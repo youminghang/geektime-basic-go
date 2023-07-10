@@ -1,37 +1,15 @@
-# 极客时间-初级Go工程师训练营
+# 极客时间 Go 初级工程师训练营
 
-#### 介绍
-这是极客时间《初级Go工程师训练营》代码仓库，更多课程内容请移步：https://u.geekbang.org/subject/go3rd
+这是为极客时间 Go 初级工程师训练营提供的配套代码仓库。
 
-#### 软件架构
-软件架构说明
+整个仓库的代码可以分成两个部分：
+- 基础语法部分：在 syntax 中。
+- 小微书代码。
 
+## 如何使用该仓库？
 
-#### 安装教程
+因为仓库中的代码是随着课程推进而演进的，所以你需要通过 git log 来查看提交记录。
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
-
-#### 使用说明
-
-1.  xxxx
-2.  xxxx
-3.  xxxx
-
-#### 参与贡献
-
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
-
-
-#### 特技
-
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+其中：
+- master 分支是我预先写好的代码
+- live0 是我 0 期直播时候写的代码
