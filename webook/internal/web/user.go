@@ -1,6 +1,8 @@
 package web
 
 import (
+	"gitee.com/geekbang/basic-go/webook/internal/domain"
+	"gitee.com/geekbang/basic-go/webook/internal/service"
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -13,12 +15,14 @@ const emailRegexPattern = "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$"
 const passwordRegexPattern = `^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,}$`
 
 type UserHandler struct {
+	svc              *service.UserService
 	emailRegexExp    *regexp.Regexp
 	passwordRegexExp *regexp.Regexp
 }
 
-func NewUserHandler() *UserHandler {
+func NewUserHandler(svc *service.UserService) *UserHandler {
 	return &UserHandler{
+		svc:              svc,
 		emailRegexExp:    regexp.MustCompile(emailRegexPattern, regexp.None),
 		passwordRegexExp: regexp.MustCompile(passwordRegexPattern, regexp.None),
 	}
@@ -78,8 +82,19 @@ func (c *UserHandler) SignUp(ctx *gin.Context) {
 			"密码必须包含数字、特殊字符，并且长度不能小于 8 位")
 		return
 	}
-	ctx.Header("Access-Control-Allow-Origin", "*")
-	ctx.String(http.StatusOK, "hello, 你在注册")
+
+	err = c.svc.Signup(ctx.Request.Context(),
+		domain.User{Email: req.Email, Password: req.ConfirmPassword})
+
+	if err == service.ErrUserDuplicateEmail {
+		ctx.String(http.StatusOK, "重复邮箱，请换一个邮箱")
+		return
+	}
+	if err != nil {
+		ctx.String(http.StatusOK, "服务器异常，注册失败")
+		return
+	}
+	ctx.String(http.StatusOK, "hello, 注册成功")
 }
 
 // Login 用户登录接口
