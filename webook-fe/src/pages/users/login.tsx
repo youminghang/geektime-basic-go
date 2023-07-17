@@ -2,6 +2,7 @@ import React from 'react';
 import { Button, Form, Input } from 'antd';
 import axios from "@/axios/axios";
 import Link from "next/link";
+import router from "next/router";
 
 const onFinish = (values: any) => {
     axios.post("/users/login", values)
@@ -11,6 +12,7 @@ const onFinish = (values: any) => {
                 return
             }
             alert(res.data)
+            router.push('/users/profile')
         }).catch((err) => {
             alert(err);
     })

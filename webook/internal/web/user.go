@@ -119,6 +119,10 @@ func (c *UserHandler) Login(ctx *gin.Context) {
 	}
 	sess := sessions.Default(ctx)
 	sess.Set(userIdKey, u.Id)
+	sess.Options(sessions.Options{
+		// 60 秒过期
+		MaxAge: 60,
+	})
 	err = sess.Save()
 	if err != nil {
 		ctx.String(http.StatusOK, "服务器异常")
