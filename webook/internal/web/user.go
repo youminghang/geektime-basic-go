@@ -4,15 +4,18 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	regexp "github.com/dlclark/regexp2"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-const emailRegexPattern = "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$"
+const (
+	emailRegexPattern = "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$"
+	// 和上面比起来，用 ` 看起来就比较清爽
+	passwordRegexPattern = `^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,}$`
 
-// 和上面比起来，用 ` 看起来就比较清爽
-// go get
-const passwordRegexPattern = `^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,}$`
+	userIdKey = "userId"
+)
 
 type UserHandler struct {
 	svc              *service.UserService
@@ -99,7 +102,29 @@ func (c *UserHandler) SignUp(ctx *gin.Context) {
 
 // Login 用户登录接口
 func (c *UserHandler) Login(ctx *gin.Context) {
+	type LoginReq struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
 
+	var req LoginReq
+	// 当我们调用 Bind 方法的时候，如果有问题，Bind 方法已经直接写响应回去了
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+	u, err := c.svc.Login(ctx.Request.Context(), req.Email, req.Password)
+	if err == service.ErrInvalidUserOrPassword {
+		ctx.String(http.StatusOK, "用户名或者密码不正确，请重试")
+		return
+	}
+	sess := sessions.Default(ctx)
+	sess.Set(userIdKey, u.Id)
+	err = sess.Save()
+	if err != nil {
+		ctx.String(http.StatusOK, "服务器异常")
+		return
+	}
+	ctx.String(http.StatusOK, "登录成功")
 }
 
 // Edit 用户编译信息
@@ -109,5 +134,19 @@ func (c *UserHandler) Edit(ctx *gin.Context) {
 
 // Profile 用户详情
 func (c *UserHandler) Profile(ctx *gin.Context) {
-
+	type Profile struct {
+		Email string
+	}
+	sess := sessions.Default(ctx)
+	id := sess.Get(userIdKey).(int64)
+	u, err := c.svc.Profile(ctx, id)
+	if err != nil {
+		// 按照道理来说，这边 id 对应的数据肯定存在，所以要是没找到，
+		// 那就说明是系统出了问题。
+		ctx.String(http.StatusOK, "系统错误")
+		return
+	}
+	ctx.JSON(http.StatusOK, Profile{
+		Email: u.Email,
+	})
 }
