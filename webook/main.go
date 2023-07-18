@@ -39,7 +39,10 @@ func initWebServer() *gin.Engine {
 	server := gin.Default()
 	server.Use(cors.New(cors.Config{
 		AllowCredentials: true,
-		AllowHeaders:     []string{"Content-Type"},
+		// 在使用 JWT 的时候，因为我们使用了 Authorization 的头部，所以要加上
+		AllowHeaders: []string{"Content-Type", "Authorization"},
+		// 为了 JWT
+		ExposeHeaders: []string{"X-Jwt-Token"},
 		AllowOriginFunc: func(origin string) bool {
 			if strings.HasPrefix(origin, "http://localhost") {
 				return true
@@ -49,6 +52,20 @@ func initWebServer() *gin.Engine {
 		MaxAge: 12 * time.Hour,
 	}))
 
+	// 使用 session 机制登录
+	//usingSession(server)
+
+	// 使用 JWT
+	usingJWT(server)
+	return server
+}
+
+func usingJWT(server *gin.Engine) {
+	mldBd := &middleware.JWTLoginMiddlewareBuilder{}
+	server.Use(mldBd.Build())
+}
+
+func usingSession(server *gin.Engine) {
 	//store := cookie.NewStore([]byte("secret"))
 
 	// 这是基于内存的实现，第一个参数是 authentication key，最好是 32 或者 64 位
@@ -67,12 +84,12 @@ func initWebServer() *gin.Engine {
 	//if err != nil {
 	//	panic(err)
 	//}
+
 	// cookie 的名字叫做ssid
 	server.Use(sessions.Sessions("ssid", store))
 	// 登录校验
 	login := &middleware.LoginMiddlewareBuilder{}
 	server.Use(login.CheckLogin())
-	return server
 }
 
 func initUser(server *gin.Engine, db *gorm.DB) {

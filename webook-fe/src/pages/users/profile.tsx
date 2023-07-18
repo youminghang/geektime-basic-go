@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import axios from "@/axios/axios";
 
-function Profile() {
+function Page() {
     type Profile = {
         Email: string
     }
-    const [data, setData] = useState<Profile>(null)
+    let p: Profile = {Email: ""}
+    const [data, setData] = useState<Profile>(p)
     const [isLoading, setLoading] = useState(false)
 
     useEffect(() => {
@@ -29,4 +30,4 @@ function Profile() {
     )
 }
 
-export default Profile
+export default Page
