@@ -10,3 +10,12 @@ func Switch(status int) string {
 		return "未知状态"
 	}
 }
+
+func SwitchNoVal(age int) {
+	switch {
+	case age >= 18:
+		println("成年人")
+	case age < 6:
+		println("小孩子")
+	}
+}
