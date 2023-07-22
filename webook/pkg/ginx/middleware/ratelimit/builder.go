@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
+	"log"
 	"net/http"
 	"time"
 )
@@ -38,12 +39,14 @@ func (b *Builder) Build() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		limited, err := b.limit(ctx)
 		if err != nil {
+			log.Println(err)
 			// 这一步很有意思，就是如果这边出错了
 			// 要怎么办？
 			ctx.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
 		if limited {
+			log.Println(err)
 			ctx.AbortWithStatus(http.StatusTooManyRequests)
 			return
 		}

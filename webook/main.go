@@ -1,6 +1,7 @@
 package main
 
 import (
+	"gitee.com/geekbang/basic-go/webook/config"
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
@@ -14,6 +15,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -22,11 +24,15 @@ func main() {
 	db := initDB()
 	server := initWebServer()
 	initUser(server, db)
+	//server := gin.Default()
+	server.GET("/hello", func(ctx *gin.Context) {
+		ctx.String(http.StatusOK, "hello, world")
+	})
 	server.Run(":8080")
 }
 
 func initDB() *gorm.DB {
-	db, err := gorm.Open(mysql.Open("root:root@tcp(localhost:13316)/webook"))
+	db, err := gorm.Open(mysql.Open(config.Config.DB.DSN))
 	if err != nil {
 		panic(err)
 	}
@@ -39,10 +45,11 @@ func initDB() *gorm.DB {
 
 func initWebServer() *gin.Engine {
 	server := gin.Default()
+	rCfg := config.Config.Redis
 	cmd := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       1,
+		Addr:     rCfg.Addr,
+		Password: rCfg.Password,
+		DB:       rCfg.DB,
 	})
 	// 一分钟 100 次。
 	server.Use(ratelimit.NewBuilder(cmd, time.Minute, 100).Build())
@@ -64,7 +71,6 @@ func initWebServer() *gin.Engine {
 
 	// 使用 session 机制登录
 	//usingSession(server)
-
 	// 使用 JWT
 	usingJWT(server)
 	return server
