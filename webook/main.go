@@ -7,12 +7,10 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	"gitee.com/geekbang/basic-go/webook/internal/web"
 	"gitee.com/geekbang/basic-go/webook/internal/web/middleware"
-	"gitee.com/geekbang/basic-go/webook/pkg/ginx/middleware/ratelimit"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/memstore"
 	"github.com/gin-gonic/gin"
-	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"net/http"
@@ -45,14 +43,14 @@ func initDB() *gorm.DB {
 
 func initWebServer() *gin.Engine {
 	server := gin.Default()
-	rCfg := config.Config.Redis
-	cmd := redis.NewClient(&redis.Options{
-		Addr:     rCfg.Addr,
-		Password: rCfg.Password,
-		DB:       rCfg.DB,
-	})
+	//rCfg := config.Config.Redis
+	//cmd := redis.NewClient(&redis.Options{
+	//	Addr:     rCfg.Addr,
+	//	Password: rCfg.Password,
+	//	DB:       rCfg.DB,
+	//})
 	// 一分钟 100 次。
-	server.Use(ratelimit.NewBuilder(cmd, time.Minute, 100).Build())
+	//server.Use(ratelimit.NewBuilder(cmd, time.Minute, 100).Build())
 
 	server.Use(cors.New(cors.Config{
 		AllowCredentials: true,

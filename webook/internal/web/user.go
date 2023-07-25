@@ -130,7 +130,9 @@ func (c *UserHandler) LoginJWT(ctx *gin.Context) {
 		UserAgent: ctx.GetHeader("User-Agent"),
 		RegisteredClaims: jwt.RegisteredClaims{
 			// 演示目的设置为一分钟过期
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
+			//ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
+			// 在压测的时候，要将过期时间设置更长一些
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * 30)),
 		},
 	})
 	tokenStr, err := token.SignedString(JWTKey)
