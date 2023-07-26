@@ -32,6 +32,14 @@ func functional6() {
 	fn()
 }
 
+func functional6_1() {
+	// 新定义了一个方法，赋值给了 fn
+	fn := func() string {
+		return "hello"
+	}
+	fn()
+}
+
 func functional8() {
 	// 新定义了一个方法，赋值给了 fn
 	fn := func() string {
