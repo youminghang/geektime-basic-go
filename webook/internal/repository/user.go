@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
+	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 )
 
@@ -10,12 +11,14 @@ var ErrUserDuplicateEmail = dao.ErrUserDuplicateEmail
 var ErrUserNotFound = dao.ErrDataNotFound
 
 type UserRepository struct {
-	dao *dao.UserDAO
+	dao   *dao.UserDAO
+	cache *cache.UserCache
 }
 
-func NewUserRepository(d *dao.UserDAO) *UserRepository {
+func NewUserRepository(d *dao.UserDAO, c *cache.UserCache) *UserRepository {
 	return &UserRepository{
-		dao: d,
+		dao:   d,
+		cache: c,
 	}
 }
 
@@ -44,9 +47,45 @@ func (ur *UserRepository) FindByEmail(ctx context.Context,
 
 func (ur *UserRepository) FindById(ctx context.Context,
 	id int64) (domain.User, error) {
-	u, err := ur.dao.FindById(ctx, id)
-	return domain.User{
-		Email:    u.Email,
-		Password: u.Password,
-	}, err
+	u, err := ur.cache.Get(ctx, id)
+	// 注意这里的处理方式
+	if err == nil {
+		return u, err
+	}
+	ue, err := ur.dao.FindById(ctx, id)
+	if err != nil {
+		return domain.User{}, err
+	}
+	u = domain.User{
+		Id:       ue.Id,
+		Email:    ue.Email,
+		Password: ue.Password,
+	}
+	// 忽略掉这里的错误
+	_ = ur.cache.Set(ctx, u)
+	return u, nil
+}
+
+func (ur *UserRepository) FindByIdV1(ctx context.Context,
+	id int64) (domain.User, error) {
+	u, err := ur.cache.Get(ctx, id)
+	switch err {
+	case nil:
+		return u, err
+	case cache.ErrKeyNotExist:
+		ue, err := ur.dao.FindById(ctx, id)
+		if err != nil {
+			return domain.User{}, err
+		}
+		u = domain.User{
+			Id:       ue.Id,
+			Email:    ue.Email,
+			Password: ue.Password,
+		}
+		// 忽略掉这里的错误
+		_ = ur.cache.Set(ctx, u)
+		return u, nil
+	default:
+		return domain.User{}, err
+	}
 }
