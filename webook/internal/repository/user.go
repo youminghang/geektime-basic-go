@@ -2,12 +2,13 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 )
 
-var ErrUserDuplicateEmail = dao.ErrUserDuplicateEmail
+var ErrUserDuplicate = dao.ErrUserDuplicate
 var ErrUserNotFound = dao.ErrDataNotFound
 
 type UserRepository struct {
@@ -23,26 +24,29 @@ func NewUserRepository(d *dao.UserDAO, c *cache.UserCache) *UserRepository {
 }
 
 func (ur *UserRepository) Create(ctx context.Context, u domain.User) error {
-	err := ur.dao.Insert(ctx, dao.User{
-		Email:    u.Email,
+	return ur.dao.Insert(ctx, dao.User{
+		Email: sql.NullString{
+			String: u.Email,
+			Valid:  u.Email != "",
+		},
+		Phone: sql.NullString{
+			String: u.Phone,
+			Valid:  u.Phone != "",
+		},
 		Password: u.Password,
 	})
-	return err
+}
+
+func (ur *UserRepository) FindByPhone(ctx context.Context,
+	phone string) (domain.User, error) {
+	u, err := ur.dao.FindByPhone(ctx, phone)
+	return ur.entityToDomain(u), err
 }
 
 func (ur *UserRepository) FindByEmail(ctx context.Context,
 	email string) (domain.User, error) {
 	u, err := ur.dao.FindByEmail(ctx, email)
-
-	// 因为我们用的是别名机制，所以这里不用这么写
-	//if err == gorm.ErrRecordNotFound {
-	//	return ErrUserNotFound
-	//}
-	return domain.User{
-		Id:       u.Id,
-		Email:    u.Email,
-		Password: u.Password,
-	}, err
+	return ur.entityToDomain(u), err
 }
 
 func (ur *UserRepository) FindById(ctx context.Context,
@@ -56,11 +60,7 @@ func (ur *UserRepository) FindById(ctx context.Context,
 	if err != nil {
 		return domain.User{}, err
 	}
-	u = domain.User{
-		Id:       ue.Id,
-		Email:    ue.Email,
-		Password: ue.Password,
-	}
+	u = ur.entityToDomain(ue)
 	// 忽略掉这里的错误
 	_ = ur.cache.Set(ctx, u)
 	return u, nil
@@ -77,15 +77,20 @@ func (ur *UserRepository) FindByIdV1(ctx context.Context,
 		if err != nil {
 			return domain.User{}, err
 		}
-		u = domain.User{
-			Id:       ue.Id,
-			Email:    ue.Email,
-			Password: ue.Password,
-		}
+		u = ur.entityToDomain(ue)
 		// 忽略掉这里的错误
 		_ = ur.cache.Set(ctx, u)
 		return u, nil
 	default:
 		return domain.User{}, err
+	}
+}
+
+func (ur *UserRepository) entityToDomain(ue dao.User) domain.User {
+	return domain.User{
+		Id:       ue.Id,
+		Email:    ue.Email.String,
+		Password: ue.Password,
+		Phone:    ue.Phone.String,
 	}
 }

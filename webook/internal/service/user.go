@@ -8,7 +8,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var ErrUserDuplicateEmail = repository.ErrUserDuplicateEmail
+var ErrUserDuplicateEmail = repository.ErrUserDuplicate
 var ErrInvalidUserOrPassword = errors.New("邮箱或者密码不正确")
 
 type UserService struct {
@@ -28,6 +28,27 @@ func (svc *UserService) Signup(ctx context.Context, u domain.User) error {
 	}
 	u.Password = string(hash)
 	return svc.repo.Create(ctx, u)
+}
+
+// FindOrCreate 如果手机号不存在，那么会初始化一个用户
+func (svc *UserService) FindOrCreate(ctx context.Context,
+	phone string) (domain.User, error) {
+	// 这是一种优化写法
+	// 大部分人会命中这个分支
+	u, err := svc.repo.FindByPhone(ctx, phone)
+	if err != repository.ErrUserNotFound {
+		return u, err
+	}
+	// 要执行注册
+	err = svc.repo.Create(ctx, domain.User{
+		Phone: phone,
+	})
+	// 注册有问题，但是又不是用户手机号码冲突，说明是系统错误
+	if err != nil && err != repository.ErrUserDuplicate {
+		return domain.User{}, err
+	}
+	// 主从模式下，这里要从主库中读取，暂时我们不需要考虑
+	return svc.repo.FindByPhone(ctx, phone)
 }
 
 func (svc *UserService) Login(ctx context.Context,

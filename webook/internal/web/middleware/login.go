@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"encoding/gob"
+	"github.com/ecodeclub/ekit/set"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -9,14 +10,25 @@ import (
 )
 
 type LoginMiddlewareBuilder struct {
+	publicPaths set.Set[string]
 }
 
-func (*LoginMiddlewareBuilder) CheckLogin() gin.HandlerFunc {
+func NewLoginMiddlewareBuilder() *LoginMiddlewareBuilder {
+	s := set.NewMapSet[string](3)
+	s.Add("/users/signup")
+	s.Add("/users/login_sms/code/send")
+	s.Add("/users/login_sms")
+	s.Add("/users/login")
+	return &LoginMiddlewareBuilder{
+		publicPaths: s,
+	}
+}
+
+func (l *LoginMiddlewareBuilder) CheckLogin() gin.HandlerFunc {
 	gob.Register(time.Time{})
 	return func(ctx *gin.Context) {
 		// 不需要校验
-		if ctx.Request.URL.Path == "/users/signup" ||
-			ctx.Request.URL.Path == "/users/login" {
+		if l.publicPaths.Exist(ctx.Request.URL.Path) {
 			return
 		}
 		sess := sessions.Default(ctx)

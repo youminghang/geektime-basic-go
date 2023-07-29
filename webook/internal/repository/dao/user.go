@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
@@ -11,8 +12,8 @@ import (
 // ErrDataNotFound 通用的数据没找到
 var ErrDataNotFound = gorm.ErrRecordNotFound
 
-// ErrUserDuplicateEmail 这个算是 user 专属的
-var ErrUserDuplicateEmail = errors.New("邮件冲突")
+// ErrUserDuplicate 这个算是 user 专属的
+var ErrUserDuplicate = errors.New("用户邮箱或者手机号冲突")
 
 type UserDAO struct {
 	db *gorm.DB
@@ -32,10 +33,16 @@ func (ud *UserDAO) Insert(ctx context.Context, u User) error {
 	if me, ok := err.(*mysql.MySQLError); ok {
 		const uniqueIndexErrNo uint16 = 1062
 		if me.Number == uniqueIndexErrNo {
-			return ErrUserDuplicateEmail
+			return ErrUserDuplicate
 		}
 	}
 	return err
+}
+
+func (ud *UserDAO) FindByPhone(ctx context.Context, phone string) (User, error) {
+	var u User
+	err := ud.db.WithContext(ctx).First(&u, "phone = ?", phone).Error
+	return u, err
 }
 
 func (ud *UserDAO) FindByEmail(ctx context.Context, email string) (User, error) {
@@ -53,8 +60,11 @@ func (ud *UserDAO) FindById(ctx context.Context, id int64) (User, error) {
 type User struct {
 	Id int64 `gorm:"primaryKey,autoIncrement"`
 	// 设置为唯一索引
-	Email    string `gorm:"unique"`
+	Email    sql.NullString `gorm:"unique"`
 	Password string
+
+	//Phone *string
+	Phone sql.NullString `gorm:"unique"`
 
 	// 创建时间
 	Ctime int64

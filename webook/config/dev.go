@@ -9,6 +9,6 @@ var Config = WebookConfig{
 	Redis: RedisConfig{
 		Addr:     "localhost:6379",
 		Password: "",
-		DB:       1,
+		DB:       0,
 	},
 }

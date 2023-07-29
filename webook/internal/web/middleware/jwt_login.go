@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"gitee.com/geekbang/basic-go/webook/internal/web"
+	"github.com/ecodeclub/ekit/set"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"log"
@@ -11,13 +12,23 @@ import (
 )
 
 type JWTLoginMiddlewareBuilder struct {
+	publicPaths set.Set[string]
 }
 
+func NewJWTLoginMiddlewareBuilder() *JWTLoginMiddlewareBuilder {
+	s := set.NewMapSet[string](3)
+	s.Add("/users/signup")
+	s.Add("/users/login_sms/code/send")
+	s.Add("/users/login_sms")
+	s.Add("/users/login")
+	return &JWTLoginMiddlewareBuilder{
+		publicPaths: s,
+	}
+}
 func (j *JWTLoginMiddlewareBuilder) Build() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// 不需要校验
-		if ctx.Request.URL.Path == "/users/signup" ||
-			ctx.Request.URL.Path == "/users/login" {
+		if j.publicPaths.Exist(ctx.Request.URL.Path) {
 			return
 		}
 
