@@ -1,6 +1,7 @@
-package main
+package ioc
 
 import (
+	"gitee.com/geekbang/basic-go/webook/internal/web"
 	"gitee.com/geekbang/basic-go/webook/internal/web/middleware"
 	"gitee.com/geekbang/basic-go/webook/pkg/ginx/middleware/ratelimit"
 	"github.com/gin-contrib/cors"
@@ -12,16 +13,27 @@ import (
 	"time"
 )
 
-func initWebServer(redisCmd redis.Cmdable) *gin.Engine {
+func InitWebServer(funcs []gin.HandlerFunc,
+	userHdl *web.UserHandler) *gin.Engine {
 	server := gin.Default()
-	server.Use(ratelimit.NewBuilder(redisCmd, time.Minute, 100).Build())
-	server.Use(corsHandler())
-	// 使用 session 机制登录
-	//usingSession(server)
-	// 使用 JWT
-	usingJWT(server)
+	server.Use(funcs...)
 	// 注册路由
+	userHdl.RegisterRoutes(server)
 	return server
+}
+
+func GinMiddlewares(cmd redis.Cmdable) []gin.HandlerFunc {
+	return []gin.HandlerFunc{
+		ratelimit.NewBuilder(cmd, time.Minute, 100).Build(),
+		corsHandler(),
+
+		// 使用 JWT
+		middleware.NewJWTLoginMiddlewareBuilder().Build(),
+
+		// 使用session 登录校验
+		//sessionHandlerFunc(),
+		//middleware.NewLoginMiddlewareBuilder().CheckLogin(),
+	}
 }
 
 func corsHandler() gin.HandlerFunc {
@@ -41,12 +53,7 @@ func corsHandler() gin.HandlerFunc {
 	})
 }
 
-func usingJWT(server *gin.Engine) {
-	mldBd := middleware.NewJWTLoginMiddlewareBuilder()
-	server.Use(mldBd.Build())
-}
-
-func usingSession(server *gin.Engine) {
+func sessionHandlerFunc() gin.HandlerFunc {
 	//store := cookie.NewStore([]byte("secret"))
 
 	// 这是基于内存的实现，第一个参数是 authentication key，最好是 32 或者 64 位
@@ -67,8 +74,5 @@ func usingSession(server *gin.Engine) {
 	//}
 
 	// cookie 的名字叫做ssid
-	server.Use(sessions.Sessions("ssid", store))
-	// 登录校验
-	login := middleware.NewLoginMiddlewareBuilder()
-	server.Use(login.CheckLogin())
+	return sessions.Sessions("ssid", store)
 }

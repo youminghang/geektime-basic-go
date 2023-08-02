@@ -12,20 +12,26 @@ var ErrCodeSendTooMany = repository.ErrCodeSendTooMany
 
 const codeTplId = "1877556"
 
-type CodeService struct {
-	sms  sms.Service
-	repo *repository.CodeRepository
+type CodeService interface {
+	Send(ctx context.Context, biz string, phone string) error
+	Verify(ctx context.Context, biz string, phone string, inputCode string) (bool, error)
 }
 
-func NewCodeService(svc sms.Service, repo *repository.CodeRepository) *CodeService {
-	return &CodeService{
+// SMSCodeService 短信验证码的实现
+type SMSCodeService struct {
+	sms  sms.Service
+	repo repository.CodeRepository
+}
+
+func NewSMSCodeService(svc sms.Service, repo repository.CodeRepository) *SMSCodeService {
+	return &SMSCodeService{
 		sms:  svc,
 		repo: repo,
 	}
 }
 
 // Send 生成一个随机验证码，并发送
-func (c *CodeService) Send(ctx context.Context, biz string, phone string) error {
+func (c *SMSCodeService) Send(ctx context.Context, biz string, phone string) error {
 	code := c.generate()
 	err := c.repo.Store(ctx, biz, phone, code)
 	if err != nil {
@@ -36,7 +42,7 @@ func (c *CodeService) Send(ctx context.Context, biz string, phone string) error 
 }
 
 // Verify 验证验证码
-func (c *CodeService) Verify(ctx context.Context,
+func (c *SMSCodeService) Verify(ctx context.Context,
 	biz string,
 	phone string,
 	inputCode string) (bool, error) {
@@ -50,7 +56,7 @@ func (c *CodeService) Verify(ctx context.Context,
 	return ok, err
 }
 
-func (c *CodeService) generate() string {
+func (c *SMSCodeService) generate() string {
 	// 用随机数生成一个
 	num := rand.Intn(999999)
 	return fmt.Sprintf("%6d", num)

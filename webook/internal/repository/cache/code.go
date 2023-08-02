@@ -18,12 +18,21 @@ var (
 	ErrCodeVerifyTooManyTimes = errors.New("验证次数太多")
 )
 
-type CodeCache struct {
+type CodeCache interface {
+	Set(ctx context.Context, biz string,
+		phone string, code string) error
+
+	Verify(ctx context.Context, biz string,
+		phone string, inputCode string) (bool, error)
+}
+
+// RedisCodeCache 基于 Redis 的实现
+type RedisCodeCache struct {
 	redis redis.Cmdable
 }
 
-func NewCodeCache(cmd redis.Cmdable) *CodeCache {
-	return &CodeCache{
+func NewRedisCodeCache(cmd redis.Cmdable) *RedisCodeCache {
+	return &RedisCodeCache{
 		redis: cmd,
 	}
 }
@@ -33,7 +42,7 @@ func NewCodeCache(cmd redis.Cmdable) *CodeCache {
 // 如果已经有一个验证码，但是没有过期时间，说明有不知名错误
 // 如果已经有一个验证码，但是发出去不到一分钟，不允许重发
 // 验证码有效期 10 分钟
-func (c *CodeCache) Set(ctx context.Context,
+func (c *RedisCodeCache) Set(ctx context.Context,
 	biz string,
 	phone string,
 	code string) error {
@@ -58,7 +67,7 @@ func (c *CodeCache) Set(ctx context.Context,
 // Verify 验证验证码
 // 如果验证码是一致的，那么删除
 // 如果验证码不一致，那么保留的
-func (c *CodeCache) Verify(ctx context.Context,
+func (c *RedisCodeCache) Verify(ctx context.Context,
 	biz string, phone string, inputCode string) (bool, error) {
 	res, err := c.redis.Eval(ctx, luaVerifyCode, []string{c.key(biz, phone)}, inputCode).Int()
 	if err != nil {
@@ -76,6 +85,6 @@ func (c *CodeCache) Verify(ctx context.Context,
 	}
 }
 
-func (c *CodeCache) key(biz string, phone string) string {
+func (c *RedisCodeCache) key(biz string, phone string) string {
 	return fmt.Sprintf("phone_code:%s:%s", biz, phone)
 }

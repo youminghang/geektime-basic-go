@@ -23,15 +23,15 @@ const (
 var _ handler = &UserHandler{}
 
 type UserHandler struct {
-	svc              *service.UserService
-	codeSvc          *service.CodeService
+	svc              service.UserService
+	codeSvc          service.CodeService
 	emailRegexExp    *regexp.Regexp
 	passwordRegexExp *regexp.Regexp
 	// 只有在使用 JWT 的时候才有用
 	jwtKey string
 }
 
-func NewUserHandler(svc *service.UserService, codeSvc *service.CodeService) *UserHandler {
+func NewUserHandler(svc service.UserService, codeSvc service.CodeService) *UserHandler {
 	return &UserHandler{
 		svc:              svc,
 		codeSvc:          codeSvc,

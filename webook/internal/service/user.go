@@ -11,17 +11,24 @@ import (
 var ErrUserDuplicateEmail = repository.ErrUserDuplicate
 var ErrInvalidUserOrPassword = errors.New("邮箱或者密码不正确")
 
-type UserService struct {
-	repo *repository.UserRepository
+type UserService interface {
+	Signup(ctx context.Context, u domain.User) error
+	FindOrCreate(ctx context.Context, phone string) (domain.User, error)
+	Login(ctx context.Context, email, password string) (domain.User, error)
+	Profile(ctx context.Context, id int64) (domain.User, error)
 }
 
-func NewUserService(repo *repository.UserRepository) *UserService {
-	return &UserService{
+type userService struct {
+	repo repository.UserRepository
+}
+
+func NewUserService(repo repository.UserRepository) UserService {
+	return &userService{
 		repo: repo,
 	}
 }
 
-func (svc *UserService) Signup(ctx context.Context, u domain.User) error {
+func (svc *userService) Signup(ctx context.Context, u domain.User) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
@@ -31,7 +38,7 @@ func (svc *UserService) Signup(ctx context.Context, u domain.User) error {
 }
 
 // FindOrCreate 如果手机号不存在，那么会初始化一个用户
-func (svc *UserService) FindOrCreate(ctx context.Context,
+func (svc *userService) FindOrCreate(ctx context.Context,
 	phone string) (domain.User, error) {
 	// 这是一种优化写法
 	// 大部分人会命中这个分支
@@ -51,7 +58,7 @@ func (svc *UserService) FindOrCreate(ctx context.Context,
 	return svc.repo.FindByPhone(ctx, phone)
 }
 
-func (svc *UserService) Login(ctx context.Context,
+func (svc *userService) Login(ctx context.Context,
 	email, password string) (domain.User, error) {
 	u, err := svc.repo.FindByEmail(ctx, email)
 	if err == repository.ErrUserNotFound {
@@ -64,7 +71,7 @@ func (svc *UserService) Login(ctx context.Context,
 	return u, err
 }
 
-func (svc *UserService) Profile(ctx context.Context,
+func (svc *userService) Profile(ctx context.Context,
 	id int64) (domain.User, error) {
 	return svc.repo.FindById(ctx, id)
 }

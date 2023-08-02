@@ -10,17 +10,25 @@ var (
 	ErrCodeSendTooMany        = cache.ErrCodeSendTooMany
 )
 
-type CodeRepository struct {
-	cache *cache.CodeCache
+type CodeRepository interface {
+	Store(ctx context.Context, biz string,
+		phone string, code string) error
+
+	Verify(ctx context.Context, biz string,
+		phone string, inputCode string) (bool, error)
 }
 
-func NewCodeRepository(c *cache.CodeCache) *CodeRepository {
-	return &CodeRepository{
+type CachedCodeRepository struct {
+	cache cache.CodeCache
+}
+
+func NewCachedCodeRepository(c cache.CodeCache) *CachedCodeRepository {
+	return &CachedCodeRepository{
 		cache: c,
 	}
 }
 
-func (repo *CodeRepository) Store(ctx context.Context,
+func (repo *CachedCodeRepository) Store(ctx context.Context,
 	biz string,
 	phone string,
 	code string) error {
@@ -29,7 +37,7 @@ func (repo *CodeRepository) Store(ctx context.Context,
 }
 
 // Verify 比较验证码。如果验证码相等，那么删除；
-func (repo *CodeRepository) Verify(ctx context.Context,
+func (repo *CachedCodeRepository) Verify(ctx context.Context,
 	biz string, phone string, inputCode string) (bool, error) {
 	return repo.cache.Verify(ctx, biz, phone, inputCode)
 }

@@ -9,22 +9,28 @@ import (
 	"time"
 )
 
+// ErrKeyNotExist 因为我们目前还是只有一个实现，所以可以保持用别名
 var ErrKeyNotExist = redis.Nil
 
-type UserCache struct {
+type UserCache interface {
+	Get(ctx context.Context, id int64) (domain.User, error)
+	Set(ctx context.Context, u domain.User) error
+}
+
+type RedisUserCache struct {
 	cmd redis.Cmdable
 	// 过期时间
 	expiration time.Duration
 }
 
-func NewUserCache(cmd redis.Cmdable) *UserCache {
-	return &UserCache{
+func NewRedisUserCache(cmd redis.Cmdable) *RedisUserCache {
+	return &RedisUserCache{
 		cmd:        cmd,
 		expiration: time.Minute * 15,
 	}
 }
 
-func (cache *UserCache) Get(ctx context.Context, id int64) (domain.User, error) {
+func (cache *RedisUserCache) Get(ctx context.Context, id int64) (domain.User, error) {
 	key := cache.key(id)
 	data, err := cache.cmd.Get(ctx, key).Result()
 	if err != nil {
@@ -36,7 +42,7 @@ func (cache *UserCache) Get(ctx context.Context, id int64) (domain.User, error) 
 	return u, err
 }
 
-func (cache *UserCache) Set(ctx context.Context, u domain.User) error {
+func (cache *RedisUserCache) Set(ctx context.Context, u domain.User) error {
 	data, err := json.Marshal(u)
 	if err != nil {
 		return err
@@ -45,6 +51,6 @@ func (cache *UserCache) Set(ctx context.Context, u domain.User) error {
 	return cache.cmd.Set(ctx, key, data, cache.expiration).Err()
 }
 
-func (cache *UserCache) key(id int64) string {
+func (cache *RedisUserCache) key(id int64) string {
 	return fmt.Sprintf("user:info:%d", id)
 }
