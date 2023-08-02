@@ -82,6 +82,8 @@ func (u *UserHandler) SignUp(ctx *gin.Context) {
 	ctx.String(http.StatusOK, "注册成功")
 	fmt.Printf("%v", req)
 	// 这边就是数据库操作
+
+	//db := gorm.Open()
 }
 
 func (u *UserHandler) Login(ctx *gin.Context) {
