@@ -3,6 +3,7 @@ module gitee.com/geekbang/basic-go
 go 1.20
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/dlclark/regexp2 v1.10.0
 	github.com/ecodeclub/ekit v0.0.7
 	github.com/gin-contrib/cors v1.4.0
@@ -15,6 +16,7 @@ require (
 	github.com/stretchr/testify v1.8.3
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.708
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.708
+	go.uber.org/mock v0.2.0
 	golang.org/x/crypto v0.11.0
 	gorm.io/driver/mysql v1.5.1
 	gorm.io/driver/sqlite v1.5.2

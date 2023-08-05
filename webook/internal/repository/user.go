@@ -6,6 +6,7 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
+	"time"
 )
 
 var ErrUserDuplicate = dao.ErrUserDuplicate
@@ -103,5 +104,6 @@ func (ur *CachedUserRepository) entityToDomain(ue dao.User) domain.User {
 		Email:    ue.Email.String,
 		Password: ue.Password,
 		Phone:    ue.Phone.String,
+		Ctime:    time.UnixMilli(ue.Ctime),
 	}
 }
