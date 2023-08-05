@@ -15,15 +15,11 @@ func DeleteAt[T any](src []T, index int) ([]T, error) {
 		return nil, fmt.Errorf("ekit: %w, 下标超出范围，长度 %d, 下标 %d",
 			ErrIndexOutOfRange, length, index)
 	}
-	j := 0
-	for i, v := range src {
-		if i != index {
-			src[j] = v
-			j++
-		}
+	for i := index; i+1 < length; i++ {
+		src[i] = src[i+1]
 	}
-	src = src[:j]
-	return src, nil
+
+	return src[:length-1], nil
 }
 
 // Shrink 这是缩容
