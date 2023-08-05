@@ -6,6 +6,7 @@ import (
 	"net/http"
 )
 
+// LoginMiddlewareBuilder 扩展性
 type LoginMiddlewareBuilder struct {
 	paths []string
 }

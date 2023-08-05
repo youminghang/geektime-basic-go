@@ -58,17 +58,17 @@ func initWebServer() *gin.Engine {
 	store := cookie.NewStore([]byte("secret"))
 	server.Use(sessions.Sessions("mysession", store))
 	// 步骤3
-	//server.Use(middleware.NewLoginMiddlewareBuilder().
-	//	IgnorePaths("/users/signup").
-	//	IgnorePaths("/users/login").Build())
+	server.Use(middleware.NewLoginMiddlewareBuilder().
+		IgnorePaths("/users/signup").
+		IgnorePaths("/users/login").Build())
 
 	// v1
-	middleware.IgnorePaths = []string{"sss"}
-	server.Use(middleware.CheckLogin())
+	//middleware.IgnorePaths = []string{"sss"}
+	//server.Use(middleware.CheckLogin())
 
 	// 不能忽略sss这条路径
-	server1 := gin.Default()
-	server1.Use(middleware.CheckLogin())
+	//server1 := gin.Default()
+	//server1.Use(middleware.CheckLogin())
 	return server
 }
 
