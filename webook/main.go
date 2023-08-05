@@ -1,14 +1,32 @@
 package main
 
 import (
+	"gitee.com/geekbang/basic-go/webook/internal/repository"
+	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
+	"gitee.com/geekbang/basic-go/webook/internal/service"
 	"gitee.com/geekbang/basic-go/webook/internal/web"
+	"gitee.com/geekbang/basic-go/webook/internal/web/middleware"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 	"strings"
 	"time"
 )
 
 func main() {
+	db := initDB()
+	server := initWebServer()
+
+	u := initUser(db)
+	u.RegisterRoutes(server)
+
+	server.Run(":8080")
+}
+
+func initWebServer() *gin.Engine {
 	server := gin.Default()
 
 	server.Use(func(ctx *gin.Context) {
@@ -36,10 +54,44 @@ func main() {
 		MaxAge: 12 * time.Hour,
 	}))
 
-	//v1 := server.Group("/v1")
-	//users := server.Group("/users/v1")
-	u := web.NewUserHandler()
-	//u.RegisterRoutesV1(server.Group("/users"))
-	u.RegisterRoutes(server)
-	server.Run(":8080")
+	// 步骤1
+	store := cookie.NewStore([]byte("secret"))
+	server.Use(sessions.Sessions("mysession", store))
+	// 步骤3
+	//server.Use(middleware.NewLoginMiddlewareBuilder().
+	//	IgnorePaths("/users/signup").
+	//	IgnorePaths("/users/login").Build())
+
+	// v1
+	middleware.IgnorePaths = []string{"sss"}
+	server.Use(middleware.CheckLogin())
+
+	// 不能忽略sss这条路径
+	server1 := gin.Default()
+	server1.Use(middleware.CheckLogin())
+	return server
+}
+
+func initUser(db *gorm.DB) *web.UserHandler {
+	ud := dao.NewUserDAO(db)
+	repo := repository.NewUserRepository(ud)
+	svc := service.NewUserService(repo)
+	u := web.NewUserHandler(svc)
+	return u
+}
+
+func initDB() *gorm.DB {
+	db, err := gorm.Open(mysql.Open("root:root@tcp(localhost:13316)/webook"))
+	if err != nil {
+		// 我只会在初始化过程中 panic
+		// panic 相当于整个 goroutine 结束
+		// 一旦初始化过程出错，应用就不要启动了
+		panic(err)
+	}
+
+	err = dao.InitTable(db)
+	if err != nil {
+		panic(err)
+	}
+	return db
 }
