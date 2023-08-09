@@ -127,9 +127,28 @@ func (u *UserHandler) Login(ctx *gin.Context) {
 	// 我可以随便设置值了
 	// 你要放在 session 里面的值
 	sess.Set("userId", user.Id)
+	sess.Options(sessions.Options{
+		Secure:   true,
+		HttpOnly: true,
+		// 一分钟过期
+		MaxAge: 60,
+	})
 	sess.Save()
 	ctx.String(http.StatusOK, "登录成功")
 	return
+}
+
+func (u *UserHandler) Logout(ctx *gin.Context) {
+	sess := sessions.Default(ctx)
+	// 我可以随便设置值了
+	// 你要放在 session 里面的值
+	sess.Options(sessions.Options{
+		//Secure: true,
+		//HttpOnly: true,
+		MaxAge: -1,
+	})
+	sess.Save()
+	ctx.String(http.StatusOK, "退出登录成功")
 }
 
 func (u *UserHandler) Edit(ctx *gin.Context) {

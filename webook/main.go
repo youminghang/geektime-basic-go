@@ -8,7 +8,7 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/web/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -55,7 +55,20 @@ func initWebServer() *gin.Engine {
 	}))
 
 	// 步骤1
-	store := cookie.NewStore([]byte("secret"))
+	//store := cookie.NewStore([]byte("secret"))
+
+	//store := memstore.NewStore([]byte("95osj3fUD7fo0mlYdDbncXz4VD2igvf0"),
+	//	[]byte("0Pf2r0wZBpXVXlQNdpwCXN4ncnlnZSc3"))
+	store, err := redis.NewStore(16,
+		"tcp", "localhost:6379", "",
+		[]byte("95osj3fUD7fo0mlYdDbncXz4VD2igvf0"), []byte("0Pf2r0wZBpXVXlQNdpwCXN4ncnlnZSc3"))
+
+	if err != nil {
+		panic(err)
+	}
+
+	//myStore := &sqlx_store.Store{}
+
 	server.Use(sessions.Sessions("mysession", store))
 	// 步骤3
 	server.Use(middleware.NewLoginMiddlewareBuilder().
