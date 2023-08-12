@@ -28,7 +28,7 @@ type CachedUserRepository struct {
 // NewCachedUserRepository 也说明了 CachedUserRepository 的特性
 // 会从缓存和数据库中去尝试获得
 func NewCachedUserRepository(d dao.UserDAO,
-	c cache.UserCache) *CachedUserRepository {
+	c cache.UserCache) UserRepository {
 	return &CachedUserRepository{
 		dao:   d,
 		cache: c,
