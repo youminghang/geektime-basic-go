@@ -12,7 +12,7 @@ import (
 
 func InitSmsService() sms.Service {
 	//return initSmsTencentService()
-	return initSmsMemoryService()
+	return InitSmsMemoryService()
 }
 
 func initSmsTencentService() sms.Service {
@@ -31,7 +31,7 @@ func initSmsTencentService() sms.Service {
 	return tencent.NewService(c, "1400842696", "妙影科技")
 }
 
-// initSmsMemoryService 使用基于内存，输出到控制台的实现
-func initSmsMemoryService() sms.Service {
+// InitSmsMemoryService 使用基于内存，输出到控制台的实现
+func InitSmsMemoryService() sms.Service {
 	return localsms.NewService()
 }

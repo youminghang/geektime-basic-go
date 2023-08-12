@@ -1,6 +1,6 @@
 //go:build wireinject
 
-package main
+package integration
 
 import (
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
@@ -15,6 +15,8 @@ import (
 
 func InitWebServer() *gin.Engine {
 	wire.Build(
+		//基础部分
+		//wire.Bind(new(redis.Cmdable), new(*redis.Client)),
 		ioc.InitRedis, ioc.InitDB,
 
 		// DAO 部分
@@ -28,7 +30,8 @@ func InitWebServer() *gin.Engine {
 		repository.NewCachedCodeRepository,
 
 		// service 部分
-		ioc.InitSmsService,
+		// 集成测试我们显式指定使用内存实现
+		ioc.InitSmsMemoryService,
 		service.NewSMSCodeService,
 		service.NewUserService,
 
