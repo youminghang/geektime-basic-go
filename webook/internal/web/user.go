@@ -87,7 +87,11 @@ func (c *UserHandler) LoginSMS(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "系统错误"})
 		return
 	}
-	c.setJWTToken(ctx, u.Id)
+	err = c.setJWTToken(ctx, u.Id)
+	if err != nil {
+		ctx.JSON(http.StatusOK, Result{Msg: "系统错误"})
+		return
+	}
 	ctx.JSON(http.StatusOK, Result{Msg: "登录成功"})
 }
 
@@ -189,11 +193,15 @@ func (c *UserHandler) LoginJWT(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "用户名或者密码不正确，请重试")
 		return
 	}
-	c.setJWTToken(ctx, u.Id)
+	err = c.setJWTToken(ctx, u.Id)
+	if err != nil {
+		ctx.String(http.StatusOK, "系统异常")
+		return
+	}
 	ctx.String(http.StatusOK, "登录成功")
 }
 
-func (c *UserHandler) setJWTToken(ctx *gin.Context, uid int64) {
+func (c *UserHandler) setJWTToken(ctx *gin.Context, uid int64) error {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, UserClaims{
 		Id:        uid,
 		UserAgent: ctx.GetHeader("User-Agent"),
@@ -206,10 +214,10 @@ func (c *UserHandler) setJWTToken(ctx *gin.Context, uid int64) {
 	})
 	tokenStr, err := token.SignedString(JWTKey)
 	if err != nil {
-		ctx.String(http.StatusOK, "系统异常")
-		return
+		return err
 	}
 	ctx.Header("x-jwt-token", tokenStr)
+	return nil
 }
 
 // Login 用户登录接口
