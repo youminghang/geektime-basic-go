@@ -16,6 +16,9 @@ type UserService interface {
 	FindOrCreate(ctx context.Context, phone string) (domain.User, error)
 	Login(ctx context.Context, email, password string) (domain.User, error)
 	Profile(ctx context.Context, id int64) (domain.User, error)
+	// UpdateNonSensitiveInfo 更新非敏感数据
+	// 你可以在这里进一步补充究竟哪些数据会被更新
+	UpdateNonSensitiveInfo(ctx context.Context, user domain.User) error
 }
 
 type userService struct {
@@ -26,6 +29,21 @@ func NewUserService(repo repository.UserRepository) UserService {
 	return &userService{
 		repo: repo,
 	}
+}
+
+func (svc *userService) UpdateNonSensitiveInfo(ctx context.Context, user domain.User) error {
+	// 写法1
+	// 这种是简单的写法，依赖与 Web 层保证没有敏感数据被修改
+	// 也就是说，你的基本假设是前端传过来的数据就是不会修改 Email，Phone 之类的信息的。
+	//return svc.repo.Update(ctx, user)
+
+	// 写法2
+	// 这种是复杂写法，依赖于 repository 中更新会忽略 0 值
+	// 这个转换的意义在于，你在 service 层面上维护住了什么是敏感字段这个语义
+	user.Email = ""
+	user.Phone = ""
+	user.Password = ""
+	return svc.repo.Update(ctx, user)
 }
 
 func (svc *userService) Signup(ctx context.Context, u domain.User) error {
