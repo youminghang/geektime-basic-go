@@ -36,6 +36,7 @@ func (svc *UserService) Login(ctx context.Context, email, password string) (doma
 		// DEBUG
 		return domain.User{}, ErrInvalidUserOrPassword
 	}
+
 	return u, nil
 }
 
@@ -48,4 +49,10 @@ func (svc *UserService) SignUp(ctx context.Context, u domain.User) error {
 	u.Password = string(hash)
 	// 然后就是，存起来
 	return svc.repo.Create(ctx, u)
+}
+
+func (svc *UserService) Profile(ctx context.Context,
+	id int64) (domain.User, error) {
+	u, err := svc.repo.FindById(ctx, id)
+	return u, err
 }
