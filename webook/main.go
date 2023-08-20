@@ -3,12 +3,14 @@ package main
 import (
 	"gitee.com/geekbang/basic-go/webook/config"
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
+	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	"gitee.com/geekbang/basic-go/webook/internal/web"
 	"gitee.com/geekbang/basic-go/webook/internal/web/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"net/http"
@@ -20,7 +22,8 @@ func main() {
 	db := initDB()
 	server := initWebServer()
 
-	u := initUser(db)
+	rdb := initRedis()
+	u := initUser(db, rdb)
 	u.RegisterRoutes(server)
 
 	server.GET("/hello", func(ctx *gin.Context) {
@@ -98,9 +101,17 @@ func initWebServer() *gin.Engine {
 	return server
 }
 
-func initUser(db *gorm.DB) *web.UserHandler {
+func initRedis() redis.Cmdable {
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: config.Config.Redis.Addr,
+	})
+	return redisClient
+}
+
+func initUser(db *gorm.DB, rdb redis.Cmdable) *web.UserHandler {
 	ud := dao.NewUserDAO(db)
-	repo := repository.NewUserRepository(ud)
+	uc := cache.NewUserCache(rdb)
+	repo := repository.NewUserRepository(ud, uc)
 	svc := service.NewUserService(repo)
 	u := web.NewUserHandler(svc)
 	return u
