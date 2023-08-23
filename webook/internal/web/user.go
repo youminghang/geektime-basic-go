@@ -3,6 +3,7 @@ package web
 import (
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
+	"gitee.com/geekbang/basic-go/webook/internal/service/oauth2"
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -25,6 +26,7 @@ var _ handler = &UserHandler{}
 type UserHandler struct {
 	svc              service.UserService
 	codeSvc          service.CodeService
+	oauth2Svc        oauth2.Service
 	emailRegexExp    *regexp.Regexp
 	passwordRegexExp *regexp.Regexp
 	// 只有在使用 JWT 的时候才有用
@@ -59,6 +61,24 @@ func (c *UserHandler) RegisterRoutes(server *gin.Engine) {
 	ug.GET("/profile", c.ProfileJWT)
 	ug.POST("/login_sms/code/send", c.SendSMSLoginCode)
 	ug.POST("/login_sms", c.LoginSMS)
+	// 明确写明是微信的，这样后面可以通过 URL 来区分不同的扫码登录
+	ug.GET("/oauth2/wechat", c.OAuth2URL)
+}
+
+func (c *UserHandler) OAuth2URL(ctx *gin.Context) {
+	url, err := c.oauth2Svc.AuthURL(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusOK, Result{
+			Code: 5,
+			Msg:  "系统错误，请稍后再试",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, Result{
+		Data: url,
+	})
+	return
 }
 
 func (c *UserHandler) LoginSMS(ctx *gin.Context) {
@@ -120,6 +140,10 @@ func (c *UserHandler) SendSMSLoginCode(ctx *gin.Context) {
 		// 要打印日志
 		return
 	}
+}
+
+func (c *UserHandler) WechatAuthUrl(ctx *gin.Context) {
+
 }
 
 // SignUp 用户注册接口
