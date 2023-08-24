@@ -19,6 +19,6 @@ if code == expectedCode then
     return 0
 else
     -- 可能使用户手一抖输错了
-    redis.call("decr", cntKey, -1)
+    redis.call("decr", cntKey)
     return -2
 end
