@@ -1,6 +1,6 @@
 //go:build wireinject
 
-package integration
+package startup
 
 import (
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
@@ -13,30 +13,29 @@ import (
 	"github.com/google/wire"
 )
 
+var thirdProvider = wire.NewSet(ioc.InitRedis, ioc.InitDB)
+var userSvcProvider = wire.NewSet(
+	thirdProvider,
+	dao.NewGORMUserDAO,
+	cache.NewRedisUserCache,
+	repository.NewCachedUserRepository,
+	service.NewUserService)
+
 func InitWebServer() *gin.Engine {
 	wire.Build(
-		//基础部分
-		//wire.Bind(new(redis.Cmdable), new(*redis.Client)),
-		ioc.InitRedis, ioc.InitDB,
-
-		// DAO 部分
-		dao.NewGORMUserDAO,
-
-		// Cache 部分
-		cache.NewRedisUserCache, cache.NewRedisCodeCache,
-
-		// repository 部分
-		repository.NewCachedUserRepository,
+		userSvcProvider,
+		cache.NewRedisCodeCache,
 		repository.NewCachedCodeRepository,
-
 		// service 部分
 		// 集成测试我们显式指定使用内存实现
 		ioc.InitSmsMemoryService,
-		service.NewSMSCodeService,
-		service.NewUserService,
 
+		// 指定啥也不干的 wechat service
+		InitPhantomWechatService,
+		service.NewSMSCodeService,
 		// handler 部分
 		web.NewUserHandler,
+		web.NewOAuth2WechatHandler,
 
 		// gin 的中间件
 		ioc.GinMiddlewares,
@@ -46,4 +45,9 @@ func InitWebServer() *gin.Engine {
 	)
 	// 随便返回一个
 	return gin.Default()
+}
+
+func InitUserSvc() service.UserService {
+	wire.Build(userSvcProvider)
+	return service.NewUserService(nil)
 }

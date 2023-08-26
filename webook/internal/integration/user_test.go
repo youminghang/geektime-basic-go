@@ -1,3 +1,5 @@
+//go:build e2e
+
 package integration
 
 import (
@@ -5,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"gitee.com/geekbang/basic-go/webook/internal/integration/startup"
 	"gitee.com/geekbang/basic-go/webook/internal/web"
 	"gitee.com/geekbang/basic-go/webook/ioc"
 	"github.com/stretchr/testify/assert"
@@ -17,7 +20,7 @@ import (
 func TestUserHandler_SendSMSLoginCode(t *testing.T) {
 	const sendSMSCodeUrl = "/users/login_sms/code/send"
 	// 使用依赖注入的 server
-	server := InitWebServer()
+	server := startup.InitWebServer()
 	rdb := ioc.InitRedis()
 	testCases := []struct {
 		// 名字

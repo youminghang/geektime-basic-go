@@ -11,6 +11,7 @@ import (
 var ErrUserDuplicateEmail = repository.ErrUserDuplicate
 var ErrInvalidUserOrPassword = errors.New("邮箱或者密码不正确")
 
+// UserService 用户相关服务
 type UserService interface {
 	Signup(ctx context.Context, u domain.User) error
 	FindOrCreate(ctx context.Context, phone string) (domain.User, error)
@@ -19,6 +20,10 @@ type UserService interface {
 	// UpdateNonSensitiveInfo 更新非敏感数据
 	// 你可以在这里进一步补充究竟哪些数据会被更新
 	UpdateNonSensitiveInfo(ctx context.Context, user domain.User) error
+
+	// FindOrCreateByWechat 查找或者初始化
+	// 随着业务增长，这边可以考虑拆分出去作为一个新的 Service
+	FindOrCreateByWechat(ctx context.Context, info domain.WechatInfo) (domain.User, error)
 }
 
 type userService struct {
@@ -87,6 +92,21 @@ func (svc *userService) Login(ctx context.Context,
 		return domain.User{}, ErrInvalidUserOrPassword
 	}
 	return u, nil
+}
+
+func (svc *userService) FindOrCreateByWechat(ctx context.Context,
+	info domain.WechatInfo) (domain.User, error) {
+	// 类似于手机号的过程，大部分人只是扫码登录，也就是数据在我们这里是有的
+	u, err := svc.repo.FindByWechat(ctx, info.OpenId)
+	if err != repository.ErrUserNotFound {
+		return u, err
+	}
+	// 要执行注册
+	err = svc.repo.Create(ctx, domain.User{
+		WechatInfo: info,
+	})
+	// 主从模式下，这里要从主库中读取，暂时我们不需要考虑
+	return svc.repo.FindByWechat(ctx, info.OpenId)
 }
 
 func (svc *userService) Profile(ctx context.Context,

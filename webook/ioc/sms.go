@@ -21,12 +21,15 @@ func initSmsTencentService() sms.Service {
 		panic("没有找到环境变量 SMS_SECRET_ID ")
 	}
 	secretKey, ok := os.LookupEnv("SMS_SECRET_KEY")
+	if !ok {
+		panic("没有找到环境变量 SMS_SECRET_KEY")
+	}
 
 	c, err := tencentSMS.NewClient(common.NewCredential(secretId, secretKey),
 		"ap-nanjing",
 		profile.NewClientProfile())
 	if err != nil {
-		panic("没有找到环境变量 SMS_SECRET_KEY")
+		panic(err)
 	}
 	return tencent.NewService(c, "1400842696", "妙影科技")
 }

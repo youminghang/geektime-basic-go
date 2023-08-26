@@ -21,6 +21,8 @@ func NewJWTLoginMiddlewareBuilder() *JWTLoginMiddlewareBuilder {
 	s.Add("/users/login_sms/code/send")
 	s.Add("/users/login_sms")
 	s.Add("/users/login")
+	s.Add("/oauth2/wechat/authurl")
+	s.Add("/oauth2/wechat/callback")
 	return &JWTLoginMiddlewareBuilder{
 		publicPaths: s,
 	}
@@ -87,7 +89,6 @@ func (j *JWTLoginMiddlewareBuilder) Build() gin.HandlerFunc {
 			} else {
 				ctx.Header("x-jwt-token", newToken)
 			}
-
 		}
 
 		// 说明 token 是合法的

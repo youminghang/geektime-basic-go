@@ -14,11 +14,12 @@ import (
 )
 
 func InitWebServer(funcs []gin.HandlerFunc,
-	userHdl *web.UserHandler) *gin.Engine {
+	userHdl *web.UserHandler, oauth2Hdl *web.OAuth2WechatHandler) *gin.Engine {
 	server := gin.Default()
 	server.Use(funcs...)
 	// 注册路由
 	userHdl.RegisterRoutes(server)
+	oauth2Hdl.RegisterRoutes(server)
 	return server
 }
 
