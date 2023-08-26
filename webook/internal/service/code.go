@@ -16,6 +16,13 @@ type CodeService struct {
 	//tplId string
 }
 
+func NewCodeService(repo *repository.CodeRepository, smsSvc sms.Service) *CodeService {
+	return &CodeService{
+		repo:   repo,
+		smsSvc: smsSvc,
+	}
+}
+
 // Send 发验证码，我需要什么参数？
 func (svc *CodeService) Send(ctx context.Context,
 	// 区别业务场景
