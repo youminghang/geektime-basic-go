@@ -10,6 +10,11 @@ import (
 
 const codeTplId = "1877556"
 
+var (
+	ErrCodeVerifyTooManyTimes = repository.ErrCodeVerifyTooManyTimes
+	ErrCodeSendTooMany        = repository.ErrCodeSendTooMany
+)
+
 type CodeService struct {
 	repo   *repository.CodeRepository
 	smsSvc sms.Service
@@ -62,7 +67,7 @@ func (svc *CodeService) generateCode() string {
 	num := rand.Intn(1000000)
 	// 不够六位的，加上前导 0
 	// 000001
-	return fmt.Sprintf("%6d", num)
+	return fmt.Sprintf("%06d", num)
 }
 
 //func (svc *CodeService) VerifyV1(ctx context.Context, biz string,
