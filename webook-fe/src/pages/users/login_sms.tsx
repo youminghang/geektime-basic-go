@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button, Form, Input } from 'antd';
 import axios from "@/axios/axios";
 import router from "next/router";
@@ -28,8 +28,27 @@ const onFinishFailed = (errorInfo: any) => {
 const LoginFormSMS: React.FC = () => {
     const [form] = Form.useForm();
 
+    // 控制发送按钮是否可用的状态
+    const [sendState, setSendState] = useState(false);
+    // 控制按钮中显示的文字
+    const [sendButton, setSendButton] = useState("发送验证码");
+
     const sendCode = () => {
-        const data = form.getFieldValue("phone")
+        const data = form.getFieldValue("phone");
+
+        setSendState(true);
+        let cnt = 60;
+        const timer = setInterval(() => {
+            cnt--;
+            if (cnt <= 0) {
+                clearInterval(timer);
+                setSendButton("发送验证码");
+                setSendState(false);
+            } else {
+                setSendButton(`倒计时:${cnt}`);
+            }
+        }, 1000);
+
         axios.post("/users/login_sms/code/send", {"phone": data} ).then((res) => {
             if(res.status != 200) {
                 alert(res.statusText);
@@ -69,7 +88,13 @@ const LoginFormSMS: React.FC = () => {
                 <Input />
             </Form.Item>
             <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-                <Button type={"default"} onClick={() => sendCode()}>发送验证码</Button>
+                <Button
+                    type={"default"}
+                    onClick={() => sendCode()}
+                    disabled={sendState}
+                >
+                    {sendButton}
+                </Button>
             </Form.Item>
 
             <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
