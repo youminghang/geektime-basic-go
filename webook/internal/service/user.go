@@ -24,11 +24,19 @@ type userService struct {
 	repo repository.UserRepository
 }
 
+// NewUserService 我用的人，只管用，怎么初始化我不管，我一点都不关心如何初始化
 func NewUserService(repo repository.UserRepository) UserService {
 	return &userService{
 		repo: repo,
 	}
 }
+
+//func NewUserServiceV1(f repository.UserRepositoryFactory) UserService {
+//	return &userService{
+//		// 我在这里，不同的 factory，会创建出来不同实现
+//		repo: f.NewRepo(),
+//	}
+//}
 
 func (svc *userService) Login(ctx context.Context, email, password string) (domain.User, error) {
 	// 先找用户
