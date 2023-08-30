@@ -91,5 +91,7 @@ func (svc *userService) Login(ctx context.Context,
 
 func (svc *userService) Profile(ctx context.Context,
 	id int64) (domain.User, error) {
+	// 在系统内部，基本上都是用 ID 的。
+	// 有些人的系统比较复杂，有一个 GUID（global unique ID）
 	return svc.repo.FindById(ctx, id)
 }

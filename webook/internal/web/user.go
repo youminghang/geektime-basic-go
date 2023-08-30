@@ -259,6 +259,7 @@ func (c *UserHandler) Edit(ctx *gin.Context) {
 		// 邮箱和手机都要验证
 		// 密码更加不用多说了
 		Nickname string `json:"nickname"`
+		// 2023-01-01
 		Birthday string `json:"birthday"`
 		AboutMe  string `json:"aboutMe"`
 	}
