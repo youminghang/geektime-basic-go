@@ -6,7 +6,6 @@ import (
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"time"
 )
@@ -202,25 +201,6 @@ func (c *UserHandler) LoginJWT(ctx *gin.Context) {
 		return
 	}
 	ctx.String(http.StatusOK, "登录成功")
-}
-
-func (c *UserHandler) setJWTToken(ctx *gin.Context, uid int64) error {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, UserClaims{
-		Id:        uid,
-		UserAgent: ctx.GetHeader("User-Agent"),
-		RegisteredClaims: jwt.RegisteredClaims{
-			// 演示目的设置为一分钟过期
-			//ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
-			// 在压测的时候，要将过期时间设置更长一些
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * 30)),
-		},
-	})
-	tokenStr, err := token.SignedString(JWTKey)
-	if err != nil {
-		return err
-	}
-	ctx.Header("x-jwt-token", tokenStr)
-	return nil
 }
 
 // Login 用户登录接口

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
-	uuid "github.com/lithammer/shortuuid/v4"
 	"golang.org/x/net/context"
 	"net/http"
 	"net/url"
@@ -29,8 +28,7 @@ func NewService(appId, appSecret string) Service {
 	}
 }
 
-func (s *service) VerifyCode(ctx context.Context, code string,
-	state string) (domain.WechatInfo, error) {
+func (s *service) VerifyCode(ctx context.Context, code string) (domain.WechatInfo, error) {
 	const baseURL = "https://api.weixin.qq.com/sns/oauth2/access_token"
 	// 这是另外一种写法
 	queryParams := url.Values{}
@@ -64,8 +62,7 @@ func (s *service) VerifyCode(ctx context.Context, code string,
 	}, nil
 }
 
-func (s *service) AuthURL(ctx context.Context) (string, error) {
-	state := uuid.New()
+func (s *service) AuthURL(ctx context.Context, state string) (string, error) {
 	return fmt.Sprintf(authURLPattern, s.appId, redirectURL, state), nil
 }
 

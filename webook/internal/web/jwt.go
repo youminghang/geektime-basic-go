@@ -40,3 +40,8 @@ func (h *jwtHandler) setJWTToken(ctx *gin.Context, uid int64) error {
 	ctx.Header("x-jwt-token", tokenStr)
 	return nil
 }
+
+type StateClaims struct {
+	State string
+	jwt.RegisteredClaims
+}
