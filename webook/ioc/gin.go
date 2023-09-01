@@ -42,8 +42,8 @@ func corsHandler() gin.HandlerFunc {
 		AllowCredentials: true,
 		// 在使用 JWT 的时候，因为我们使用了 Authorization 的头部，所以要加上
 		AllowHeaders: []string{"Content-Type", "Authorization"},
-		// 为了 JWT
-		ExposeHeaders: []string{"X-Jwt-Token"},
+		// 为了 JWT，长短 token 的设置
+		ExposeHeaders: []string{"X-Jwt-Token", "X-Refresh-Token"},
 		AllowOriginFunc: func(origin string) bool {
 			if strings.HasPrefix(origin, "http://localhost") {
 				return true

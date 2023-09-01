@@ -81,6 +81,14 @@ func (h *OAuth2WechatHandler) Callback(ctx *gin.Context) {
 		})
 		return
 	}
+	err = h.setRefreshToken(ctx, u.Id)
+	if err != nil {
+		ctx.JSON(http.StatusOK, Result{
+			Code: 5,
+			Msg:  "系统错误",
+		})
+		return
+	}
 	ctx.JSON(http.StatusOK, Result{
 		Msg: "登录成功",
 	})
@@ -95,7 +103,7 @@ func (h *OAuth2WechatHandler) verifyState(ctx *gin.Context) error {
 	}
 	var sc StateClaims
 	_, err = jwt.ParseWithClaims(ck, &sc, func(token *jwt.Token) (interface{}, error) {
-		return JWTKey, nil
+		return AccessTokenKey, nil
 	})
 	if err != nil {
 		return fmt.Errorf("%w, cookie 不是合法 JWT token", err)
@@ -136,7 +144,7 @@ func (h *OAuth2WechatHandler) setStateCookie(ctx *gin.Context, state string) err
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, StateClaims{
 		State: state,
 	})
-	tokenStr, err := token.SignedString(JWTKey)
+	tokenStr, err := token.SignedString(AccessTokenKey)
 	if err != nil {
 		return err
 	}

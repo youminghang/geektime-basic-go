@@ -6,6 +6,7 @@ import (
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"time"
 )
@@ -58,6 +59,31 @@ func (c *UserHandler) RegisterRoutes(server *gin.Engine) {
 	ug.GET("/profile", c.ProfileJWT)
 	ug.POST("/login_sms/code/send", c.SendSMSLoginCode)
 	ug.POST("/login_sms", c.LoginSMS)
+	ug.POST("/refresh_token", c.RefreshToken)
+}
+
+func (c *UserHandler) RefreshToken(ctx *gin.Context) {
+	// 假定长 token 也放在这里
+	tokenStr := ExtractToken(ctx)
+	var rc RefreshClaims
+	token, err := jwt.ParseWithClaims(tokenStr, &rc, func(token *jwt.Token) (interface{}, error) {
+		return refreshTokenKey, nil
+	})
+	// 这边要保持和登录校验一直的逻辑，即返回 401 响应
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, Result{Code: 4, Msg: "请登录"})
+		return
+	}
+	if token == nil || !token.Valid {
+		ctx.JSON(http.StatusUnauthorized, Result{Code: 4, Msg: "请登录"})
+		return
+	}
+	err = c.setJWTToken(ctx, rc.uid)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, Result{Code: 4, Msg: "请登录"})
+		return
+	}
+	ctx.JSON(http.StatusOK, Result{Msg: "刷新成功"})
 }
 
 func (c *UserHandler) LoginSMS(ctx *gin.Context) {
@@ -119,9 +145,6 @@ func (c *UserHandler) SendSMSLoginCode(ctx *gin.Context) {
 		// 要打印日志
 		return
 	}
-}
-
-func (c *UserHandler) WechatAuthUrl(ctx *gin.Context) {
 }
 
 // SignUp 用户注册接口
@@ -196,6 +219,11 @@ func (c *UserHandler) LoginJWT(ctx *gin.Context) {
 		return
 	}
 	err = c.setJWTToken(ctx, u.Id)
+	if err != nil {
+		ctx.String(http.StatusOK, "系统异常")
+		return
+	}
+	err = c.setRefreshToken(ctx, u.Id)
 	if err != nil {
 		ctx.String(http.StatusOK, "系统异常")
 		return
