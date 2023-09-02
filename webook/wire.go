@@ -8,6 +8,7 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	"gitee.com/geekbang/basic-go/webook/internal/web"
+	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"gitee.com/geekbang/basic-go/webook/ioc"
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
@@ -34,6 +35,7 @@ func InitWebServer() *gin.Engine {
 		service.NewUserService,
 
 		// handler 部分
+		ijwt.NewRedisHandler,
 		web.NewUserHandler,
 		web.NewOAuth2WechatHandler,
 

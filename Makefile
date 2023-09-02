@@ -3,6 +3,7 @@
 # 要注意文件分隔符使用 Windows 的分隔符。
 .PHONY: mock
 mock:
+	@mockgen -source=./webook/internal/web/jwt/types.go -package=jwtmocks -destination=./webook/internal/web/jwt/mocks/handler.mock.go
 	@mockgen -source=./webook/internal/service/user.go -package=svcmocks -destination=./webook/internal/service/mocks/user.mock.go
 	@mockgen -source=./webook/internal/service/code.go -package=svcmocks -destination=./webook/internal/service/mocks/code.mock.go
 	@mockgen -source=./webook/internal/service/sms/types.go -package=smsmocks -destination=./webook/internal/service/sms/mocks/svc.mock.go

@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"gitee.com/geekbang/basic-go/webook/internal/web"
+	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"github.com/ecodeclub/ekit/set"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -11,9 +11,10 @@ import (
 
 type JWTLoginMiddlewareBuilder struct {
 	publicPaths set.Set[string]
+	ijwt.Handler
 }
 
-func NewJWTLoginMiddlewareBuilder() *JWTLoginMiddlewareBuilder {
+func NewJWTLoginMiddlewareBuilder(hdl ijwt.Handler) *JWTLoginMiddlewareBuilder {
 	s := set.NewMapSet[string](3)
 	s.Add("/users/signup")
 	s.Add("/users/login_sms/code/send")
@@ -24,6 +25,7 @@ func NewJWTLoginMiddlewareBuilder() *JWTLoginMiddlewareBuilder {
 	s.Add("/oauth2/wechat/callback")
 	return &JWTLoginMiddlewareBuilder{
 		publicPaths: s,
+		Handler:     hdl,
 	}
 }
 func (j *JWTLoginMiddlewareBuilder) Build() gin.HandlerFunc {
@@ -33,10 +35,10 @@ func (j *JWTLoginMiddlewareBuilder) Build() gin.HandlerFunc {
 			return
 		}
 		// 如果是空字符串，你可以预期后面 Parse 就会报错
-		tokenStr := web.ExtractToken(ctx)
-		uc := web.UserClaims{}
+		tokenStr := j.ExtractTokenString(ctx)
+		uc := ijwt.UserClaims{}
 		token, err := jwt.ParseWithClaims(tokenStr, &uc, func(token *jwt.Token) (interface{}, error) {
-			return web.AccessTokenKey, nil
+			return ijwt.AccessTokenKey, nil
 		})
 		if err != nil || !token.Valid {
 			// 不正确的 token
@@ -61,18 +63,15 @@ func (j *JWTLoginMiddlewareBuilder) Build() gin.HandlerFunc {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
-		// 每 10 秒刷新一次
-		//if expireTime.Sub(time.Now()) < time.Second*50 {
-		//	uc.ExpiresAt = jwt.NewNumericDate(time.Now().Add(time.Minute))
-		//	newToken, err := token.SignedString(web.AccessTokenKey)
-		//	if err != nil {
-		//		// 因为刷新这个事情，并不是一定要做的，所以这里可以考虑打印日志
-		//		// 暂时这样打印
-		//		log.Println(err)
-		//	} else {
-		//		ctx.Header("x-jwt-token", newToken)
-		//	}
-		//}
+
+		err = j.CheckSession(ctx, uc.Ssid)
+		if err != nil {
+			// 系统错误或者用户已经主动退出登录了
+			// 这里也可以考虑说，如果在 Redis 已经崩溃的时候，
+			// 就不要去校验是不是已经主动退出登录了。
+			ctx.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
 
 		// 说明 token 是合法的
 		// 我们把这个 token 里面的数据放到 ctx 里面，后面用的时候就不用再次 Parse 了

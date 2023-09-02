@@ -2,6 +2,7 @@ package ioc
 
 import (
 	"gitee.com/geekbang/basic-go/webook/internal/web"
+	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"gitee.com/geekbang/basic-go/webook/internal/web/middleware"
 	"gitee.com/geekbang/basic-go/webook/pkg/ginx/middleware/ratelimit"
 	"github.com/gin-contrib/cors"
@@ -23,13 +24,13 @@ func InitWebServer(funcs []gin.HandlerFunc,
 	return server
 }
 
-func GinMiddlewares(cmd redis.Cmdable) []gin.HandlerFunc {
+func GinMiddlewares(cmd redis.Cmdable, hdl ijwt.Handler) []gin.HandlerFunc {
 	return []gin.HandlerFunc{
 		ratelimit.NewBuilder(cmd, time.Minute, 100).Build(),
 		corsHandler(),
 
 		// 使用 JWT
-		middleware.NewJWTLoginMiddlewareBuilder().Build(),
+		middleware.NewJWTLoginMiddlewareBuilder(hdl).Build(),
 
 		// 使用session 登录校验
 		//sessionHandlerFunc(),

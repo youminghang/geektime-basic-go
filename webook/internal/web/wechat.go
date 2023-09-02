@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	"gitee.com/geekbang/basic-go/webook/internal/service/oauth2/wechat"
+	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	uuid "github.com/lithammer/shortuuid/v4"
@@ -19,16 +20,20 @@ type OAuth2WechatHandler struct {
 	wechatSvc       wechat.Service
 	userSvc         service.UserService
 	stateCookieName string
-	jwtHandler
+	stateTokenKey   []byte
+	ijwt.Handler
 }
 
 func NewOAuth2WechatHandler(service wechat.Service,
-	userSvc service.UserService) *OAuth2WechatHandler {
+	userSvc service.UserService,
+	jwthdl ijwt.Handler) *OAuth2WechatHandler {
 	return &OAuth2WechatHandler{
 		wechatSvc: service,
 		userSvc:   userSvc,
 		// 万一后续我们要改，也可以做成可配置的。
 		stateCookieName: "jwt-state",
+		stateTokenKey:   []byte("moyn8y9abnd7q4zkq2m73yw8tu9j5ixB"),
+		Handler:         jwthdl,
 	}
 }
 
@@ -73,15 +78,7 @@ func (h *OAuth2WechatHandler) Callback(ctx *gin.Context) {
 		})
 		return
 	}
-	err = h.setJWTToken(ctx, u.Id)
-	if err != nil {
-		ctx.JSON(http.StatusOK, Result{
-			Code: 5,
-			Msg:  "系统错误",
-		})
-		return
-	}
-	err = h.setRefreshToken(ctx, u.Id)
+	err = h.SetLoginToken(ctx, u.Id)
 	if err != nil {
 		ctx.JSON(http.StatusOK, Result{
 			Code: 5,
@@ -103,7 +100,7 @@ func (h *OAuth2WechatHandler) verifyState(ctx *gin.Context) error {
 	}
 	var sc StateClaims
 	_, err = jwt.ParseWithClaims(ck, &sc, func(token *jwt.Token) (interface{}, error) {
-		return AccessTokenKey, nil
+		return h.stateTokenKey, nil
 	})
 	if err != nil {
 		return fmt.Errorf("%w, cookie 不是合法 JWT token", err)
@@ -144,7 +141,7 @@ func (h *OAuth2WechatHandler) setStateCookie(ctx *gin.Context, state string) err
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, StateClaims{
 		State: state,
 	})
-	tokenStr, err := token.SignedString(AccessTokenKey)
+	tokenStr, err := token.SignedString(h.stateTokenKey)
 	if err != nil {
 		return err
 	}
@@ -155,4 +152,9 @@ func (h *OAuth2WechatHandler) setStateCookie(ctx *gin.Context, state string) err
 		// 这边把 HTTPS 协议禁止了。不过在生产环境中要开启。
 		"", false, true)
 	return nil
+}
+
+type StateClaims struct {
+	State string
+	jwt.RegisteredClaims
 }
