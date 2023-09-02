@@ -26,6 +26,7 @@ type UserRepository interface {
 type CachedUserRepository struct {
 	dao   dao.UserDAO
 	cache cache.UserCache
+	//testSignal chan struct{}
 }
 
 func NewUserRepository(dao dao.UserDAO, c cache.UserCache) UserRepository {
@@ -74,15 +75,17 @@ func (r *CachedUserRepository) FindById(ctx context.Context, id int64) (domain.U
 
 	u = r.entityToDomain(ue)
 
+	//if err != nil {
+	// 我这里怎么办？
+	// 打日志，做监控
+	//return domain.User{}, err
+	//}
+
 	go func() {
-		err = r.cache.Set(ctx, u)
-		if err != nil {
-			// 我这里怎么办？
-			// 打日志，做监控
-			//return domain.User{}, err
-		}
+		_ = r.cache.Set(ctx, u)
+		//r.testSignal <- struct{}{}
 	}()
-	return u, err
+	return u, nil
 
 	// 这里怎么办？ err = io.EOF
 	// 要不要去数据库加载？
