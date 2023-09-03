@@ -29,7 +29,7 @@ func TestRatelimitSMSService_Send(t *testing.T) {
 				svc := smsmocks.NewMockService(ctrl)
 				limiter := limitmocks.NewMockLimiter(ctrl)
 				limiter.EXPECT().Limit(gomock.Any(), gomock.Any()).
-					Return(true, nil)
+					Return(false, nil)
 				svc.EXPECT().Send(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 				return svc, limiter
@@ -41,7 +41,7 @@ func TestRatelimitSMSService_Send(t *testing.T) {
 				svc := smsmocks.NewMockService(ctrl)
 				limiter := limitmocks.NewMockLimiter(ctrl)
 				limiter.EXPECT().Limit(gomock.Any(), gomock.Any()).
-					Return(false, nil)
+					Return(true, nil)
 				return svc, limiter
 			},
 			wantErr: errors.New("短信服务触发限流"),

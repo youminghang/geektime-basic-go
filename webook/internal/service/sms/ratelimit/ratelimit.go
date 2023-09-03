@@ -30,7 +30,7 @@ func (r *RatelimitSMSService) Send(ctx context.Context, tplId string, args []str
 	if err != nil {
 		return fmt.Errorf("短信服务判断是否限流异常 %w", err)
 	}
-	if !limited {
+	if limited {
 		return errLimited
 	}
 	// 最终业务逻辑交给了被装饰实现
