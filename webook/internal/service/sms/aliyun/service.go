@@ -29,7 +29,6 @@ func NewService(client *sms.Client) *Service {
 
 // SendSms 单次
 func (s *Service) SendSms(ctx context.Context, signName, tplCode string, phone []string) error {
-
 	phoneLen := len(phone)
 
 	// phone1 phone2

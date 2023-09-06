@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	mysms "gitee.com/geekbang/basic-go/webook/internal/service/sms"
+	"gitee.com/geekbang/basic-go/webook/pkg/ratelimit"
 	"github.com/ecodeclub/ekit"
 	"github.com/ecodeclub/ekit/slice"
 	sms "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms/v20210111"
@@ -13,20 +14,23 @@ type Service struct {
 	appId    *string
 	signName *string
 	client   *sms.Client
+	limiter  ratelimit.Limiter
 }
 
-func NewService(client *sms.Client, appId string, signName string) *Service {
+func NewService(client *sms.Client, appId string,
+	signName string, limiter ratelimit.Limiter) *Service {
 	return &Service{
 		client:   client,
 		appId:    ekit.ToPtr[string](appId),
 		signName: ekit.ToPtr[string](signName),
+		limiter:  limiter,
 	}
 }
 
-// 一个是 []*string
+// Send 一个是 []*string
 // 一个是 string，json 串
-
-func (s *Service) Send(ctx context.Context, tplId string, args []string, numbers ...string) error {
+func (s *Service) Send(ctx context.Context,
+	tplId string, args []string, numbers ...string) error {
 	req := sms.NewSendSmsRequest()
 	req.SmsSdkAppId = s.appId
 	req.SignName = s.signName
