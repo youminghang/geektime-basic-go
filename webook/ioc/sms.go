@@ -16,6 +16,7 @@ func InitSmsService() sms.Service {
 }
 
 func initSmsTencentService() sms.Service {
+	// 在这里你也可以考虑从配置文件里面读取
 	secretId, ok := os.LookupEnv("SMS_SECRET_ID")
 	if !ok {
 		panic("没有找到环境变量 SMS_SECRET_ID ")
