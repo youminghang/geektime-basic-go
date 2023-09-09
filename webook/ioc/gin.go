@@ -2,6 +2,7 @@ package ioc
 
 import (
 	"gitee.com/geekbang/basic-go/webook/internal/web"
+	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"gitee.com/geekbang/basic-go/webook/internal/web/middleware"
 	"gitee.com/geekbang/basic-go/webook/pkg/ginx/middleware/ratelimit"
 	"github.com/gin-contrib/cors"
@@ -14,21 +15,22 @@ import (
 )
 
 func InitWebServer(funcs []gin.HandlerFunc,
-	userHdl *web.UserHandler) *gin.Engine {
+	userHdl *web.UserHandler, oauth2Hdl *web.OAuth2WechatHandler) *gin.Engine {
 	server := gin.Default()
 	server.Use(funcs...)
 	// 注册路由
 	userHdl.RegisterRoutes(server)
+	oauth2Hdl.RegisterRoutes(server)
 	return server
 }
 
-func GinMiddlewares(cmd redis.Cmdable) []gin.HandlerFunc {
+func GinMiddlewares(cmd redis.Cmdable, hdl ijwt.Handler) []gin.HandlerFunc {
 	return []gin.HandlerFunc{
 		ratelimit.NewBuilder(cmd, time.Minute, 100).Build(),
 		corsHandler(),
 
 		// 使用 JWT
-		middleware.NewJWTLoginMiddlewareBuilder().Build(),
+		middleware.NewJWTLoginMiddlewareBuilder(hdl).Build(),
 
 		// 使用session 登录校验
 		//sessionHandlerFunc(),
@@ -41,8 +43,8 @@ func corsHandler() gin.HandlerFunc {
 		AllowCredentials: true,
 		// 在使用 JWT 的时候，因为我们使用了 Authorization 的头部，所以要加上
 		AllowHeaders: []string{"Content-Type", "Authorization"},
-		// 为了 JWT
-		ExposeHeaders: []string{"X-Jwt-Token"},
+		// 为了 JWT，长短 token 的设置
+		ExposeHeaders: []string{"X-Jwt-Token", "X-Refresh-Token"},
 		AllowOriginFunc: func(origin string) bool {
 			if strings.HasPrefix(origin, "http://localhost") {
 				return true

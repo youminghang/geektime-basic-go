@@ -8,6 +8,7 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	"gitee.com/geekbang/basic-go/webook/internal/web"
+	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"gitee.com/geekbang/basic-go/webook/ioc"
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
@@ -29,11 +30,14 @@ func InitWebServer() *gin.Engine {
 
 		// service 部分
 		ioc.InitSmsService,
+		ioc.InitWechatService,
 		service.NewSMSCodeService,
 		service.NewUserService,
 
 		// handler 部分
+		ijwt.NewRedisHandler,
 		web.NewUserHandler,
+		web.NewOAuth2WechatHandler,
 
 		// gin 的中间件
 		ioc.GinMiddlewares,

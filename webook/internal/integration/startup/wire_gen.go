@@ -4,7 +4,7 @@
 //go:build !wireinject
 // +build !wireinject
 
-package integration
+package startup
 
 import (
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
@@ -14,6 +14,7 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/web"
 	"gitee.com/geekbang/basic-go/webook/ioc"
 	"github.com/gin-gonic/gin"
+	"github.com/google/wire"
 )
 
 // Injectors from wire.go:
@@ -31,6 +32,26 @@ func InitWebServer() *gin.Engine {
 	codeRepository := repository.NewCachedCodeRepository(codeCache)
 	codeService := service.NewSMSCodeService(smsService, codeRepository)
 	userHandler := web.NewUserHandler(userService, codeService)
-	engine := ioc.InitWebServer(v, userHandler)
+	wechatService := InitPhantomWechatService()
+	oAuth2WechatHandler := web.NewOAuth2WechatHandler(wechatService, userService)
+	engine := ioc.InitWebServer(v, userHandler, oAuth2WechatHandler)
 	return engine
 }
+
+func InitUserSvc() service.UserService {
+	db := ioc.InitDB()
+	userDAO := dao.NewGORMUserDAO(db)
+	cmdable := ioc.InitRedis()
+	userCache := cache.NewRedisUserCache(cmdable)
+	userRepository := repository.NewCachedUserRepository(userDAO, userCache)
+	userService := service.NewUserService(userRepository)
+	return userService
+}
+
+// wire.go:
+
+var thirdProvider = wire.NewSet(ioc.InitRedis, ioc.InitDB)
+
+var userSvcProvider = wire.NewSet(
+	thirdProvider, dao.NewGORMUserDAO, cache.NewRedisUserCache, repository.NewCachedUserRepository, service.NewUserService,
+)

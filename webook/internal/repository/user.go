@@ -19,6 +19,9 @@ type UserRepository interface {
 	FindByPhone(ctx context.Context, phone string) (domain.User, error)
 	FindByEmail(ctx context.Context, email string) (domain.User, error)
 	FindById(ctx context.Context, id int64) (domain.User, error)
+	// FindByWechat 暂时可以认为按照 openId来查询
+	// 将来可能需要按照 unionId 来查询
+	FindByWechat(ctx context.Context, openId string) (domain.User, error)
 }
 
 // CachedUserRepository 使用了缓存的 repository 实现
@@ -56,6 +59,14 @@ func (ur *CachedUserRepository) Create(ctx context.Context, u domain.User) error
 			Valid:  u.Phone != "",
 		},
 		Password: u.Password,
+		WechatUnionId: sql.NullString{
+			String: u.WechatInfo.UnionId,
+			Valid:  u.WechatInfo.UnionId != "",
+		},
+		WechatOpenId: sql.NullString{
+			String: u.WechatInfo.OpenId,
+			Valid:  u.WechatInfo.OpenId != "",
+		},
 	})
 }
 
@@ -68,6 +79,12 @@ func (ur *CachedUserRepository) FindByPhone(ctx context.Context,
 func (ur *CachedUserRepository) FindByEmail(ctx context.Context,
 	email string) (domain.User, error) {
 	u, err := ur.dao.FindByEmail(ctx, email)
+	return ur.entityToDomain(u), err
+}
+
+func (ur *CachedUserRepository) FindByWechat(ctx context.Context,
+	openId string) (domain.User, error) {
+	u, err := ur.dao.FindByWechat(ctx, openId)
 	return ur.entityToDomain(u), err
 }
 
@@ -149,5 +166,9 @@ func (ur *CachedUserRepository) entityToDomain(ue dao.User) domain.User {
 		AboutMe:  ue.AboutMe.String,
 		Birthday: birthday,
 		Ctime:    time.UnixMilli(ue.Ctime),
+		WechatInfo: domain.WechatInfo{
+			OpenId:  ue.WechatOpenId.String,
+			UnionId: ue.WechatUnionId.String,
+		},
 	}
 }

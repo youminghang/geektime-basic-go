@@ -20,6 +20,7 @@ type UserDAO interface {
 	UpdateNonZeroFields(ctx context.Context, u User) error
 	FindByPhone(ctx context.Context, phone string) (User, error)
 	FindByEmail(ctx context.Context, email string) (User, error)
+	FindByWechat(ctx context.Context, openId string) (User, error)
 	FindById(ctx context.Context, id int64) (User, error)
 }
 
@@ -68,6 +69,12 @@ func (ud *GORMUserDAO) FindByEmail(ctx context.Context, email string) (User, err
 	return u, err
 }
 
+func (ud *GORMUserDAO) FindByWechat(ctx context.Context, openId string) (User, error) {
+	var u User
+	err := ud.db.WithContext(ctx).First(&u, "wechat_open_id = ?", openId).Error
+	return u, err
+}
+
 func (ud *GORMUserDAO) FindById(ctx context.Context, id int64) (User, error) {
 	var u User
 	err := ud.db.WithContext(ctx).First(&u, "id = ?", id).Error
@@ -97,6 +104,12 @@ type User struct {
 	// 指定是 varchar 这个类型，并且长度是 1024
 	// 因此你可以看到在 web 里面有这个校验
 	AboutMe sql.NullString `gorm:"type=varchar(1024)"`
+
+	// 微信有关数据。有些公司会尝试把这些数据分离出去做一个单独的表
+	// 从而避免这个表有过多的列，但是暂时来说
+	// 我们还没到这个地步
+	WechatOpenId  sql.NullString
+	WechatUnionId sql.NullString
 
 	// 创建时间
 	Ctime int64
