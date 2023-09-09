@@ -6,6 +6,7 @@ import (
 	"github.com/ecodeclub/ekit"
 	"github.com/ecodeclub/ekit/slice"
 	sms "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms/v20210111"
+	"go.uber.org/zap"
 )
 
 type Service struct {
@@ -34,6 +35,9 @@ func (s *Service) Send(ctx context.Context, tplId string,
 	req.TemplateId = ekit.ToPtr[string](tplId)
 	req.SignName = s.signName
 	resp, err := s.client.SendSms(req)
+	zap.L().Debug("调用腾讯短信服务",
+		zap.Any("req", req),
+		zap.Any("resp", resp))
 	if err != nil {
 		return err
 	}

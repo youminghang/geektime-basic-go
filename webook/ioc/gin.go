@@ -1,10 +1,13 @@
 package ioc
 
 import (
+	"context"
 	"gitee.com/geekbang/basic-go/webook/internal/web"
 	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"gitee.com/geekbang/basic-go/webook/internal/web/middleware"
+	"gitee.com/geekbang/basic-go/webook/pkg/ginx/middleware/accesslog"
 	"gitee.com/geekbang/basic-go/webook/pkg/ginx/middleware/ratelimit"
+	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/memstore"
@@ -24,14 +27,21 @@ func InitWebServer(funcs []gin.HandlerFunc,
 	return server
 }
 
-func GinMiddlewares(cmd redis.Cmdable, hdl ijwt.Handler) []gin.HandlerFunc {
+func GinMiddlewares(cmd redis.Cmdable,
+	hdl ijwt.Handler, l logger.LoggerV1) []gin.HandlerFunc {
 	return []gin.HandlerFunc{
 		ratelimit.NewBuilder(cmd, time.Minute, 100).Build(),
 		corsHandler(),
 
 		// 使用 JWT
 		middleware.NewJWTLoginMiddlewareBuilder(hdl).Build(),
-
+		accesslog.NewMiddlewareBuilder(func(ctx context.Context, al accesslog.AccessLog) {
+			// 设置为 DEBUG 级别
+			l.Debug("GIN 收到请求", logger.Field{
+				Key:   "req",
+				Value: al,
+			})
+		}).AllowReqBody().AllowRespBody().Build(),
 		// 使用session 登录校验
 		//sessionHandlerFunc(),
 		//middleware.NewLoginMiddlewareBuilder().CheckLogin(),

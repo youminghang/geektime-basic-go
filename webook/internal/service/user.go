@@ -5,6 +5,7 @@ import (
 	"errors"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -27,12 +28,14 @@ type UserService interface {
 }
 
 type userService struct {
-	repo repository.UserRepository
+	repo   repository.UserRepository
+	logger *zap.Logger
 }
 
 func NewUserService(repo repository.UserRepository) UserService {
 	return &userService{
-		repo: repo,
+		repo:   repo,
+		logger: zap.L(),
 	}
 }
 
@@ -69,6 +72,7 @@ func (svc *userService) FindOrCreate(ctx context.Context,
 	if err != repository.ErrUserNotFound {
 		return u, err
 	}
+
 	// 要执行注册
 	err = svc.repo.Create(ctx, domain.User{
 		Phone: phone,
@@ -101,6 +105,18 @@ func (svc *userService) FindOrCreateByWechat(ctx context.Context,
 	if err != repository.ErrUserNotFound {
 		return u, err
 	}
+	// 直接使用包变量
+	//zap.L().Info("微信用户未注册，注册新用户",
+	//	zap.Any("wechat_info", info))
+
+	// 使用注入的 logger
+	//svc.logger.Info("微信用户未注册，注册新用户",
+	//	zap.Any("wechat_info", info))
+
+	// 自定义的 logger
+	//logger.Logger.Info("微信用户未注册，注册新用户",
+	//	zap.Any("wechat_info", info))
+
 	// 要执行注册
 	err = svc.repo.Create(ctx, domain.User{
 		WechatInfo: info,

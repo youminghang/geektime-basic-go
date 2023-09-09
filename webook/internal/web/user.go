@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
@@ -109,6 +110,7 @@ func (c *UserHandler) LoginSMS(ctx *gin.Context) {
 	ok, err := c.codeSvc.Verify(ctx, bizLogin, req.Phone, req.Code)
 	if err != nil {
 		ctx.JSON(http.StatusOK, Result{Code: 5, Msg: "系统异常"})
+		zap.L().Error("用户手机号码登录失败", zap.Error(err))
 		return
 	}
 	if !ok {
@@ -153,6 +155,7 @@ func (c *UserHandler) SendSMSLoginCode(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, Result{Msg: "发送成功"})
 	case service.ErrCodeSendTooMany:
 		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "短信发送太频繁，请稍后再试"})
+		zap.L().Warn("短信发送太频繁")
 	default:
 		ctx.JSON(http.StatusOK, Result{Code: 5, Msg: "系统错误"})
 		// 要打印日志
