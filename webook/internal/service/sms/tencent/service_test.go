@@ -6,6 +6,7 @@ import (
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	sms "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms/v20210111"
+	"go.uber.org/zap"
 	"os"
 	"testing"
 )
@@ -38,9 +39,11 @@ func TestSender(t *testing.T) {
 			tplId:  "1877556",
 			params: []string{"123456"},
 			// 改成你的手机号码
-			numbers: []string{""},
+			numbers: []string{"15261892580"},
 		},
 	}
+	logger, _ := zap.NewDevelopment()
+	zap.ReplaceGlobals(logger)
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			er := s.Send(context.Background(), tc.tplId, tc.params, tc.numbers...)
