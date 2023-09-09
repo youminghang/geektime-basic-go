@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	_ "github.com/spf13/viper/remote"
+	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
@@ -16,12 +17,23 @@ func main() {
 	// 注意，要在 Goland 里面把对应的 work director 设置到 webook
 	// 要把配置初始化放在最前面
 	initViperV2Watch()
+	initLogger()
 	server := InitWebServer()
 	// 注册路由
 	server.GET("/hello", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "hello, world")
 	})
 	server.Run(":8080")
+}
+
+func initLogger() {
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		panic(err)
+	}
+	// 设置了全局的 logger，
+	// 你在你的代码里面就可以直接使用 zap.XXX 来记录日志
+	zap.ReplaceGlobals(logger)
 }
 
 func initViper() {
