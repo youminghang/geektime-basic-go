@@ -19,6 +19,7 @@ type UserDAO interface {
 	FindById(ctx context.Context, id int64) (User, error)
 	FindByPhone(ctx context.Context, phone string) (User, error)
 	Insert(ctx context.Context, u User) error
+	FindByWechat(ctx context.Context, openID string) (User, error)
 }
 
 type GORMUserDAO struct {
@@ -29,6 +30,13 @@ func NewUserDAO(db *gorm.DB) UserDAO {
 	return &GORMUserDAO{
 		db: db,
 	}
+}
+
+func (dao *GORMUserDAO) FindByWechat(ctx context.Context, openID string) (User, error) {
+	var u User
+	err := dao.db.WithContext(ctx).Where("wechat_open_id = ?", openID).First(&u).Error
+	//err := dao.db.WithContext(ctx).First(&u, "email = ?", email).Error
+	return u, err
 }
 
 func (dao *GORMUserDAO) FindByEmail(ctx context.Context, email string) (User, error) {
@@ -83,6 +91,21 @@ type User struct {
 	//Phone *string
 
 	// 往这面加
+
+	// 索引的最左匹配原则：
+	// 假如索引在 <A, B, C> 建好了
+	// A, AB, ABC 都能用
+	// WHERE A =?
+	// WHERE A = ? AND B =?    WHERE B = ? AND A =?
+	// WHERE A = ? AND B = ? AND C = ?  ABC 的顺序随便换
+	// WHERE 里面带了 ABC，可以用
+	// WHERE 里面，没有 A，就不能用
+
+	// 如果要创建联合索引，<unionid, openid>，用 openid 查询的时候不会走索引
+	// <openid, unionid> 用 unionid 查询的时候，不会走索引
+	// 微信的字段
+	WechatUnionID sql.NullString
+	WechatOpenID  sql.NullString `gorm:"unique"`
 
 	// 创建时间，毫秒数
 	Ctime int64

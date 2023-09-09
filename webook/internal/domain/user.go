@@ -11,7 +11,10 @@ type User struct {
 	Email    string
 	Password string
 	Phone    string
-	Ctime    time.Time
+
+	// 不要组合，万一你将来可能还有 DingDingInfo，里面有同名字段 UnionID
+	WechatInfo WechatInfo
+	Ctime      time.Time
 }
 
 //type Address struct {

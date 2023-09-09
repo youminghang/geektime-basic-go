@@ -11,3 +11,8 @@ func InitRedis() redis.Cmdable {
 	})
 	return redisClient
 }
+
+//
+//func NewRateLimiter() redis.Limiter {
+//
+//}

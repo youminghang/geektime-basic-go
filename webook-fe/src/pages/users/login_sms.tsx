@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Button, Form, Input } from 'antd';
 import axios from "@/axios/axios";
 import router from "next/router";
@@ -28,27 +28,8 @@ const onFinishFailed = (errorInfo: any) => {
 const LoginFormSMS: React.FC = () => {
     const [form] = Form.useForm();
 
-    // 控制发送按钮是否可用的状态
-    const [sendState, setSendState] = useState(false);
-    // 控制按钮中显示的文字
-    const [sendButton, setSendButton] = useState("发送验证码");
-
     const sendCode = () => {
-        const data = form.getFieldValue("phone");
-
-        setSendState(true);
-        let cnt = 60;
-        const timer = setInterval(() => {
-            cnt--;
-            if (cnt <= 0) {
-                clearInterval(timer);
-                setSendButton("发送验证码");
-                setSendState(false);
-            } else {
-                setSendButton(`倒计时:${cnt}`);
-            }
-        }, 1000);
-
+        const data = form.getFieldValue("phone")
         axios.post("/users/login_sms/code/send", {"phone": data} ).then((res) => {
             if(res.status != 200) {
                 alert(res.statusText);
@@ -61,48 +42,42 @@ const LoginFormSMS: React.FC = () => {
     }
 
     return (
-        <Form
-            name="basic"
-            labelCol={{ span: 8 }}
-            wrapperCol={{ span: 16 }}
-            style={{ maxWidth: 600 }}
-            initialValues={{ remember: true }}
-            onFinish={onFinish}
-            onFinishFailed={onFinishFailed}
-            autoComplete="off"
-            form={form}
+    <Form
+        name="basic"
+        labelCol={{ span: 8 }}
+        wrapperCol={{ span: 16 }}
+        style={{ maxWidth: 600 }}
+        initialValues={{ remember: true }}
+        onFinish={onFinish}
+        onFinishFailed={onFinishFailed}
+        autoComplete="off"
+        form={form}
+    >
+        <Form.Item
+            label="手机号码"
+            name="phone"
+            rules={[{ required: true, message: '请输入手机号码' }]}
         >
-            <Form.Item
-                label="手机号码"
-                name="phone"
-                rules={[{ required: true, message: '请输入手机号码' }]}
-            >
-                <Input />
-            </Form.Item>
+            <Input />
+        </Form.Item>
 
-            <Form.Item
-                label="验证码"
-                name="code"
-                rules={[{ required: true, message: '请输入验证码' }]}
-            >
-                <Input />
-            </Form.Item>
-            <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-                <Button
-                    type={"default"}
-                    onClick={() => sendCode()}
-                    disabled={sendState}
-                >
-                    {sendButton}
-                </Button>
-            </Form.Item>
+        <Form.Item
+            label="验证码"
+            name="code"
+            rules={[{ required: true, message: '请输入验证码' }]}
+        >
+            <Input />
+        </Form.Item>
+        <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+            <Button type={"default"} onClick={() => sendCode()}>发送验证码</Button>
+        </Form.Item>
 
-            <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-                <Button type="primary" htmlType="submit">
-                    登录/注册
-                </Button>
-            </Form.Item>
-        </Form>
-    )};
+        <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+            <Button type="primary" htmlType="submit">
+                登录/注册
+            </Button>
+        </Form.Item>
+    </Form>
+)};
 
 export default LoginFormSMS;
