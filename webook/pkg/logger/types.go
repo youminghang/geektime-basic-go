@@ -1,19 +1,19 @@
 package logger
 
-func example() {
-	var l Logger
-	l.Info("微信用户未注册，注册新用户, 微信信息 %v", wechatInfo)
-
-	var l1 LoggerV1
-	l1.Info("微信用户未注册，注册新用户", Field{
-		Key:   "微信信息",
-		Value: wechatInfo,
-	})
-
-	var l2 LoggerV2
-	l2.Info("微信用户未注册，注册新用户",
-		"微信信息", wechatInfo)
-}
+//func example() {
+//	var l Logger
+//	l.Info("微信用户未注册，注册新用户, 微信信息 %v", wechatInfo)
+//
+//	var l1 LoggerV1
+//	l1.Info("微信用户未注册，注册新用户", Field{
+//		Key:   "微信信息",
+//		Value: wechatInfo,
+//	})
+//
+//	var l2 LoggerV2
+//	l2.Info("微信用户未注册，注册新用户",
+//		"微信信息", wechatInfo)
+//}
 
 type Logger interface {
 	Debug(msg string, args ...any)

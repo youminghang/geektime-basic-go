@@ -108,8 +108,8 @@ type User struct {
 	// 微信有关数据。有些公司会尝试把这些数据分离出去做一个单独的表
 	// 从而避免这个表有过多的列，但是暂时来说
 	// 我们还没到这个地步
-	WechatOpenId  sql.NullString
-	WechatUnionId sql.NullString
+	WechatOpenId  sql.NullString `gorm:"type=varchar(1024),unique"`
+	WechatUnionId sql.NullString `gorm:"type=varchar(1024)"`
 
 	// 创建时间
 	Ctime int64

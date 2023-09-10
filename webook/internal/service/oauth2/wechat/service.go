@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
+	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"golang.org/x/net/context"
 	"net/http"
 	"net/url"
@@ -18,13 +19,16 @@ type service struct {
 	appId     string
 	appSecret string
 	client    *http.Client
+	logger    logger.LoggerV1
 }
 
-func NewService(appId, appSecret string) Service {
+func NewService(appId, appSecret string,
+	logger logger.LoggerV1) Service {
 	return &service{
 		appId:     appId,
 		appSecret: appSecret,
 		client:    http.DefaultClient,
+		logger:    logger,
 	}
 }
 

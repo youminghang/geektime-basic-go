@@ -17,7 +17,7 @@ func main() {
 	// 注意，要在 Goland 里面把对应的 work director 设置到 webook
 	// 要把配置初始化放在最前面
 	initViperV2Watch()
-	initLogger()
+	//initLogger()
 	server := InitWebServer()
 	// 注册路由
 	server.GET("/hello", func(ctx *gin.Context) {
