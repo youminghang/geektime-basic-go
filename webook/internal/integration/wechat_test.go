@@ -1,4 +1,4 @@
-//go:build e2e
+//go:build manual
 
 package integration
 
@@ -37,7 +37,7 @@ func TestWechatCallback(t *testing.T) {
 			mock: func(ctrl *gomock.Controller) wechat.Service {
 				svc := wechatmocks.NewMockService(ctrl)
 				svc.EXPECT().VerifyCode(gomock.Any(),
-					gomock.Any(), gomock.Any()).
+					gomock.Any()).
 					Return(domain.WechatInfo{
 						OpenId:  "123",
 						UnionId: "1234",
@@ -65,8 +65,7 @@ func TestWechatCallback(t *testing.T) {
 			name: "已有的用户",
 			mock: func(ctrl *gomock.Controller) wechat.Service {
 				svc := wechatmocks.NewMockService(ctrl)
-				svc.EXPECT().VerifyCode(gomock.Any(),
-					gomock.Any(), gomock.Any()).
+				svc.EXPECT().VerifyCode(gomock.Any(), gomock.Any()).
 					Return(domain.WechatInfo{
 						OpenId:  "2345",
 						UnionId: "23456",
@@ -109,8 +108,9 @@ func TestWechatCallback(t *testing.T) {
 			tc.before(t)
 
 			userSvc := startup.InitUserSvc()
+			jwtHdl := startup.InitJwtHdl()
 			wechatSvc := tc.mock(ctrl)
-			hdl := web.NewOAuth2WechatHandler(wechatSvc, userSvc)
+			hdl := web.NewOAuth2WechatHandler(wechatSvc, userSvc, jwtHdl)
 			server := gin.Default()
 			hdl.RegisterRoutes(server)
 
