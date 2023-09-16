@@ -26,6 +26,7 @@ type LocalCodeCache struct {
 	// 可以多个人加读锁
 	rwLock     sync.RWMutex
 	expiration time.Duration
+	maps       sync.Map
 }
 
 func NewLocalCodeCache(c *lru.Cache, expiration time.Duration) *LocalCodeCache {
@@ -44,6 +45,18 @@ func (l *LocalCodeCache) Set(ctx context.Context, biz string, phone string, code
 
 	// 我选用的本地缓存，很不幸的是，没有获得过期时间的接口，所以都是自己维持了一个过期时间字段
 	key := l.key(biz, phone)
+	// 如果你的 key 非常多，这个 maps 本身就占据了很多内存
+	//lock, _ := l.maps.LoadOrStore(key, &sync.Mutex{})
+	//lock.(*sync.Mutex).Lock()
+	//defer lock.(*sync.Mutex).Unlock()
+
+	//lock, _ := l.maps.LoadOrStore(key, &sync.Mutex{})
+	//lock.(*sync.Mutex).Lock()
+	//defer func() {
+	//	l.maps.Delete(key)
+	//	lock.(*sync.Mutex).Unlock()
+	//}()
+
 	now := time.Now()
 	val, ok := l.cache.Get(key)
 	if !ok {
