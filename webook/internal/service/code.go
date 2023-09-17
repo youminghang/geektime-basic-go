@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
 	"gitee.com/geekbang/basic-go/webook/internal/service/sms"
+	"go.uber.org/atomic"
 	"math/rand"
 )
 
-const codeTplId = "1877556"
+var codeTplId atomic.String = atomic.String{}
 
 var (
 	ErrCodeVerifyTooManyTimes = repository.ErrCodeVerifyTooManyTimes
@@ -30,6 +31,11 @@ type codeService struct {
 }
 
 func NewCodeService(repo repository.CodeRepository, smsSvc sms.Service) CodeService {
+	codeTplId.Store("1877556")
+	//viper.OnConfigChange(func(in fsnotify.Event) {
+	//	codeTplId.Store(viper.GetString("code.tpl.id"))
+	//})
+
 	return &codeService{
 		repo:   repo,
 		smsSvc: smsSvc,
@@ -53,7 +59,7 @@ func (svc *codeService) Send(ctx context.Context,
 
 	// 发送出去
 
-	err = svc.smsSvc.Send(ctx, codeTplId, []string{code}, phone)
+	err = svc.smsSvc.Send(ctx, codeTplId.Load(), []string{code}, phone)
 	//if err != nil {
 	// 这个地方怎么办？
 	// 这意味着，Redis 有这个验证码，但是不好意思，

@@ -22,19 +22,36 @@ type UserDAO interface {
 	FindByWechat(ctx context.Context, openID string) (User, error)
 }
 
+type DBProvider func() *gorm.DB
+
 type GORMUserDAO struct {
 	db *gorm.DB
+
+	p DBProvider
+}
+
+func NewUserDAOV1(p DBProvider) UserDAO {
+	return &GORMUserDAO{
+		p: p,
+	}
 }
 
 func NewUserDAO(db *gorm.DB) UserDAO {
-	return &GORMUserDAO{
+	res := &GORMUserDAO{
 		db: db,
 	}
+	//viper.OnConfigChange(func(in fsnotify.Event) {
+	//	db, err := gorm.Open(mysql.Open())
+	//	pt := unsafe.Pointer(&res.db)
+	//	atomic.StorePointer(&pt, unsafe.Pointer(&db))
+	//})
+	return res
 }
 
 func (dao *GORMUserDAO) FindByWechat(ctx context.Context, openID string) (User, error) {
 	var u User
 	err := dao.db.WithContext(ctx).Where("wechat_open_id = ?", openID).First(&u).Error
+	//err := dao.p().WithContext(ctx).Where("wechat_open_id = ?", openID).First(&u).Error
 	//err := dao.db.WithContext(ctx).First(&u, "email = ?", email).Error
 	return u, err
 }
