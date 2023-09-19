@@ -12,6 +12,7 @@ type ArticleDAO interface {
 	Create(ctx context.Context, art Article) (int64, error)
 	UpdateById(ctx context.Context, art Article) error
 	Sync(ctx context.Context, art Article) (int64, error)
+	SyncStatus(ctx context.Context, id int64, status uint8) error
 }
 
 type GORMArticleDAO struct {
@@ -22,6 +23,18 @@ func NewGORMArticleDAO(db *gorm.DB) ArticleDAO {
 	return &GORMArticleDAO{
 		db: db,
 	}
+}
+
+func (dao *GORMArticleDAO) SyncStatus(ctx context.Context, id int64, status uint8) error {
+	return dao.db.Transaction(func(tx *gorm.DB) error {
+		err := tx.Model(&Article{}).Where("id=?", id).
+			Update("status", status).Error
+		if err != nil {
+			return err
+		}
+		return tx.Model(&PublishedArticle{}).
+			Where("id=?", id).Update("status", status).Error
+	})
 }
 
 func (dao *GORMArticleDAO) Sync(ctx context.Context,

@@ -37,7 +37,18 @@ func (a *ArticleHandler) Withdraw(ctx *gin.Context) {
 		a.l.Error("反序列化请求失败", logger.Error(err))
 		return
 	}
-
+	if err := a.svc.Withdraw(ctx, req.Id); err != nil {
+		a.l.Error("设置为尽自己可见失败", logger.Error(err),
+			logger.Field{Key: "id", Value: req.Id})
+		ctx.JSON(http.StatusOK, Result{
+			Code: 5,
+			Msg:  "系统错误",
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, Result{
+		Msg: "OK",
+	})
 }
 
 func (a *ArticleHandler) Publish(ctx *gin.Context) {

@@ -65,6 +65,20 @@ func (mr *MockArticleDAOMockRecorder) Sync(ctx, art interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Sync", reflect.TypeOf((*MockArticleDAO)(nil).Sync), ctx, art)
 }
 
+// SyncStatus mocks base method.
+func (m *MockArticleDAO) SyncStatus(ctx context.Context, id int64, status uint8) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SyncStatus", ctx, id, status)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SyncStatus indicates an expected call of SyncStatus.
+func (mr *MockArticleDAOMockRecorder) SyncStatus(ctx, id, status interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SyncStatus", reflect.TypeOf((*MockArticleDAO)(nil).SyncStatus), ctx, id, status)
+}
+
 // UpdateById mocks base method.
 func (m *MockArticleDAO) UpdateById(ctx context.Context, art dao.Article) error {
 	m.ctrl.T.Helper()

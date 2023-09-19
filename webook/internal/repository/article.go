@@ -43,6 +43,10 @@ func NewArticleRepositoryV1(authorDAO dao.ArticleAuthorDAO,
 	}
 }
 
+func (repo *CachedArticleRepository) SyncStatus(ctx context.Context, id int64, status domain.ArticleStatus) error {
+	return repo.dao.SyncStatus(ctx, id, status.ToUint8())
+}
+
 func (repo *CachedArticleRepository) Sync(ctx context.Context,
 	art domain.Article) (int64, error) {
 	return repo.dao.Sync(ctx, repo.toEntity(art))
