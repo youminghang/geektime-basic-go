@@ -2,12 +2,14 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/fsnotify/fsnotify"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	_ "github.com/spf13/viper/remote"
+	"go.uber.org/zap"
 	"net/http"
 )
 
@@ -20,7 +22,9 @@ func main() {
 	//u := initUser(db, rdb)
 	//u.RegisterRoutes(server)
 
-	initViperRemote()
+	//initViperRemote()
+	initViperV1()
+	initLogger()
 	keys := viper.AllKeys()
 	println(keys)
 	setting := viper.AllSettings()
@@ -32,6 +36,25 @@ func main() {
 	})
 
 	server.Run(":8080")
+}
+
+func initLogger() {
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		panic(err)
+	}
+	zap.L().Info("这是 replace 之前")
+	// 如果你不 replace，直接用 zap.L()，你啥都打不出来。
+	zap.ReplaceGlobals(logger)
+	zap.L().Info("hello，你搞好了")
+
+	type Demo struct {
+		Name string `json:"name"`
+	}
+	zap.L().Info("这是实验参数",
+		zap.Error(errors.New("这是一个 error")),
+		zap.Int64("id", 123),
+		zap.Any("一个结构体", Demo{Name: "hello"}))
 }
 
 func initViperReader() {
