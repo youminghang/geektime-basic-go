@@ -8,22 +8,28 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	"gitee.com/geekbang/basic-go/webook/internal/web"
+	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"gitee.com/geekbang/basic-go/webook/ioc"
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
 )
 
-var thirdProvider = wire.NewSet(ioc.InitRedis, ioc.InitDB)
+var thirdProvider = wire.NewSet(InitRedis, InitTestDB, InitLog)
 var userSvcProvider = wire.NewSet(
-	thirdProvider,
 	dao.NewGORMUserDAO,
 	cache.NewRedisUserCache,
 	repository.NewCachedUserRepository,
 	service.NewUserService)
+var articlSvcProvider = wire.NewSet(
+	dao.NewGORMArticleDAO,
+	repository.NewArticleRepository,
+	service.NewArticleService)
 
 func InitWebServer() *gin.Engine {
 	wire.Build(
+		thirdProvider,
 		userSvcProvider,
+		articlSvcProvider,
 		cache.NewRedisCodeCache,
 		repository.NewCachedCodeRepository,
 		// service 部分
@@ -36,6 +42,8 @@ func InitWebServer() *gin.Engine {
 		// handler 部分
 		web.NewUserHandler,
 		web.NewOAuth2WechatHandler,
+		web.NewArticleHandler,
+		ijwt.NewRedisHandler,
 
 		// gin 的中间件
 		ioc.GinMiddlewares,
@@ -47,7 +55,17 @@ func InitWebServer() *gin.Engine {
 	return gin.Default()
 }
 
+func InitArticleHandler() *web.ArticleHandler {
+	wire.Build(thirdProvider, articlSvcProvider, web.NewArticleHandler)
+	return new(web.ArticleHandler)
+}
+
 func InitUserSvc() service.UserService {
-	wire.Build(userSvcProvider)
+	wire.Build(thirdProvider, userSvcProvider)
 	return service.NewUserService(nil)
+}
+
+func InitJwtHdl() ijwt.Handler {
+	wire.Build(thirdProvider, ijwt.NewRedisHandler)
+	return ijwt.NewRedisHandler(nil)
 }

@@ -1,3 +1,5 @@
+//go:build e2e
+
 package cache
 
 import (
@@ -102,15 +104,13 @@ func TestRedisCodeCache_Set_e2e(t *testing.T) {
 				// 传入 0 就是没有过期时间
 				err := rdb.Set(ctx, key, "123456", 0).Err()
 				assert.NoError(t, err)
-				err = rdb.Del(ctx, key).Err()
-				assert.NoError(t, err)
 			},
 			// 遇到未知错误的时候，Redis 中的数据也还是原本的数据
 			// 也就是还保持那个没有设置过期时间的错误数据
 			after: func(t *testing.T) {
 				ctx := context.Background()
 				key := c.key("login", "15212345670")
-				val, err := rdb.Get(ctx, key).Result()
+				val, err := rdb.GetDel(ctx, key).Result()
 				// 断言必然取到了数据
 				assert.NoError(t, err)
 				assert.Equal(t, "123456", val)

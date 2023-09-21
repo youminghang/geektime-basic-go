@@ -223,23 +223,23 @@ func TestUserHandler_SignUp(t *testing.T) {
 	}
 }
 
-func TestMock(t *testing.T) {
-	// 先创建一个控制 mock 的控制器
-	ctrl := gomock.NewController(t)
-	// 每个测试结束都要调用 Finish，
-	// 然后 mock 就会验证你的测试流程是否符合预期
-	defer ctrl.Finish()
-	usersvc := svcmocks.NewMockUserService(ctrl)
-	// 开始设计一个个模拟调用
-	// 预期第一个是 Signup 的调用
-	// 模拟的条件是 gomock.Any, gomock.Any。
-	// 然后返回
-	usersvc.EXPECT().Signup(gomock.Any(), gomock.Any()).
-		Return(errors.New("模拟的错误"))
-
-	// 后面就可以使用这个 usersvc 了
-	//hdl := NewUserHandler(usersvc, nil)
-}
+//func TestMock(t *testing.T) {
+//	// 先创建一个控制 mock 的控制器
+//	ctrl := gomock.NewController(t)
+//	// 每个测试结束都要调用 Finish，
+//	// 然后 mock 就会验证你的测试流程是否符合预期
+//	defer ctrl.Finish()
+//	usersvc := svcmocks.NewMockUserService(ctrl)
+//	// 开始设计一个个模拟调用
+//	// 预期第一个是 Signup 的调用
+//	// 模拟的条件是 gomock.Any, gomock.Any。
+//	// 然后返回
+//	usersvc.EXPECT().Signup(gomock.Any(), gomock.Any()).
+//		Return(errors.New("模拟的错误"))
+//
+//	// 后面就可以使用这个 usersvc 了
+//	//hdl := NewUserHandler(usersvc, nil)
+//}
 
 //func TestHTTPDemo(t *testing.T) {
 //

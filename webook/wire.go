@@ -15,12 +15,14 @@ import (
 )
 
 func InitWebServer() *gin.Engine {
+
 	wire.Build(
 		ioc.InitRedis, ioc.InitDB,
 		ioc.InitLogger,
 
 		// DAO 部分
 		dao.NewGORMUserDAO,
+		dao.NewGORMArticleDAO,
 
 		// Cache 部分
 		cache.NewRedisUserCache, cache.NewRedisCodeCache,
@@ -28,16 +30,19 @@ func InitWebServer() *gin.Engine {
 		// repository 部分
 		repository.NewCachedUserRepository,
 		repository.NewCachedCodeRepository,
+		repository.NewArticleRepository,
 
 		// service 部分
 		ioc.InitSmsService,
 		ioc.InitWechatService,
 		service.NewSMSCodeService,
 		service.NewUserService,
+		service.NewArticleService,
 
 		// handler 部分
 		ijwt.NewRedisHandler,
 		web.NewUserHandler,
+		web.NewArticleHandler,
 		web.NewOAuth2WechatHandler,
 
 		// gin 的中间件

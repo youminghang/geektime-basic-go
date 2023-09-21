@@ -155,7 +155,6 @@ func (c *UserHandler) SendSMSLoginCode(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, Result{Msg: "发送成功"})
 	case service.ErrCodeSendTooMany:
 		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "短信发送太频繁，请稍后再试"})
-		zap.L().Warn("短信发送太频繁")
 	default:
 		ctx.JSON(http.StatusOK, Result{Code: 5, Msg: "系统错误"})
 		// 要打印日志
