@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/integration/startup"
-	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
+	"gitee.com/geekbang/basic-go/webook/internal/repository/dao/article"
 	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -18,15 +18,14 @@ import (
 	"testing"
 )
 
-type ArticleHandlerTestSuite struct {
+type ArticleGORMHandlerTestSuite struct {
 	suite.Suite
 	server *gin.Engine
 	db     *gorm.DB
 }
 
-func (s *ArticleHandlerTestSuite) SetupSuite() {
+func (s *ArticleGORMHandlerTestSuite) SetupSuite() {
 	s.server = gin.Default()
-	s.db = startup.InitTestDB()
 	s.server.Use(func(context *gin.Context) {
 		// 直接设置好
 		context.Set("user", ijwt.UserClaims{
@@ -34,20 +33,19 @@ func (s *ArticleHandlerTestSuite) SetupSuite() {
 		})
 		context.Next()
 	})
-	hdl := startup.InitArticleHandler()
+	s.db = startup.InitTestDB()
+	hdl := startup.InitArticleHandler(article.NewGORMArticleDAO(s.db))
 	hdl.RegisterRoutes(s.server)
 }
 
-func (s *ArticleHandlerTestSuite) TearDownTest() {
+func (s *ArticleGORMHandlerTestSuite) TearDownTest() {
 	err := s.db.Exec("TRUNCATE TABLE `articles`").Error
 	assert.NoError(s.T(), err)
 	s.db.Exec("TRUNCATE TABLE `published_articles`")
-
 }
 
-func (s *ArticleHandlerTestSuite) TestArticleHandler_Edit() {
+func (s *ArticleGORMHandlerTestSuite) TestArticleHandler_Edit() {
 	t := s.T()
-
 	testCases := []struct {
 		name string
 		// 要提前准备数据
@@ -69,14 +67,14 @@ func (s *ArticleHandlerTestSuite) TestArticleHandler_Edit() {
 			},
 			after: func(t *testing.T) {
 				// 验证一下数据
-				var art dao.Article
+				var art article.Article
 				s.db.Where("author_id = ?", 123).First(&art)
 				assert.True(t, art.Ctime > 0)
 				assert.True(t, art.Utime > 0)
 				// 重置了这些值，因为无法比较
 				art.Utime = 0
 				art.Ctime = 0
-				assert.Equal(t, dao.Article{
+				assert.Equal(t, article.Article{
 					Id:       1,
 					Title:    "hello，你好",
 					Content:  "随便试试",
@@ -98,7 +96,7 @@ func (s *ArticleHandlerTestSuite) TestArticleHandler_Edit() {
 			name: "更新帖子",
 			before: func(t *testing.T) {
 				// 模拟已经存在的帖子，并且是已经发布的帖子
-				s.db.Create(&dao.Article{
+				s.db.Create(&article.Article{
 					Id:       2,
 					Title:    "我的标题",
 					Content:  "我的内容",
@@ -110,11 +108,11 @@ func (s *ArticleHandlerTestSuite) TestArticleHandler_Edit() {
 			},
 			after: func(t *testing.T) {
 				// 验证一下数据
-				var art dao.Article
+				var art article.Article
 				s.db.Where("id = ?", 2).First(&art)
 				assert.True(t, art.Utime > 234)
 				art.Utime = 0
-				assert.Equal(t, dao.Article{
+				assert.Equal(t, article.Article{
 					Id:       2,
 					Title:    "新的标题",
 					Content:  "新的内容",
@@ -139,7 +137,7 @@ func (s *ArticleHandlerTestSuite) TestArticleHandler_Edit() {
 			name: "更新别人的帖子",
 			before: func(t *testing.T) {
 				// 模拟已经存在的帖子
-				s.db.Create(&dao.Article{
+				s.db.Create(&article.Article{
 					Id:      3,
 					Title:   "我的标题",
 					Content: "我的内容",
@@ -152,9 +150,9 @@ func (s *ArticleHandlerTestSuite) TestArticleHandler_Edit() {
 			},
 			after: func(t *testing.T) {
 				// 更新应该是失败了，数据没有发生变化
-				var art dao.Article
+				var art article.Article
 				s.db.Where("id = ?", 3).First(&art)
-				assert.Equal(t, dao.Article{
+				assert.Equal(t, article.Article{
 					Id:       3,
 					Title:    "我的标题",
 					Content:  "我的内容",
@@ -207,7 +205,7 @@ func (s *ArticleHandlerTestSuite) TestArticleHandler_Edit() {
 	}
 }
 
-func (s *ArticleHandlerTestSuite) TestArticle_Publish() {
+func (s *ArticleGORMHandlerTestSuite) TestArticle_Publish() {
 	t := s.T()
 
 	testCases := []struct {
@@ -229,14 +227,14 @@ func (s *ArticleHandlerTestSuite) TestArticle_Publish() {
 			},
 			after: func(t *testing.T) {
 				// 验证一下数据
-				var art dao.Article
+				var art article.Article
 				s.db.Where("author_id = ?", 123).First(&art)
 				assert.Equal(t, "hello，你好", art.Title)
 				assert.Equal(t, "随便试试", art.Content)
 				assert.Equal(t, int64(123), art.AuthorId)
 				assert.True(t, art.Ctime > 0)
 				assert.True(t, art.Utime > 0)
-				var publishedArt dao.PublishedArticle
+				var publishedArt article.PublishedArticle
 				s.db.Where("author_id = ?", 123).First(&publishedArt)
 				assert.Equal(t, "hello，你好", publishedArt.Title)
 				assert.Equal(t, "随便试试", publishedArt.Content)
@@ -258,7 +256,7 @@ func (s *ArticleHandlerTestSuite) TestArticle_Publish() {
 			name: "更新帖子并新发表",
 			before: func(t *testing.T) {
 				// 模拟已经存在的帖子
-				s.db.Create(&dao.Article{
+				s.db.Create(&article.Article{
 					Id:       2,
 					Title:    "我的标题",
 					Content:  "我的内容",
@@ -269,7 +267,7 @@ func (s *ArticleHandlerTestSuite) TestArticle_Publish() {
 			},
 			after: func(t *testing.T) {
 				// 验证一下数据
-				var art dao.Article
+				var art article.Article
 				s.db.Where("id = ?", 2).First(&art)
 				assert.Equal(t, "新的标题", art.Title)
 				assert.Equal(t, "新的内容", art.Content)
@@ -278,7 +276,7 @@ func (s *ArticleHandlerTestSuite) TestArticle_Publish() {
 				assert.Equal(t, int64(456), art.Ctime)
 				// 更新时间变了
 				assert.True(t, art.Utime > 234)
-				var publishedArt dao.PublishedArticle
+				var publishedArt article.PublishedArticle
 				s.db.Where("id = ?", 2).First(&publishedArt)
 				assert.Equal(t, "新的标题", art.Title)
 				assert.Equal(t, "新的内容", art.Content)
@@ -299,7 +297,7 @@ func (s *ArticleHandlerTestSuite) TestArticle_Publish() {
 		{
 			name: "更新帖子，并且重新发表",
 			before: func(t *testing.T) {
-				art := dao.Article{
+				art := article.Article{
 					Id:       3,
 					Title:    "我的标题",
 					Content:  "我的内容",
@@ -308,10 +306,11 @@ func (s *ArticleHandlerTestSuite) TestArticle_Publish() {
 					AuthorId: 123,
 				}
 				s.db.Create(&art)
-				s.db.Create(&dao.PublishedArticle{Article: art})
+				part := article.PublishedArticle(art)
+				s.db.Create(&part)
 			},
 			after: func(t *testing.T) {
-				var art dao.Article
+				var art article.Article
 				s.db.Where("id = ?", 3).First(&art)
 				assert.Equal(t, "新的标题", art.Title)
 				assert.Equal(t, "新的内容", art.Content)
@@ -321,7 +320,7 @@ func (s *ArticleHandlerTestSuite) TestArticle_Publish() {
 				// 更新时间变了
 				assert.True(t, art.Utime > 234)
 
-				var part dao.PublishedArticle
+				var part article.PublishedArticle
 				s.db.Where("id = ?", 3).First(&part)
 				assert.Equal(t, "新的标题", part.Title)
 				assert.Equal(t, "新的内容", part.Content)
@@ -344,7 +343,7 @@ func (s *ArticleHandlerTestSuite) TestArticle_Publish() {
 		{
 			name: "更新别人的帖子，并且发表失败",
 			before: func(t *testing.T) {
-				art := dao.Article{
+				art := article.Article{
 					Id:      4,
 					Title:   "我的标题",
 					Content: "我的内容",
@@ -354,18 +353,19 @@ func (s *ArticleHandlerTestSuite) TestArticle_Publish() {
 					AuthorId: 789,
 				}
 				s.db.Create(&art)
-				s.db.Create(&dao.PublishedArticle{Article: dao.Article{
+				part := article.PublishedArticle(article.Article{
 					Id:       4,
 					Title:    "我的标题",
 					Content:  "我的内容",
 					Ctime:    456,
 					Utime:    234,
 					AuthorId: 789,
-				}})
+				})
+				s.db.Create(&part)
 			},
 			after: func(t *testing.T) {
 				// 更新应该是失败了，数据没有发生变化
-				var art dao.Article
+				var art article.Article
 				s.db.Where("id = ?", 4).First(&art)
 				assert.Equal(t, "我的标题", art.Title)
 				assert.Equal(t, "我的内容", art.Content)
@@ -373,7 +373,7 @@ func (s *ArticleHandlerTestSuite) TestArticle_Publish() {
 				assert.Equal(t, int64(234), art.Utime)
 				assert.Equal(t, int64(789), art.AuthorId)
 
-				var part dao.PublishedArticle
+				var part article.PublishedArticle
 				// 数据没有变化
 				s.db.Where("id = ?", 4).First(&part)
 				assert.Equal(t, "我的标题", part.Title)
@@ -427,12 +427,6 @@ func (s *ArticleHandlerTestSuite) TestArticle_Publish() {
 	}
 }
 
-func TestArticle(t *testing.T) {
-	suite.Run(t, new(ArticleHandlerTestSuite))
-}
-
-type Article struct {
-	Id      int64  `json:"id"`
-	Title   string `json:"title"`
-	Content string `json:"content"`
+func TestGORMArticle(t *testing.T) {
+	suite.Run(t, new(ArticleGORMHandlerTestSuite))
 }

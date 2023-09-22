@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
-	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
+	"gitee.com/geekbang/basic-go/webook/internal/repository/dao/article"
 	"gorm.io/gorm"
 )
 
@@ -14,37 +14,38 @@ type ArticleRepository interface {
 	// Sync 本身要求先保存到制作库，再同步到线上库
 	Sync(ctx context.Context, art domain.Article) (int64, error)
 	// SyncStatus 仅仅同步状态
-	SyncStatus(ctx context.Context, id int64, status domain.ArticleStatus) error
+	SyncStatus(ctx context.Context, uid, id int64, status domain.ArticleStatus) error
 }
 
 type CachedArticleRepository struct {
 	// 操作单一的库
-	dao dao.ArticleDAO
+	dao article.ArticleDAO
 
 	// SyncV1 用
-	authorDAO dao.ArticleAuthorDAO
-	readerDAO dao.ArticleReaderDAO
+	authorDAO article.ArticleAuthorDAO
+	readerDAO article.ArticleReaderDAO
 
 	// SyncV2 用
 	db *gorm.DB
 }
 
-func NewArticleRepository(dao dao.ArticleDAO) ArticleRepository {
+func NewArticleRepository(dao article.ArticleDAO) ArticleRepository {
 	return &CachedArticleRepository{
 		dao: dao,
 	}
 }
 
-func NewArticleRepositoryV1(authorDAO dao.ArticleAuthorDAO,
-	readerDAO dao.ArticleReaderDAO) ArticleRepository {
+func NewArticleRepositoryV1(authorDAO article.ArticleAuthorDAO,
+	readerDAO article.ArticleReaderDAO) ArticleRepository {
 	return &CachedArticleRepository{
 		authorDAO: authorDAO,
 		readerDAO: readerDAO,
 	}
 }
 
-func (repo *CachedArticleRepository) SyncStatus(ctx context.Context, id int64, status domain.ArticleStatus) error {
-	return repo.dao.SyncStatus(ctx, id, status.ToUint8())
+func (repo *CachedArticleRepository) SyncStatus(ctx context.Context,
+	uid, id int64, status domain.ArticleStatus) error {
+	return repo.dao.SyncStatus(ctx, uid, id, status.ToUint8())
 }
 
 func (repo *CachedArticleRepository) Sync(ctx context.Context,
@@ -61,8 +62,8 @@ func (repo *CachedArticleRepository) SyncV2(ctx context.Context,
 	// 直接 defer Rollback
 	// 如果我们后续 Commit 了，这里会得到一个错误，但是没关系
 	defer tx.Rollback()
-	authorDAO := dao.NewGORMArticleDAO(tx)
-	readerDAO := dao.NewGORMArticleReaderDAO(tx)
+	authorDAO := article.NewGORMArticleDAO(tx)
+	readerDAO := article.NewGORMArticleReaderDAO(tx)
 
 	// 下面代码和 SyncV1 一模一样
 	artn := repo.toEntity(art)
@@ -71,7 +72,7 @@ func (repo *CachedArticleRepository) SyncV2(ctx context.Context,
 		err error
 	)
 	if id == 0 {
-		id, err = authorDAO.Create(ctx, artn)
+		id, err = authorDAO.Insert(ctx, artn)
 		if err != nil {
 			return 0, err
 		}
@@ -82,7 +83,7 @@ func (repo *CachedArticleRepository) SyncV2(ctx context.Context,
 		return 0, err
 	}
 	artn.Id = id
-	err = readerDAO.UpsertV2(ctx, dao.PublishedArticle{Article: artn})
+	err = readerDAO.UpsertV2(ctx, article.PublishedArticle(artn))
 	if err != nil {
 		// 依赖于 defer 来 rollback
 		return 0, err
@@ -116,7 +117,7 @@ func (repo *CachedArticleRepository) SyncV1(ctx context.Context,
 
 func (repo *CachedArticleRepository) Create(ctx context.Context,
 	art domain.Article) (int64, error) {
-	return repo.dao.Create(ctx, repo.toEntity(art))
+	return repo.dao.Insert(ctx, repo.toEntity(art))
 }
 
 func (repo *CachedArticleRepository) Update(ctx context.Context,
@@ -124,8 +125,8 @@ func (repo *CachedArticleRepository) Update(ctx context.Context,
 	return repo.dao.UpdateById(ctx, repo.toEntity(art))
 }
 
-func (repo *CachedArticleRepository) toEntity(art domain.Article) dao.Article {
-	return dao.Article{
+func (repo *CachedArticleRepository) toEntity(art domain.Article) article.Article {
+	return article.Article{
 		Id:       art.Id,
 		Title:    art.Title,
 		Content:  art.Content,

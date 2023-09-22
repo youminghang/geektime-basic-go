@@ -37,7 +37,16 @@ func (a *ArticleHandler) Withdraw(ctx *gin.Context) {
 		a.l.Error("反序列化请求失败", logger.Error(err))
 		return
 	}
-	if err := a.svc.Withdraw(ctx, req.Id); err != nil {
+	usr, ok := ctx.MustGet("user").(jwt.UserClaims)
+	if !ok {
+		ctx.JSON(http.StatusOK, Result{
+			Code: 5,
+			Msg:  "系统错误",
+		})
+		a.l.Error("获得用户会话信息失败")
+		return
+	}
+	if err := a.svc.Withdraw(ctx, usr.Id, req.Id); err != nil {
 		a.l.Error("设置为尽自己可见失败", logger.Error(err),
 			logger.Field{Key: "id", Value: req.Id})
 		ctx.JSON(http.StatusOK, Result{

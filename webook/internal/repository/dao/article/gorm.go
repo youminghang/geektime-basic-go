@@ -1,4 +1,4 @@
-package dao
+package article
 
 import (
 	"context"
@@ -7,13 +7,6 @@ import (
 	"gorm.io/gorm/clause"
 	"time"
 )
-
-type ArticleDAO interface {
-	Create(ctx context.Context, art Article) (int64, error)
-	UpdateById(ctx context.Context, art Article) error
-	Sync(ctx context.Context, art Article) (int64, error)
-	SyncStatus(ctx context.Context, id int64, status uint8) error
-}
 
 type GORMArticleDAO struct {
 	db *gorm.DB
@@ -25,15 +18,27 @@ func NewGORMArticleDAO(db *gorm.DB) ArticleDAO {
 	}
 }
 
-func (dao *GORMArticleDAO) SyncStatus(ctx context.Context, id int64, status uint8) error {
-	return dao.db.Transaction(func(tx *gorm.DB) error {
-		err := tx.Model(&Article{}).Where("id=?", id).
-			Update("status", status).Error
-		if err != nil {
-			return err
+func (dao *GORMArticleDAO) SyncStatus(ctx context.Context, author, id int64, status uint8) error {
+	return dao.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		res := tx.Model(&Article{}).
+			Where("id=? AND author_id = ?", id, author).
+			Update("status", status)
+		if res.Error != nil {
+			return res.Error
 		}
-		return tx.Model(&PublishedArticle{}).
-			Where("id=?", id).Update("status", status).Error
+		if res.RowsAffected != 1 {
+			return ErrPossibleIncorrectAuthor
+		}
+
+		res = tx.Model(&PublishedArticle{}).
+			Where("id=? AND author_id = ?", id, author).Update("status", status)
+		if res.Error != nil {
+			return res.Error
+		}
+		if res.RowsAffected != 1 {
+			return ErrPossibleIncorrectAuthor
+		}
+		return nil
 	})
 }
 
@@ -48,7 +53,7 @@ func (dao *GORMArticleDAO) Sync(ctx context.Context,
 		err error
 	)
 	if id == 0 {
-		id, err = txDAO.Create(ctx, art)
+		id, err = txDAO.Insert(ctx, art)
 	} else {
 		err = txDAO.UpdateById(ctx, art)
 	}
@@ -56,9 +61,7 @@ func (dao *GORMArticleDAO) Sync(ctx context.Context,
 		return 0, err
 	}
 	art.Id = id
-	publishArt := PublishedArticle{
-		Article: art,
-	}
+	publishArt := PublishedArticle(art)
 	publishArt.Utime = now
 	publishArt.Ctime = now
 	err = tx.Clauses(clause.OnConflict{
@@ -88,7 +91,7 @@ func (dao *GORMArticleDAO) SyncClosure(ctx context.Context,
 		now := time.Now().UnixMilli()
 		txDAO := NewGORMArticleDAO(tx)
 		if id == 0 {
-			id, err = txDAO.Create(ctx, art)
+			id, err = txDAO.Insert(ctx, art)
 		} else {
 			err = txDAO.UpdateById(ctx, art)
 		}
@@ -96,9 +99,7 @@ func (dao *GORMArticleDAO) SyncClosure(ctx context.Context,
 			return err
 		}
 		art.Id = id
-		publishArt := PublishedArticle{
-			Article: art,
-		}
+		publishArt := art
 		publishArt.Utime = now
 		publishArt.Ctime = now
 		return tx.Clauses(clause.OnConflict{
@@ -114,7 +115,7 @@ func (dao *GORMArticleDAO) SyncClosure(ctx context.Context,
 	return id, err
 }
 
-func (dao *GORMArticleDAO) Create(ctx context.Context,
+func (dao *GORMArticleDAO) Insert(ctx context.Context,
 	art Article) (int64, error) {
 	now := time.Now().UnixMilli()
 	art.Ctime = now
@@ -143,17 +144,4 @@ func (dao *GORMArticleDAO) UpdateById(ctx context.Context,
 		return errors.New("更新数据失败")
 	}
 	return nil
-}
-
-type Article struct {
-	Id int64
-	// 标题的长度
-	// 正常都不会超过这个长度
-	Title   string `gorm:"type=varchar(4096)"`
-	Content string `gorm:"type=BLOB"`
-	// 作者
-	AuthorId int64 `gorm:"index"`
-	Status   uint8 `gorm:"default=1"`
-	Ctime    int64
-	Utime    int64
 }
