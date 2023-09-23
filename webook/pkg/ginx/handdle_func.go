@@ -1,11 +1,13 @@
 package ginx
 
 import (
+	"gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"github.com/gin-gonic/gin"
 )
 
-func WrapReq[T any](fn func(ctx *gin.Context, req T) (Result, error)) gin.HandlerFunc {
+func WrapReq[T any](fn func(ctx *gin.Context, req T, uc jwt.UserClaims) (Result, error)) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		// 顺便把 userClaims 也取出来
 	}
 }
 
