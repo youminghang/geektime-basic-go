@@ -344,6 +344,13 @@ func (u *UserHandler) Login(ctx *gin.Context) {
 	return
 }
 
+//func (u *UserHandler) Do(fn func(ctx *gin.Context) (any, error)) {
+//	data, err := fn(ctx)
+//	if err != nil {
+// 在这里打日志
+//	}
+//}
+
 func (u *UserHandler) Logout(ctx *gin.Context) {
 	sess := sessions.Default(ctx)
 	// 我可以随便设置值了
