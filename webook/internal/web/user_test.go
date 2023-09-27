@@ -7,6 +7,7 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	svcmocks "gitee.com/geekbang/basic-go/webook/internal/service/mocks"
+	"gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,7 +19,7 @@ import (
 )
 
 func TestEncrypt(t *testing.T) {
-	_ = NewUserHandler(nil, nil)
+	_ = NewUserHandler(nil, nil, nil)
 	password := "hello#world123"
 	encrypted, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -33,7 +34,7 @@ func TestNil(t *testing.T) {
 }
 
 func testTypeAssert(c any) {
-	_, ok := c.(*UserClaims)
+	_, ok := c.(jwt.UserClaims)
 	println(ok)
 }
 
@@ -187,7 +188,7 @@ func TestUserHandler_SignUp(t *testing.T) {
 			defer ctrl.Finish()
 			server := gin.Default()
 			// 用不上 codeSvc
-			h := NewUserHandler(tc.mock(ctrl), nil)
+			h := NewUserHandler(tc.mock(ctrl), nil, nil)
 			h.RegisterRoutes(server)
 
 			req, err := http.NewRequest(http.MethodPost,
