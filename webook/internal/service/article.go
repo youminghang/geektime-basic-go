@@ -12,6 +12,11 @@ type ArticleService interface {
 	Publish(ctx context.Context, art domain.Article) (int64, error)
 	Withdraw(ctx context.Context, uid, id int64) error
 	PublishV1(ctx context.Context, art domain.Article) (int64, error)
+	List(ctx context.Context, author int64,
+		offset, limit int) ([]domain.Article, error)
+	GetById(ctx context.Context, id int64) (domain.Article, error)
+
+	// 剩下的这个是给读者用的服务，暂时放到这里
 }
 
 type articleService struct {
@@ -23,6 +28,15 @@ type articleService struct {
 	// 1 和 2 是互斥的，不会同时存在
 	repo   repository.ArticleRepository
 	logger logger.LoggerV1
+}
+
+func (svc *articleService) GetById(ctx context.Context, id int64) (domain.Article, error) {
+	return svc.repo.GetById(ctx, id)
+}
+
+func (svc *articleService) List(ctx context.Context, author int64,
+	offset, limit int) ([]domain.Article, error) {
+	return svc.repo.List(ctx, author, offset, limit)
 }
 
 func NewArticleService(repo repository.ArticleRepository,

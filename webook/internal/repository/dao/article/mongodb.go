@@ -16,6 +16,16 @@ type MongoDBDAO struct {
 	node    *snowflake.Node
 }
 
+func (m *MongoDBDAO) GetByAuthor(ctx context.Context, author int64, offset, limit int) ([]Article, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *MongoDBDAO) GetById(ctx context.Context, id int64) (Article, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func InitCollections(db *mongo.Database) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
@@ -41,7 +51,7 @@ func InitCollections(db *mongo.Database) error {
 	return err
 }
 
-func NewMongoDBDAO(db *mongo.Database, node *snowflake.Node) *MongoDBDAO {
+func NewMongoDBDAO(db *mongo.Database, node *snowflake.Node) ArticleDAO {
 	return &MongoDBDAO{
 		col:     db.Collection("articles"),
 		liveCol: db.Collection("published_articles"),
