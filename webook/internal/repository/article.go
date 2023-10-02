@@ -3,7 +3,9 @@ package repository
 import (
 	"context"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
+	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao/article"
+	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"github.com/ecodeclub/ekit/slice"
 	"gorm.io/gorm"
 )
@@ -23,7 +25,8 @@ type ArticleRepository interface {
 
 type CachedArticleRepository struct {
 	// 操作单一的库
-	dao article.ArticleDAO
+	dao   article.ArticleDAO
+	cache cache.ArticleCache
 
 	// SyncV1 用
 	authorDAO article.ArticleAuthorDAO
@@ -31,6 +34,25 @@ type CachedArticleRepository struct {
 
 	// SyncV2 用
 	db *gorm.DB
+	l  logger.LoggerV1
+}
+
+func NewArticleRepository(dao article.ArticleDAO,
+	c cache.ArticleCache,
+	l logger.LoggerV1) ArticleRepository {
+	return &CachedArticleRepository{
+		dao:   dao,
+		l:     l,
+		cache: c,
+	}
+}
+
+func NewArticleRepositoryV1(authorDAO article.ArticleAuthorDAO,
+	readerDAO article.ArticleReaderDAO) ArticleRepository {
+	return &CachedArticleRepository{
+		authorDAO: authorDAO,
+		readerDAO: readerDAO,
+	}
 }
 
 func (repo *CachedArticleRepository) GetById(ctx context.Context, id int64) (domain.Article, error) {
@@ -43,28 +65,36 @@ func (repo *CachedArticleRepository) GetById(ctx context.Context, id int64) (dom
 
 func (repo *CachedArticleRepository) List(ctx context.Context, author int64,
 	offset int, limit int) ([]domain.Article, error) {
+	// 只有第一页才走缓存，并且假定一页只有 100 条
+	// 也就是说，如果前端允许创作者调整页的大小
+	// 那么只有 100 这个页大小这个默认情况下，会走索引
+	if offset == 0 && limit == 100 {
+		data, err := repo.cache.GetFirstPage(ctx, author)
+		if err == nil {
+			return data, nil
+		}
+		// 这里记录日志
+		if err != cache.ErrKeyNotExist {
+			repo.l.Error("查询缓存文章失败",
+				logger.Int64("author", author), logger.Error(err))
+		}
+	}
+	// 慢路径
 	arts, err := repo.dao.GetByAuthor(ctx, author, offset, limit)
 	if err != nil {
 		return nil, err
 	}
-	return slice.Map[article.Article, domain.Article](arts,
+	res := slice.Map[article.Article, domain.Article](arts,
 		func(idx int, src article.Article) domain.Article {
 			return repo.toDomain(src)
-		}), nil
-}
-
-func NewArticleRepository(dao article.ArticleDAO) ArticleRepository {
-	return &CachedArticleRepository{
-		dao: dao,
+		})
+	// 你这个也可以做成异步的
+	err = repo.cache.SetFirstPage(ctx, author, res)
+	if err != nil {
+		repo.l.Error("刷新第一页文章的缓存失败",
+			logger.Int64("author", author), logger.Error(err))
 	}
-}
-
-func NewArticleRepositoryV1(authorDAO article.ArticleAuthorDAO,
-	readerDAO article.ArticleReaderDAO) ArticleRepository {
-	return &CachedArticleRepository{
-		authorDAO: authorDAO,
-		readerDAO: readerDAO,
-	}
+	return res, nil
 }
 
 func (repo *CachedArticleRepository) SyncStatus(ctx context.Context,
@@ -74,7 +104,17 @@ func (repo *CachedArticleRepository) SyncStatus(ctx context.Context,
 
 func (repo *CachedArticleRepository) Sync(ctx context.Context,
 	art domain.Article) (int64, error) {
-	return repo.dao.Sync(ctx, repo.toEntity(art))
+	id, err := repo.dao.Sync(ctx, repo.toEntity(art))
+	if err != nil {
+		return 0, err
+	}
+	author := art.Author.Id
+	err = repo.cache.DelFirstPage(ctx, author)
+	if err != nil {
+		repo.l.Error("删除缓存失败",
+			logger.Int64("author", author), logger.Error(err))
+	}
+	return id, nil
 }
 
 func (repo *CachedArticleRepository) SyncV2(ctx context.Context,
@@ -141,12 +181,32 @@ func (repo *CachedArticleRepository) SyncV1(ctx context.Context,
 
 func (repo *CachedArticleRepository) Create(ctx context.Context,
 	art domain.Article) (int64, error) {
-	return repo.dao.Insert(ctx, repo.toEntity(art))
+	id, err := repo.dao.Insert(ctx, repo.toEntity(art))
+	if err != nil {
+		return 0, err
+	}
+	author := art.Author.Id
+	err = repo.cache.DelFirstPage(ctx, author)
+	if err != nil {
+		repo.l.Error("删除缓存失败",
+			logger.Int64("author", author), logger.Error(err))
+	}
+	return id, nil
 }
 
 func (repo *CachedArticleRepository) Update(ctx context.Context,
 	art domain.Article) error {
-	return repo.dao.UpdateById(ctx, repo.toEntity(art))
+	err := repo.dao.UpdateById(ctx, repo.toEntity(art))
+	if err != nil {
+		return err
+	}
+	author := art.Author.Id
+	err = repo.cache.DelFirstPage(ctx, author)
+	if err != nil {
+		repo.l.Error("删除缓存失败",
+			logger.Int64("author", author), logger.Error(err))
+	}
+	return nil
 }
 
 func (repo *CachedArticleRepository) toDomain(art article.Article) domain.Article {

@@ -23,6 +23,7 @@ var userSvcProvider = wire.NewSet(
 	service.NewUserService)
 var articlSvcProvider = wire.NewSet(
 	article.NewGORMArticleDAO,
+	cache.NewRedisArticleCache,
 	repository.NewArticleRepository,
 	service.NewArticleService)
 

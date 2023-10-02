@@ -26,7 +26,9 @@ func InitWebServer() *gin.Engine {
 		article.NewGORMArticleDAO,
 
 		// Cache 部分
-		cache.NewRedisUserCache, cache.NewRedisCodeCache,
+		cache.NewRedisUserCache,
+		cache.NewRedisCodeCache,
+		cache.NewRedisArticleCache,
 
 		// repository 部分
 		repository.NewCachedUserRepository,

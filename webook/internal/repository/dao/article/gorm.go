@@ -18,6 +18,7 @@ func (dao *GORMArticleDAO) GetByAuthor(ctx context.Context, author int64, offset
 		Where("author_id = ?", author).
 		Offset(offset).
 		Limit(limit).
+		Order("utime DESC").
 		Find(&arts).Error
 	return arts, err
 }
