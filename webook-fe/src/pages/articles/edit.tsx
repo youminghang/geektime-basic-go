@@ -5,7 +5,6 @@ import axios from "@/axios/axios";
 import router from "next/router";
 import {ProLayout} from "@ant-design/pro-components";
 import {useSearchParams} from "next/navigation";
-import {useForm} from "antd/es/form/Form";
 const WangEditor = dynamic(
     // 引入对应的组件 设置的组件参考上面的wangEditor react使用文档
     () => import('../../components/editor'),
@@ -13,6 +12,7 @@ const WangEditor = dynamic(
 )
 
 function Page() {
+    const [form] = Form.useForm()
     const [html, setHtml] = useState()
     const params = useSearchParams()
     const artID = params?.get("id")
@@ -36,9 +36,29 @@ function Page() {
             alert(err);
         })
     };
+    const publish = () => {
+        const values = form.getFieldsValue()
+        if (artID) {
+            values.id = parseInt(artID)
+        }
+        values.content = html
+        axios.post("/articles/publish", values)
+            .then((res) => {
+                if(res.status != 200) {
+                    alert(res.statusText);
+                    return
+                }
+                if (res.data?.code == 0) {
+                    router.push('/articles/view?id='+res.data.data)
+                    return
+                }
+                alert(res.data?.msg || "系统错误");
+            }).catch((err) => {
+            alert(err);
+        })
+    }
 
     const [data, setData] = useState<Article>( {id: 0, title: "", content: ""})
-    const [form] = Form.useForm()
     useEffect(() => {
         if (!artID) {
             return
@@ -47,8 +67,6 @@ function Page() {
             .then((res) => res.data)
             .then((data) => {
                 form.setFieldsValue(data.data)
-                // setData()
-                console.log(data)
                 setHtml(data.data.content)
             })
     }, [artID])
@@ -66,6 +84,7 @@ function Page() {
             <Form.Item>
                 <br/>
                 <Button type={"primary"} htmlType={"submit"}>保存</Button>
+                <Button type={"default"} onClick={publish}>发表</Button>
             </Form.Item>
         </Form>
     </ProLayout>

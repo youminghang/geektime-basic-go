@@ -40,10 +40,9 @@ func (a *ArticleHandler) RegisterRoutes(s *gin.Engine) {
 	g.POST("/publish", a.Publish)
 	g.POST("/withdraw", a.Withdraw)
 
-	// 准备给读者用的服务，但是暂时没太大的必要实现
-	//pub := g.Group("/pub")
+	pub := g.Group("/pub")
 	//pub.GET("/pub", a.PubList)
-	//pub.GET("/pub/:id", a.PubDetail)
+	pub.GET("/:id", a.PubDetail)
 }
 
 func (a *ArticleHandler) Withdraw(ctx *gin.Context) {
@@ -250,5 +249,39 @@ func (a *ArticleHandler) Edit(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, Result{
 		Data: id,
+	})
+}
+
+func (a *ArticleHandler) PubDetail(ctx *gin.Context) {
+	idstr := ctx.Param("id")
+	id, err := strconv.ParseInt(idstr, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusOK, Result{
+			Code: 4,
+			Msg:  "参数错误",
+		})
+		a.l.Error("前端输入的 ID 不对", logger.Error(err))
+		return
+	}
+	art, err := a.svc.GetPublishedById(ctx, id)
+	if err != nil {
+		ctx.JSON(http.StatusOK, Result{
+			Code: 5,
+			Msg:  "系统错误",
+		})
+		a.l.Error("获得文章信息失败", logger.Error(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, Result{
+		Data: ArticleVo{
+			Id:      art.Id,
+			Title:   art.Title,
+			Status:  art.Status.ToUint8(),
+			Content: art.Content,
+			// 要把作者信息带出去
+			Author: art.Author.Name,
+			Ctime:  art.Ctime.Format(time.DateTime),
+			Utime:  art.Utime.Format(time.DateTime),
+		},
 	})
 }

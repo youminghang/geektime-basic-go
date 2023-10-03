@@ -47,5 +47,6 @@ const (
 // Author 在帖子这个领域内，
 // 没有用户的概念，只有作者的概念
 type Author struct {
-	Id int64
+	Id   int64
+	Name string
 }

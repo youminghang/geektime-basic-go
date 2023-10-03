@@ -41,7 +41,7 @@ func InitWebServer() *gin.Engine {
 	userHandler := web.NewUserHandler(userService, codeService, handler)
 	articleDAO := article.NewGORMArticleDAO(db)
 	articleCache := cache.NewRedisArticleCache(cmdable)
-	articleRepository := repository.NewArticleRepository(articleDAO, articleCache, loggerV1)
+	articleRepository := repository.NewArticleRepository(articleDAO, articleCache, userRepository, loggerV1)
 	articleService := service.NewArticleService(articleRepository, loggerV1)
 	articleHandler := web.NewArticleHandler(articleService, loggerV1)
 	wechatService := ioc.InitWechatService(loggerV1)

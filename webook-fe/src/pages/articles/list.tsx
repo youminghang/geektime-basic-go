@@ -51,9 +51,6 @@ const ArticleList = () => {
             })
     }, [])
 
-    const gotoEdit = (record: ArticleItem, idx: number) => {
-        router.push("/articles/" + record.id.toString())
-    }
     return (
         <ProLayout title={"创作中心"}>
             <ProList<ArticleItem>

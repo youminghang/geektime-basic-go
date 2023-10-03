@@ -17,6 +17,10 @@ type ArticleService interface {
 	GetById(ctx context.Context, id int64) (domain.Article, error)
 
 	// 剩下的这个是给读者用的服务，暂时放到这里
+	// GetPublishedById 查找已经发表的
+	// 正常来说在微服务架构下，读者服务和创作者服务会是两个独立的服务
+	// 单体应用下可以混在一起，毕竟现在也没几个方法
+	GetPublishedById(ctx context.Context, id int64) (domain.Article, error)
 }
 
 type articleService struct {
@@ -57,6 +61,10 @@ func NewArticleServiceV1(
 		readerRepo: readerRepo,
 		logger:     l,
 	}
+}
+
+func (svc *articleService) GetPublishedById(ctx context.Context, id int64) (domain.Article, error) {
+	return svc.repo.GetPublishedById(ctx, id)
 }
 
 func (svc *articleService) Withdraw(ctx context.Context, uid, id int64) error {

@@ -16,6 +16,11 @@ type MongoDBDAO struct {
 	node    *snowflake.Node
 }
 
+func (m *MongoDBDAO) GetPubById(ctx context.Context, id int64) (PublishedArticle, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (m *MongoDBDAO) GetByAuthor(ctx context.Context, author int64, offset, limit int) ([]Article, error) {
 	//TODO implement me
 	panic("implement me")
