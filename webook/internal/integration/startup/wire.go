@@ -8,6 +8,8 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao/article"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
+	"gitee.com/geekbang/basic-go/webook/internal/service/sms"
+	"gitee.com/geekbang/basic-go/webook/internal/service/sms/async"
 	"gitee.com/geekbang/basic-go/webook/internal/web"
 	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"gitee.com/geekbang/basic-go/webook/ioc"
@@ -59,6 +61,8 @@ func InitWebServer() *gin.Engine {
 
 func InitArticleHandler(dao article.ArticleDAO) *web.ArticleHandler {
 	wire.Build(thirdProvider,
+		userSvcProvider,
+		cache.NewRedisArticleCache,
 		//wire.InterfaceValue(new(article.ArticleDAO), dao),
 		repository.NewArticleRepository,
 		service.NewArticleService,
@@ -69,6 +73,14 @@ func InitArticleHandler(dao article.ArticleDAO) *web.ArticleHandler {
 func InitUserSvc() service.UserService {
 	wire.Build(thirdProvider, userSvcProvider)
 	return service.NewUserService(nil)
+}
+
+func InitAsyncSmsService(svc sms.Service) *async.Service {
+	wire.Build(thirdProvider, repository.NewAsyncSMSRepository,
+		dao.NewGORMAsyncSmsDAO,
+		async.NewService,
+	)
+	return &async.Service{}
 }
 
 func InitJwtHdl() ijwt.Handler {
