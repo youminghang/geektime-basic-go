@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
-	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
+	"gitee.com/geekbang/basic-go/webook/internal/repository/dao/article"
 )
 
 // ArticleAuthorRepository 演示在 service 层面上分流
@@ -14,10 +14,10 @@ type ArticleAuthorRepository interface {
 
 // CachedArticleAuthorRepository 按照道理，这里也是可以搞缓存的
 type CachedArticleAuthorRepository struct {
-	dao dao.ArticleDAO
+	dao article.ArticleDAO
 }
 
-func NewArticleAuthorRepository(dao dao.ArticleDAO) ArticleAuthorRepository {
+func NewArticleAuthorRepository(dao article.ArticleDAO) ArticleAuthorRepository {
 	return &CachedArticleAuthorRepository{
 		dao: dao,
 	}
@@ -25,7 +25,7 @@ func NewArticleAuthorRepository(dao dao.ArticleDAO) ArticleAuthorRepository {
 
 func (repo *CachedArticleAuthorRepository) Create(ctx context.Context,
 	art domain.Article) (int64, error) {
-	return repo.dao.Create(ctx, repo.toEntity(art))
+	return repo.dao.Insert(ctx, repo.toEntity(art))
 }
 
 func (repo *CachedArticleAuthorRepository) Update(ctx context.Context,
@@ -33,8 +33,8 @@ func (repo *CachedArticleAuthorRepository) Update(ctx context.Context,
 	return repo.dao.UpdateById(ctx, repo.toEntity(art))
 }
 
-func (repo *CachedArticleAuthorRepository) toEntity(art domain.Article) dao.Article {
-	return dao.Article{
+func (repo *CachedArticleAuthorRepository) toEntity(art domain.Article) article.Article {
+	return article.Article{
 		Id:       art.Id,
 		Title:    art.Title,
 		Content:  art.Content,

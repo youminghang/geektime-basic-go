@@ -10,6 +10,7 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
+	"gitee.com/geekbang/basic-go/webook/internal/repository/dao/article"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	"gitee.com/geekbang/basic-go/webook/internal/web"
 	"gitee.com/geekbang/basic-go/webook/internal/web/jwt"
@@ -38,8 +39,9 @@ func InitWebServer() *gin.Engine {
 	codeRepository := repository.NewCachedCodeRepository(codeCache)
 	codeService := service.NewSMSCodeService(smsService, codeRepository)
 	userHandler := web.NewUserHandler(userService, codeService, handler)
-	articleDAO := dao.NewGORMArticleDAO(db)
-	articleRepository := repository.NewArticleRepository(articleDAO)
+	articleDAO := article.NewGORMArticleDAO(db)
+	articleCache := cache.NewRedisArticleCache(cmdable)
+	articleRepository := repository.NewArticleRepository(articleDAO, articleCache, userRepository, loggerV1)
 	articleService := service.NewArticleService(articleRepository, loggerV1)
 	articleHandler := web.NewArticleHandler(articleService, loggerV1)
 	wechatService := ioc.InitWechatService(loggerV1)

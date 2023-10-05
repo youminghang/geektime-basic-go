@@ -10,8 +10,17 @@ import (
 type ArticleService interface {
 	Save(ctx context.Context, art domain.Article) (int64, error)
 	Publish(ctx context.Context, art domain.Article) (int64, error)
-	Withdraw(ctx context.Context, id int64) error
+	Withdraw(ctx context.Context, uid, id int64) error
 	PublishV1(ctx context.Context, art domain.Article) (int64, error)
+	List(ctx context.Context, author int64,
+		offset, limit int) ([]domain.Article, error)
+	GetById(ctx context.Context, id int64) (domain.Article, error)
+
+	// 剩下的这个是给读者用的服务，暂时放到这里
+	// GetPublishedById 查找已经发表的
+	// 正常来说在微服务架构下，读者服务和创作者服务会是两个独立的服务
+	// 单体应用下可以混在一起，毕竟现在也没几个方法
+	GetPublishedById(ctx context.Context, id int64) (domain.Article, error)
 }
 
 type articleService struct {
@@ -23,6 +32,15 @@ type articleService struct {
 	// 1 和 2 是互斥的，不会同时存在
 	repo   repository.ArticleRepository
 	logger logger.LoggerV1
+}
+
+func (svc *articleService) GetById(ctx context.Context, id int64) (domain.Article, error) {
+	return svc.repo.GetById(ctx, id)
+}
+
+func (svc *articleService) List(ctx context.Context, author int64,
+	offset, limit int) ([]domain.Article, error) {
+	return svc.repo.List(ctx, author, offset, limit)
 }
 
 func NewArticleService(repo repository.ArticleRepository,
@@ -45,8 +63,12 @@ func NewArticleServiceV1(
 	}
 }
 
-func (svc *articleService) Withdraw(ctx context.Context, id int64) error {
-	return svc.repo.SyncStatus(ctx, id, domain.ArticleStatusPrivate)
+func (svc *articleService) GetPublishedById(ctx context.Context, id int64) (domain.Article, error) {
+	return svc.repo.GetPublishedById(ctx, id)
+}
+
+func (svc *articleService) Withdraw(ctx context.Context, uid, id int64) error {
+	return svc.repo.SyncStatus(ctx, uid, id, domain.ArticleStatusPrivate)
 }
 
 func (svc *articleService) Save(ctx context.Context,

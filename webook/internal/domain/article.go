@@ -1,5 +1,7 @@
 package domain
 
+import "time"
+
 type Article struct {
 	Id      int64
 	Title   string
@@ -7,6 +9,21 @@ type Article struct {
 	Content string
 	// 作者
 	Author Author
+	Ctime  time.Time
+	Utime  time.Time
+}
+
+// Abstract 取部分作为摘要
+func (a Article) Abstract() string {
+	cs := []rune(a.Content)
+	if len(cs) < 100 {
+		return a.Content
+	}
+	return string(cs[:100])
+}
+
+func (a Article) Published() bool {
+	return a.Status == ArticleStatusPublished
 }
 
 type ArticleStatus uint8
@@ -30,5 +47,6 @@ const (
 // Author 在帖子这个领域内，
 // 没有用户的概念，只有作者的概念
 type Author struct {
-	Id int64
+	Id   int64
+	Name string
 }

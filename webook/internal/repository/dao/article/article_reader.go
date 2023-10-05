@@ -1,4 +1,4 @@
-package dao
+package article
 
 import (
 	"context"
@@ -46,9 +46,4 @@ func (dao *GORMArticleReaderDAO) UpsertV2(ctx context.Context, art PublishedArti
 			"content": art.Content,
 		}),
 	}).Create(&art).Error
-}
-
-type PublishedArticle struct {
-	Article
-	Statue uint8 `gorm:"default=1"`
 }
