@@ -15,10 +15,13 @@ type Service struct {
 	l    logger.LoggerV1
 }
 
-func NewService(svc sms.Service, repo repository.AsyncSmsRepository) *Service {
+func NewService(svc sms.Service,
+	repo repository.AsyncSmsRepository,
+	l logger.LoggerV1) *Service {
 	return &Service{
 		svc:  svc,
 		repo: repo,
+		l:    l,
 	}
 }
 
@@ -28,43 +31,47 @@ func NewService(svc sms.Service, repo repository.AsyncSmsRepository) *Service {
 // 原理：这是最简单的抢占式调度
 func (s *Service) StartAsyncCycle() {
 	for {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-		// 抢占一个异步发送的消息
-		as, err := s.repo.PreemptWaitingSMS(ctx)
-		cancel()
-		switch err {
-		case nil:
-			// 执行发送
-			// 这个也可以做成配置的
-			ctx, cancel = context.WithTimeout(context.Background(), time.Second)
-			err = s.svc.Send(ctx, as.TplId, as.Args, as.Numbers...)
-			if err != nil {
-				// 啥也不需要干
-				s.l.Error("执行异步发送短信失败",
-					logger.Error(err),
-					logger.Int64("id", as.Id))
-				continue
-			}
-			res := err == nil
-			err = s.repo.ReportScheduleResult(ctx, as.Id, res)
-			if err != nil {
-				s.l.Error("执行异步发送短信成功，但是标记数据库失败",
-					logger.Error(err),
-					logger.Bool("res", res),
-					logger.Int64("id", as.Id))
-			}
-		case repository.ErrWaitingSMSNotFound:
-			// 睡一秒。这个你可以自己决定
-			time.Sleep(time.Second)
-		default:
-			// 正常来说应该是数据库那边出了问题，
-			// 但是为了尽量运行，还是要继续的
-			// 你可以稍微睡眠，也可以不睡眠
-			// 睡眠的话可以帮你规避掉短时间的网络抖动问题
-			s.l.Error("抢占异步发送短信任务失败",
-				logger.Error(err))
-			time.Sleep(time.Second)
+		s.AsyncSend()
+	}
+}
+
+func (s *Service) AsyncSend() {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	// 抢占一个异步发送的消息
+	as, err := s.repo.PreemptWaitingSMS(ctx)
+	cancel()
+	switch err {
+	case nil:
+		// 执行发送
+		// 这个也可以做成配置的
+		ctx, cancel = context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		err = s.svc.Send(ctx, as.TplId, as.Args, as.Numbers...)
+		if err != nil {
+			// 啥也不需要干
+			s.l.Error("执行异步发送短信失败",
+				logger.Error(err),
+				logger.Int64("id", as.Id))
 		}
+		res := err == nil
+		err = s.repo.ReportScheduleResult(ctx, as.Id, res)
+		if err != nil {
+			s.l.Error("执行异步发送短信成功，但是标记数据库失败",
+				logger.Error(err),
+				logger.Bool("res", res),
+				logger.Int64("id", as.Id))
+		}
+	case repository.ErrWaitingSMSNotFound:
+		// 睡一秒。这个你可以自己决定
+		time.Sleep(time.Second)
+	default:
+		// 正常来说应该是数据库那边出了问题，
+		// 但是为了尽量运行，还是要继续的
+		// 你可以稍微睡眠，也可以不睡眠
+		// 睡眠的话可以帮你规避掉短时间的网络抖动问题
+		s.l.Error("抢占异步发送短信任务失败",
+			logger.Error(err))
+		time.Sleep(time.Second)
 	}
 }
 

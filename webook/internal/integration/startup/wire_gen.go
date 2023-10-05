@@ -77,7 +77,8 @@ func InitAsyncSmsService(svc sms.Service) *async.Service {
 	gormDB := InitTestDB()
 	asyncSmsDAO := dao.NewGORMAsyncSmsDAO(gormDB)
 	asyncSmsRepository := repository.NewAsyncSMSRepository(asyncSmsDAO)
-	asyncService := async.NewService(svc, asyncSmsRepository)
+	loggerV1 := InitLog()
+	asyncService := async.NewService(svc, asyncSmsRepository, loggerV1)
 	return asyncService
 }
 

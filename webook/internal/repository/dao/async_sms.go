@@ -56,10 +56,12 @@ func (g *GORMAsyncSmsDAO) GetWaitingSMS(ctx context.Context) (AsyncSms, error) {
 		}
 
 		// 只要更新了更新时间，根据我们前面的规则，就不可能被别的节点抢占了
-		err = tx.Model(&s).Updates(map[string]any{
-			"retry_cnt": gorm.Expr("retry_cnt + 1"),
-			"utime":     now,
-		}).Error
+		err = tx.Model(&AsyncSms{}).
+			Where("id = ?", s.Id).
+			Updates(map[string]any{
+				"retry_cnt": gorm.Expr("retry_cnt + 1"),
+				"utime":     now,
+			}).Error
 		return err
 	})
 	return s, err
@@ -67,7 +69,7 @@ func (g *GORMAsyncSmsDAO) GetWaitingSMS(ctx context.Context) (AsyncSms, error) {
 
 func (g *GORMAsyncSmsDAO) MarkSuccess(ctx context.Context, id int64) error {
 	now := time.Now().UnixMilli()
-	return g.db.WithContext(ctx).Where("id =?", id).Updates(map[string]any{
+	return g.db.WithContext(ctx).Model(&AsyncSms{}).Where("id =?", id).Updates(map[string]any{
 		"utime":  now,
 		"status": asyncStatusSuccess,
 	}).Error
@@ -75,7 +77,7 @@ func (g *GORMAsyncSmsDAO) MarkSuccess(ctx context.Context, id int64) error {
 
 func (g *GORMAsyncSmsDAO) MarkFailed(ctx context.Context, id int64) error {
 	now := time.Now().UnixMilli()
-	return g.db.WithContext(ctx).
+	return g.db.WithContext(ctx).Model(&AsyncSms{}).
 		// 只有到达了重试次数才会更新
 		Where("id =? and `retry_cnt`>=`retry_max`", id).
 		Updates(map[string]any{
