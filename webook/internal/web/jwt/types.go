@@ -1,6 +1,7 @@
 package jwt
 
 import (
+	"gitee.com/geekbang/basic-go/webook/pkg/ginx"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -19,9 +20,5 @@ type RefreshClaims struct {
 	jwt.RegisteredClaims
 }
 
-type UserClaims struct {
-	Id        int64
-	UserAgent string
-	Ssid      string
-	jwt.RegisteredClaims
-}
+// UserClaims 别名机制，偷个懒，这样就不用修改其它的代码了
+type UserClaims = ginx.UserClaims

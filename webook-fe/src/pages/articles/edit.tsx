@@ -58,7 +58,7 @@ function Page() {
         })
     }
 
-    const [data, setData] = useState<Article>( {id: 0, title: "", content: ""})
+    const [data, setData] = useState<Article>( )
     useEffect(() => {
         if (!artID) {
             return
@@ -69,7 +69,7 @@ function Page() {
                 form.setFieldsValue(data.data)
                 setHtml(data.data.content)
             })
-    }, [artID])
+    }, [form, artID])
 
     return <ProLayout title={"创作中心"}>
         <Form onFinish={onFinish}

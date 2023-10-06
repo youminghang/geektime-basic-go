@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go v1.45.15
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/dlclark/regexp2 v1.10.0
-	github.com/ecodeclub/ekit v0.0.7
+	github.com/ecodeclub/ekit v0.0.8-0.20231013092315-5f9ae289b920
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-contrib/sessions v0.0.5
@@ -20,7 +20,7 @@ require (
 	github.com/redis/go-redis/v9 v9.0.5
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.16.0
-	github.com/stretchr/testify v1.8.3
+	github.com/stretchr/testify v1.8.4
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.708
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.708
 	go.mongodb.org/mongo-driver v1.9.0
@@ -28,6 +28,7 @@ require (
 	go.uber.org/zap v1.21.0
 	golang.org/x/crypto v0.11.0
 	golang.org/x/net v0.10.0
+	golang.org/x/sync v0.4.0
 	gorm.io/driver/mysql v1.5.1
 	gorm.io/driver/sqlite v1.5.2
 	gorm.io/gorm v1.25.2
@@ -45,7 +46,7 @@ require (
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
@@ -91,7 +92,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/quasoft/memstore v0.0.0-20191010062613-2bce066d2b0b // indirect
 	github.com/sagikazarmark/crypt v0.10.0 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
@@ -113,7 +114,6 @@ require (
 	go.uber.org/multierr v1.8.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/oauth2 v0.7.0 // indirect
-	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/text v0.11.0 // indirect
 	golang.org/x/time v0.1.0 // indirect

@@ -62,9 +62,6 @@ func NewArticleRepositoryV1(authorDAO article.ArticleAuthorDAO,
 }
 
 func (repo *CachedArticleRepository) GetPublishedById(ctx context.Context, id int64) (domain.Article, error) {
-	defer func() {
-
-	}()
 	res, err := repo.cache.GetPub(ctx, id)
 	if err == nil {
 		return res, err

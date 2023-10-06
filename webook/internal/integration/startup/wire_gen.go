@@ -82,6 +82,17 @@ func InitAsyncSmsService(svc sms.Service) *async.Service {
 	return asyncService
 }
 
+func InitInteractiveService() service.InteractiveService {
+	gormDB := InitTestDB()
+	interactiveDAO := dao.NewGORMInteractiveDAO(gormDB)
+	cmdable := InitRedis()
+	interactiveCache := cache.NewRedisInteractiveCache(cmdable)
+	loggerV1 := InitLog()
+	interactiveRepository := repository.NewCachedInteractiveRepository(interactiveDAO, interactiveCache, loggerV1)
+	interactiveService := service.NewInteractiveService(interactiveRepository)
+	return interactiveService
+}
+
 func InitJwtHdl() jwt.Handler {
 	cmdable := InitRedis()
 	handler := jwt.NewRedisHandler(cmdable)
@@ -95,3 +106,5 @@ var thirdProvider = wire.NewSet(InitRedis, InitTestDB, InitLog)
 var userSvcProvider = wire.NewSet(dao.NewGORMUserDAO, cache.NewRedisUserCache, repository.NewCachedUserRepository, service.NewUserService)
 
 var articlSvcProvider = wire.NewSet(article.NewGORMArticleDAO, cache.NewRedisArticleCache, repository.NewArticleRepository, service.NewArticleService)
+
+var interactiveSvcProvider = wire.NewSet(service.NewInteractiveService, repository.NewCachedInteractiveRepository, dao.NewGORMInteractiveDAO, cache.NewRedisInteractiveCache)
