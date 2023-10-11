@@ -36,6 +36,8 @@ func main() {
 	})
 
 	server.Run(":8080")
+	// 作业
+	//server.Run(":8081")
 }
 
 func initLogger() {

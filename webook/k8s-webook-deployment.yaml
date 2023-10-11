@@ -5,6 +5,8 @@ metadata:
 #  specification
 spec:
 #  副本数量
+#  作业
+#  replicas: 2
   replicas: 3
   selector:
     matchLabels:
@@ -20,4 +22,6 @@ spec:
         - name: webook
           image: flycash/webook-live:v0.0.1
           ports:
+#            - 作业
+#            - containerPort: 8081
             - containerPort: 8080

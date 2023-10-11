@@ -7,6 +7,8 @@ spec:
     app: webook-live-redis
   ports:
     - protocol: TCP
+#      作业
+#      port: 6380
       port: 11479
 #      Redis 默认端口
       targetPort: 6379
