@@ -51,6 +51,7 @@ func (g *GORMAsyncSmsDAO) GetWaitingSMS(ctx context.Context) (AsyncSms, error) {
 		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("utime < ? and status = ?",
 				endTime, asyncStatusWaiting).First(&s).Error
+		// SELECT xx FROM xxx WHERE xx FOR UPDATE，锁住了
 		if err != nil {
 			return err
 		}
@@ -60,7 +61,9 @@ func (g *GORMAsyncSmsDAO) GetWaitingSMS(ctx context.Context) (AsyncSms, error) {
 			Where("id = ?", s.Id).
 			Updates(map[string]any{
 				"retry_cnt": gorm.Expr("retry_cnt + 1"),
-				"utime":     now,
+				// 更新成了当前时间戳，确保我在发送过程中，没人会再次抢到它
+				// 也相当于，重试间隔一分钟
+				"utime": now,
 			}).Error
 		return err
 	})
@@ -69,10 +72,12 @@ func (g *GORMAsyncSmsDAO) GetWaitingSMS(ctx context.Context) (AsyncSms, error) {
 
 func (g *GORMAsyncSmsDAO) MarkSuccess(ctx context.Context, id int64) error {
 	now := time.Now().UnixMilli()
-	return g.db.WithContext(ctx).Model(&AsyncSms{}).Where("id =?", id).Updates(map[string]any{
-		"utime":  now,
-		"status": asyncStatusSuccess,
-	}).Error
+	return g.db.WithContext(ctx).Model(&AsyncSms{}).
+		Where("id =?", id).
+		Updates(map[string]any{
+			"utime":  now,
+			"status": asyncStatusSuccess,
+		}).Error
 }
 
 func (g *GORMAsyncSmsDAO) MarkFailed(ctx context.Context, id int64) error {
