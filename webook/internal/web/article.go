@@ -54,7 +54,7 @@ func (h *ArticleHandler) Publish(ctx *gin.Context) {
 		return
 	}
 
-	id, err := h.svc.Publish(ctx, req.toDomain(claims.Uid))
+	id, err := h.svc.Publish(ctx, req.toDomain(claims.Id))
 	if err != nil {
 		ctx.JSON(http.StatusOK, Result{
 			Code: 5,
@@ -65,7 +65,6 @@ func (h *ArticleHandler) Publish(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, Result{
-		Msg:  "OK",
 		Data: id,
 	})
 }
@@ -96,7 +95,7 @@ func (h *ArticleHandler) Withdraw(ctx *gin.Context) {
 	err := h.svc.Withdraw(ctx, domain.Article{
 		Id: req.Id,
 		Author: domain.Author{
-			Id: claims.Uid,
+			Id: claims.Id,
 		},
 	})
 	if err != nil {
@@ -132,7 +131,7 @@ func (h *ArticleHandler) Edit(ctx *gin.Context) {
 	}
 	// 检测输入，跳过这一步
 	// 调用 svc 的代码
-	id, err := h.svc.Save(ctx, req.toDomain(claims.Uid))
+	id, err := h.svc.Save(ctx, req.toDomain(claims.Id))
 	if err != nil {
 		ctx.JSON(http.StatusOK, Result{
 			Code: 5,
@@ -143,7 +142,6 @@ func (h *ArticleHandler) Edit(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, Result{
-		Msg:  "OK",
 		Data: id,
 	})
 }
