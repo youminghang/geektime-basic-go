@@ -6,6 +6,7 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao/article"
 )
 
+//go:generate mockgen -source=./article_reader.go -package=repomocks -destination=mocks/article_reader.mock.go ArticleReaderRepository
 type ArticleReaderRepository interface {
 	Save(ctx context.Context, art domain.Article) error
 }

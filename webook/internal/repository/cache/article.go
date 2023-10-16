@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+//go:generate mockgen -source=./article.go -package=cachemocks -destination=mocks/article.mock.go ArticleCache
 type ArticleCache interface {
 	// GetFirstPage 只缓存第第一页的数据
 	// 并且不缓存整个 Content

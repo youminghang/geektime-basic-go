@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+//go:generate mockgen -source=./interactive.go -package=daomocks -destination=mocks/interactive.mock.go InteractiveDAO
 type InteractiveDAO interface {
 	IncrReadCnt(ctx context.Context, biz string, bizId int64) error
 	InsertLikeInfo(ctx context.Context, biz string, bizId, uid int64) error
@@ -134,8 +135,6 @@ func NewGORMInteractiveDAO(db *gorm.DB) InteractiveDAO {
 func (dao *GORMInteractiveDAO) IncrReadCnt(ctx context.Context, biz string, bizId int64) error {
 	now := time.Now().UnixMilli()
 	return dao.db.WithContext(ctx).Clauses(clause.OnConflict{
-		// mysql 是可以不写的
-		//Columns: []clause.Column{{Name: "biz_id"}, {Name: "biz"}},
 		DoUpdates: clause.Assignments(map[string]any{
 			"read_cnt": gorm.Expr("`read_cnt`+1"),
 			"utime":    now,

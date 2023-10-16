@@ -5,6 +5,7 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 )
 
+//go:generate mockgen -source=./types.go -package=wechatmocks -destination=mocks/svc.mock.go Service
 type Service interface {
 	AuthURL(ctx context.Context, state string) (string, error)
 	// VerifyCode 目前大部分公司的 OAuth2 平台都差不多的设计

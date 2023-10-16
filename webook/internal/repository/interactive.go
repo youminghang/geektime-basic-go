@@ -8,6 +8,7 @@ import (
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 )
 
+//go:generate mockgen -source=./interactive.go -package=repomocks -destination=mocks/interactive.mock.go InteractiveRepository
 type InteractiveRepository interface {
 	IncrReadCnt(ctx context.Context,
 		biz string, bizId int64) error

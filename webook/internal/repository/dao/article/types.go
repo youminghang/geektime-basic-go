@@ -7,6 +7,7 @@ import (
 
 var ErrPossibleIncorrectAuthor = errors.New("用户在尝试操作非本人数据")
 
+//go:generate mockgen -source=./types.go -package=artdaomocks -destination=mocks/article.mock.go ArticleDAO
 type ArticleDAO interface {
 	Insert(ctx context.Context, art Article) (int64, error)
 	UpdateById(ctx context.Context, art Article) error
