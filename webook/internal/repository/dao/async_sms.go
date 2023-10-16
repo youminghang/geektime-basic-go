@@ -10,6 +10,7 @@ import (
 
 var ErrWaitingSMSNotFound = gorm.ErrRecordNotFound
 
+//go:generate mockgen -source=./async_sms.go -package=daomocks -destination=mocks/async_sms.mock.go AsyncSmsDAO
 type AsyncSmsDAO interface {
 	Insert(ctx context.Context, s AsyncSms) error
 	GetWaitingSMS(ctx context.Context) (AsyncSms, error)

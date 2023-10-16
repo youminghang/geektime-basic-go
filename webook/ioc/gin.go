@@ -5,6 +5,7 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/web"
 	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"gitee.com/geekbang/basic-go/webook/internal/web/middleware"
+	"gitee.com/geekbang/basic-go/webook/pkg/ginx"
 	"gitee.com/geekbang/basic-go/webook/pkg/ginx/middleware/accesslog"
 	"gitee.com/geekbang/basic-go/webook/pkg/ginx/middleware/ratelimit"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
@@ -20,7 +21,8 @@ import (
 func InitWebServer(funcs []gin.HandlerFunc,
 	userHdl *web.UserHandler,
 	artHdl *web.ArticleHandler,
-	oauth2Hdl *web.OAuth2WechatHandler) *gin.Engine {
+	oauth2Hdl *web.OAuth2WechatHandler, l logger.LoggerV1) *gin.Engine {
+	ginx.SetLogger(l)
 	server := gin.Default()
 	server.Use(funcs...)
 	// 注册路由

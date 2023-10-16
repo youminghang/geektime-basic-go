@@ -29,11 +29,20 @@ var articlSvcProvider = wire.NewSet(
 	repository.NewArticleRepository,
 	service.NewArticleService)
 
+var interactiveSvcProvider = wire.NewSet(
+	service.NewInteractiveService,
+	repository.NewCachedInteractiveRepository,
+	dao.NewGORMInteractiveDAO,
+	cache.NewRedisInteractiveCache,
+)
+
+//go:generate wire
 func InitWebServer() *gin.Engine {
 	wire.Build(
 		thirdProvider,
 		userSvcProvider,
 		articlSvcProvider,
+		interactiveSvcProvider,
 		cache.NewRedisCodeCache,
 		repository.NewCachedCodeRepository,
 		// service 部分
@@ -62,6 +71,7 @@ func InitWebServer() *gin.Engine {
 func InitArticleHandler(dao article.ArticleDAO) *web.ArticleHandler {
 	wire.Build(thirdProvider,
 		userSvcProvider,
+		interactiveSvcProvider,
 		cache.NewRedisArticleCache,
 		//wire.InterfaceValue(new(article.ArticleDAO), dao),
 		repository.NewArticleRepository,
@@ -81,6 +91,11 @@ func InitAsyncSmsService(svc sms.Service) *async.Service {
 		async.NewService,
 	)
 	return &async.Service{}
+}
+
+func InitInteractiveService() service.InteractiveService {
+	wire.Build(thirdProvider, interactiveSvcProvider)
+	return service.NewInteractiveService(nil, nil)
 }
 
 func InitJwtHdl() ijwt.Handler {

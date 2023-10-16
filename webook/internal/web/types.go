@@ -1,12 +1,11 @@
 package web
 
-import "github.com/gin-gonic/gin"
+import (
+	"gitee.com/geekbang/basic-go/webook/pkg/ginx"
+	"github.com/gin-gonic/gin"
+)
 
-type Result struct {
-	Code int    `json:"code"`
-	Msg  string `json:"msg"`
-	Data any    `json:"data"`
-}
+type Result = ginx.Result
 
 type Page struct {
 	Offset int `json:"offset"`

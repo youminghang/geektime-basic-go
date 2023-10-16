@@ -12,6 +12,7 @@ var ErrCodeSendTooMany = repository.ErrCodeSendTooMany
 
 const codeTplId = "1877556"
 
+//go:generate mockgen -source=./code.go -package=svcmocks -destination=mocks/code.mock.go CodeService
 type CodeService interface {
 	Send(ctx context.Context, biz string, phone string) error
 	Verify(ctx context.Context, biz string, phone string, inputCode string) (bool, error)

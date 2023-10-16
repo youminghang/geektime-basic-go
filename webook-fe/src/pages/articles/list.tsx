@@ -1,4 +1,4 @@
-import {DeleteOutlined, EditOutlined} from '@ant-design/icons';
+import {EditOutlined} from '@ant-design/icons';
 import {ProLayout, ProList} from '@ant-design/pro-components';
 import {Button, Tag} from 'antd';
 import React, {useEffect, useState} from 'react';

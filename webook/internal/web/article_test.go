@@ -121,7 +121,7 @@ func TestArticleHandler_Publish(t *testing.T) {
 			defer ctrl.Finish()
 			svc := tc.mock(ctrl)
 			// 利用 mock 来构造 UserHandler
-			hdl := NewArticleHandler(svc, logger.NewNoOpLogger())
+			hdl := NewArticleHandler(svc, nil, logger.NewNoOpLogger())
 
 			// 注册路由
 			server := gin.Default()

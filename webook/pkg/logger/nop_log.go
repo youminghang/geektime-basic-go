@@ -3,6 +3,10 @@ package logger
 type NoOpLogger struct {
 }
 
+func (n *NoOpLogger) With(args ...Field) LoggerV1 {
+	return n
+}
+
 func NewNoOpLogger() LoggerV1 {
 	return &NoOpLogger{}
 }
