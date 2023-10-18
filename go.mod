@@ -7,6 +7,8 @@ require (
 	github.com/alibabacloud-go/darabonba-openapi v0.2.1
 	github.com/alibabacloud-go/dysmsapi-20170525/v2 v2.0.18
 	github.com/aliyun/alibaba-cloud-sdk-go v1.62.521
+	github.com/aws/aws-sdk-go v1.45.27
+	github.com/bwmarrin/snowflake v0.3.0
 	github.com/cloopen/go-sms-sdk v0.0.0-20200702015230-7c5619f80c9e
 	github.com/dlclark/regexp2 v1.10.0
 	github.com/ecodeclub/ekit v0.0.7
@@ -87,7 +89,7 @@ require (
 	github.com/hashicorp/serf v0.10.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect

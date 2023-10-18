@@ -4,10 +4,10 @@ package startup
 
 import (
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
-	"gitee.com/geekbang/basic-go/webook/internal/repository/article"
+	article2 "gitee.com/geekbang/basic-go/webook/internal/repository/article"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
-	article2 "gitee.com/geekbang/basic-go/webook/internal/repository/dao/article"
+	"gitee.com/geekbang/basic-go/webook/internal/repository/dao/article"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	"gitee.com/geekbang/basic-go/webook/internal/web"
 	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
@@ -22,16 +22,18 @@ var userSvcProvider = wire.NewSet(
 	cache.NewUserCache,
 	repository.NewUserRepository,
 	service.NewUserService)
+var articlSvcProvider = wire.NewSet(
+	article.NewGORMArticleDAO,
+	article2.NewArticleRepository,
+	service.NewArticleService)
 
 func InitWebServer() *gin.Engine {
 	wire.Build(
 		thirdProvider,
 		userSvcProvider,
-		//articlSvcProvider,
+		articlSvcProvider,
 		cache.NewCodeCache,
-		article2.NewGORMArticleDAO,
 		repository.NewCodeRepository,
-		article.NewArticleRepository,
 		// service 部分
 		// 集成测试我们显式指定使用内存实现
 		ioc.InitSMSService,
@@ -39,12 +41,10 @@ func InitWebServer() *gin.Engine {
 		// 指定啥也不干的 wechat service
 		InitPhantomWechatService,
 		service.NewCodeService,
-		service.NewArticleService,
 		// handler 部分
 		web.NewUserHandler,
 		web.NewOAuth2WechatHandler,
 		web.NewArticleHandler,
-		InitWechatHandlerConfig,
 		ijwt.NewRedisJWTHandler,
 
 		// gin 的中间件
@@ -57,14 +57,15 @@ func InitWebServer() *gin.Engine {
 	return gin.Default()
 }
 
-func InitArticleHandler() *web.ArticleHandler {
+func InitArticleHandler(dao article.ArticleDAO) *web.ArticleHandler {
 	wire.Build(thirdProvider,
-		article2.NewGORMArticleDAO,
+		//userSvcProvider,
+		//cache.NewRedisArticleCache,
+		//wire.InterfaceValue(new(article.ArticleDAO), dao),
+		article2.NewArticleRepository,
 		service.NewArticleService,
-		web.NewArticleHandler,
-		article.NewArticleRepository,
-	)
-	return &web.ArticleHandler{}
+		web.NewArticleHandler)
+	return new(web.ArticleHandler)
 }
 
 func InitUserSvc() service.UserService {

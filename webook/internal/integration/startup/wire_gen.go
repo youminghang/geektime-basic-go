@@ -8,10 +8,10 @@ package startup
 
 import (
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
-	"gitee.com/geekbang/basic-go/webook/internal/repository/article"
+	article2 "gitee.com/geekbang/basic-go/webook/internal/repository/article"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
-	article2 "gitee.com/geekbang/basic-go/webook/internal/repository/dao/article"
+	"gitee.com/geekbang/basic-go/webook/internal/repository/dao/article"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	"gitee.com/geekbang/basic-go/webook/internal/web"
 	"gitee.com/geekbang/basic-go/webook/internal/web/jwt"
@@ -38,20 +38,17 @@ func InitWebServer() *gin.Engine {
 	codeService := service.NewCodeService(codeRepository, smsService)
 	userHandler := web.NewUserHandler(userService, codeService, handler)
 	wechatService := InitPhantomWechatService(loggerV1)
-	wechatHandlerConfig := InitWechatHandlerConfig()
-	oAuth2WechatHandler := web.NewOAuth2WechatHandler(wechatService, userService, handler, wechatHandlerConfig)
-	articleDAO := article2.NewGORMArticleDAO(gormDB)
-	articleRepository := article.NewArticleRepository(articleDAO)
+	oAuth2WechatHandler := web.NewOAuth2WechatHandler(wechatService, userService, handler)
+	articleDAO := article.NewGORMArticleDAO(gormDB)
+	articleRepository := article2.NewArticleRepository(articleDAO)
 	articleService := service.NewArticleService(articleRepository)
 	articleHandler := web.NewArticleHandler(articleService, loggerV1)
 	engine := ioc.InitWebServer(v, userHandler, oAuth2WechatHandler, articleHandler)
 	return engine
 }
 
-func InitArticleHandler() *web.ArticleHandler {
-	gormDB := InitTestDB()
-	articleDAO := article2.NewGORMArticleDAO(gormDB)
-	articleRepository := article.NewArticleRepository(articleDAO)
+func InitArticleHandler(dao2 article.ArticleDAO) *web.ArticleHandler {
+	articleRepository := article2.NewArticleRepository(dao2)
 	articleService := service.NewArticleService(articleRepository)
 	loggerV1 := InitLog()
 	articleHandler := web.NewArticleHandler(articleService, loggerV1)
@@ -80,3 +77,5 @@ func InitJwtHdl() jwt.Handler {
 var thirdProvider = wire.NewSet(InitRedis, InitTestDB, InitLog)
 
 var userSvcProvider = wire.NewSet(dao.NewUserDAO, cache.NewUserCache, repository.NewUserRepository, service.NewUserService)
+
+var articlSvcProvider = wire.NewSet(article.NewGORMArticleDAO, article2.NewArticleRepository, service.NewArticleService)
