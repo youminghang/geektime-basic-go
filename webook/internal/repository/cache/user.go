@@ -81,8 +81,8 @@ func (cache *RedisUserCache) key(id int64) string {
 //}
 
 //type UnifyCache interface {
-//	Get(ctx context.Context, key string)
-//	Set(ctx context.Context, key string, val any, expiration time.Duration)
+//	Get(ctx context.Context, firstPageKey string)
+//	Set(ctx context.Context, firstPageKey string, val any, expiration time.Duration)
 //}
 //
 //

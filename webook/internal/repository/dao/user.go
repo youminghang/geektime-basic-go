@@ -99,6 +99,7 @@ type User struct {
 	// 全部用户唯一
 	Email    sql.NullString `gorm:"unique"`
 	Password string
+	Nickname string
 
 	// 唯一索引允许有多个空值
 	// 但是不能有多个 ""

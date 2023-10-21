@@ -14,11 +14,24 @@ type GORMArticleDAO struct {
 
 func (dao *GORMArticleDAO) GetByAuthor(ctx context.Context, author int64, offset, limit int) ([]Article, error) {
 	var arts []Article
+	// SELECT * FROM XXX WHERE XX order by aaa
+	// 在设计 order by 语句的时候，要注意让 order by 中的数据命中索引
+	// SQL 优化的案例：早期的时候，
+	// 我们的 order by 没有命中索引的，内存排序非常慢
+	// 你的工作就是优化了这个查询，加进去了索引
+	// author_id => author_id, utime 的联合索引
 	err := dao.db.WithContext(ctx).Model(&Article{}).
 		Where("author_id = ?", author).
 		Offset(offset).
 		Limit(limit).
+		// 升序排序。 utime ASC
+		// 混合排序
+		// ctime ASC, utime desc
 		Order("utime DESC").
+		//Order(clause.OrderBy{Columns: []clause.OrderByColumn{
+		//	{Column: clause.Column{Name: "utime"}, Desc: true},
+		//	{Column: clause.Column{Name: "ctime"}, Desc: false},
+		//}}).
 		Find(&arts).Error
 	return arts, err
 }
