@@ -71,7 +71,7 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, Result{
-		Data: ArticleVo{
+		Data: ArticleVO{
 			Id:      art.Id,
 			Title:   art.Title,
 			Status:  art.Status.ToUint8(),
