@@ -18,8 +18,15 @@ func main() {
 	// 要把配置初始化放在最前面
 	initViperV2Watch()
 	//initLogger()
-	server := InitWebServer()
-	// 注册路由
+	app := InitApp()
+	for _, c := range app.consumers {
+		err := c.Start()
+		if err != nil {
+			panic(err)
+		}
+	}
+	server := app.web
+	//注册路由
 	server.GET("/hello", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "hello, world")
 	})
