@@ -17,14 +17,18 @@ import (
 var _ handler = (*ArticleHandler)(nil)
 
 type ArticleHandler struct {
-	svc service.ArticleService
-	l   logger.LoggerV1
+	svc     service.ArticleService
+	l       logger.LoggerV1
+	intrSvc service.InteractiveService
+	biz     string
 }
 
-func NewArticleHandler(svc service.ArticleService, l logger.LoggerV1) *ArticleHandler {
+func NewArticleHandler(svc service.ArticleService,
+	l logger.LoggerV1) *ArticleHandler {
 	return &ArticleHandler{
 		svc: svc,
 		l:   l,
+		biz: "article",
 	}
 }
 
@@ -47,7 +51,43 @@ func (h *ArticleHandler) RegisterRoutes(server *gin.Engine) {
 	g.GET("/detail/:id", ginx.WrapToken[ijwt.UserClaims](h.Detail))
 
 	pub := g.Group("/pub")
-	pub.GET("/:id", h.PubDetail)
+	pub.GET("/:id", h.PubDetail, func(ctx *gin.Context) {
+		// 增加阅读计数。
+		//go func() {
+		//	// 开一个 goroutine，异步去执行
+		//	er := a.intrSvc.IncrReadCnt(ctx, a.biz, art.Id)
+		//	if er != nil {
+		//		a.l.Error("增加阅读计数失败",
+		//			logger.Int64("aid", art.Id),
+		//			logger.Error(err))
+		//	}
+		//}()
+	})
+	// 点赞是这个接口，取消点赞也是这个接口
+	// RESTful 风格
+	//pub.POST("/like/:id", ginx.WrapBodyAndToken[LikeReq,
+	//	ijwt.UserClaims](h.Like))
+	pub.POST("/like", ginx.WrapBodyAndToken[LikeReq,
+		ijwt.UserClaims](h.Like))
+	//pub.POST("/cancel_like", ginx.WrapBodyAndToken[LikeReq,
+	//	ijwt.UserClaims](h.Like))
+}
+
+func (a *ArticleHandler) Like(ctx *gin.Context, req LikeReq, uc ijwt.UserClaims) (ginx.Result, error) {
+	var err error
+	if req.Like {
+		err = a.intrSvc.Like(ctx, a.biz, req.Id, uc.Id)
+	} else {
+		err = a.intrSvc.CancelLike(ctx, a.biz, req.Id, uc.Id)
+	}
+
+	if err != nil {
+		return ginx.Result{
+			Code: 5,
+			Msg:  "系统错误",
+		}, err
+	}
+	return ginx.Result{Msg: "OK"}, nil
 }
 
 func (a *ArticleHandler) PubDetail(ctx *gin.Context) {
@@ -70,6 +110,21 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context) {
 		a.l.Error("获得文章信息失败", logger.Error(err))
 		return
 	}
+
+	// 增加阅读计数。
+	go func() {
+		// 开一个 goroutine，异步去执行
+		er := a.intrSvc.IncrReadCnt(ctx, a.biz, art.Id)
+		if er != nil {
+			a.l.Error("增加阅读计数失败",
+				logger.Int64("aid", art.Id),
+				logger.Error(err))
+		}
+	}()
+
+	// ctx.Set("art", art)
+
+	// 这个功能是不是可以让前端，主动发一个 HTTP 请求，来增加一个计数？
 	ctx.JSON(http.StatusOK, Result{
 		Data: ArticleVO{
 			Id:      art.Id,

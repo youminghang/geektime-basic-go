@@ -12,7 +12,7 @@ const onFinish = (values: any) => {
                 return
             }
             alert(res.data)
-            router.push('/users/profile')
+            router.push('/articles/list')
         }).catch((err) => {
             alert(err);
     })
@@ -58,9 +58,6 @@ const LoginForm: React.FC = () => {
             </Link>
             <Link href={"/users/login_wechat"} >
                 &nbsp;&nbsp;微信扫码登录
-            </Link>
-            <Link href={"https://open.weixin.qq.com/connect/qrconnect?appid=wx1b4c7610fc671845&redirect_uri=https%3A%2F%2Faccount.geekbang.org%2Faccount%2Foauth%2Fcallback%3Ftype%3Dwechat%26ident%3D124963%26login%3D0%26cip%3D0%26redirect%3Dhttps%253A%252F%252Faccount.geekbang.org%252Fthirdlogin%253Fremember%253D1%2526type%253Dwechat%2526is_bind%253D0%2526platform%253Dtime%2526redirect%253Dhttps%25253A%25252F%25252Ftime.geekbang.org%25252F%2526failedurl%253Dhttps%253A%252F%252Faccount.geekbang.org%252Fsignin%253Fredirect%253Dhttps%25253A%25252F%25252Ftime.geekbang.org%25252F&response_type=code&scope=snsapi_login&state=0674438c3faded355c5e8eac545681c1#wechat_redirect"} >
-                &nbsp;&nbsp;极客时间微信扫码登录V1
             </Link>
             <Link href={"/users/signup"} >
                 &nbsp;&nbsp;注册

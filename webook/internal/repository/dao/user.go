@@ -122,8 +122,8 @@ type User struct {
 	// 如果要创建联合索引，<unionid, openid>，用 openid 查询的时候不会走索引
 	// <openid, unionid> 用 unionid 查询的时候，不会走索引
 	// 微信的字段
-	WechatUnionID sql.NullString
-	WechatOpenID  sql.NullString `gorm:"unique"`
+	WechatUnionID sql.NullString `gorm:"type=varchar(1024)"`
+	WechatOpenID  sql.NullString `gorm:"type=varchar(1024);unique"`
 
 	// 创建时间，毫秒数
 	Ctime int64
