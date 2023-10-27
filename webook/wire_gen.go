@@ -7,6 +7,7 @@
 package main
 
 import (
+	article2 "gitee.com/geekbang/basic-go/webook/internal/events/article"
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
@@ -15,7 +16,6 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/web"
 	"gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"gitee.com/geekbang/basic-go/webook/ioc"
-	"github.com/gin-gonic/gin"
 )
 
 import (
@@ -24,7 +24,7 @@ import (
 
 // Injectors from wire.go:
 
-func InitWebServer() *gin.Engine {
+func InitApp() *App {
 	cmdable := ioc.InitRedis()
 	handler := jwt.NewRedisHandler(cmdable)
 	loggerV1 := ioc.InitLogger()
@@ -42,7 +42,10 @@ func InitWebServer() *gin.Engine {
 	articleDAO := article.NewGORMArticleDAO(db)
 	articleCache := cache.NewRedisArticleCache(cmdable)
 	articleRepository := repository.NewArticleRepository(articleDAO, articleCache, userRepository, loggerV1)
-	articleService := service.NewArticleService(articleRepository, loggerV1)
+	client := ioc.InitKafka()
+	syncProducer := ioc.NewSyncProducer(client)
+	producer := article2.NewSaramaSyncProducer(syncProducer)
+	articleService := service.NewArticleService(articleRepository, loggerV1, producer)
 	interactiveDAO := dao.NewGORMInteractiveDAO(db)
 	interactiveCache := cache.NewRedisInteractiveCache(cmdable)
 	interactiveRepository := repository.NewCachedInteractiveRepository(interactiveDAO, interactiveCache, loggerV1)
@@ -51,5 +54,11 @@ func InitWebServer() *gin.Engine {
 	wechatService := ioc.InitWechatService(loggerV1)
 	oAuth2WechatHandler := web.NewOAuth2WechatHandler(wechatService, userService, handler)
 	engine := ioc.InitWebServer(v, userHandler, articleHandler, oAuth2WechatHandler, loggerV1)
-	return engine
+	interactiveReadEventConsumer := article2.NewInteractiveReadEventConsumer(client, loggerV1, interactiveRepository)
+	v2 := ioc.NewConsumers(interactiveReadEventConsumer)
+	app := &App{
+		web:       engine,
+		consumers: v2,
+	}
+	return app
 }

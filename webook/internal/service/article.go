@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
+	events "gitee.com/geekbang/basic-go/webook/internal/events/article"
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 )
@@ -22,7 +23,7 @@ type ArticleService interface {
 	// GetPublishedById 查找已经发表的
 	// 正常来说在微服务架构下，读者服务和创作者服务会是两个独立的服务
 	// 单体应用下可以混在一起，毕竟现在也没几个方法
-	GetPublishedById(ctx context.Context, id int64) (domain.Article, error)
+	GetPublishedById(ctx context.Context, id, uid int64) (domain.Article, error)
 }
 
 type articleService struct {
@@ -34,6 +35,9 @@ type articleService struct {
 	// 1 和 2 是互斥的，不会同时存在
 	repo   repository.ArticleRepository
 	logger logger.LoggerV1
+
+	// 搞个异步的
+	producer events.Producer
 }
 
 func (svc *articleService) GetById(ctx context.Context, id int64) (domain.Article, error) {
@@ -47,10 +51,12 @@ func (svc *articleService) List(ctx context.Context, author int64,
 
 func NewArticleService(repo repository.ArticleRepository,
 	l logger.LoggerV1,
+	producer events.Producer,
 ) ArticleService {
 	return &articleService{
-		repo:   repo,
-		logger: l,
+		repo:     repo,
+		logger:   l,
+		producer: producer,
 	}
 }
 
@@ -65,8 +71,23 @@ func NewArticleServiceV1(
 	}
 }
 
-func (svc *articleService) GetPublishedById(ctx context.Context, id int64) (domain.Article, error) {
-	return svc.repo.GetPublishedById(ctx, id)
+func (svc *articleService) GetPublishedById(ctx context.Context, id, uid int64) (domain.Article, error) {
+	res, err := svc.repo.GetPublishedById(ctx, id)
+	go func() {
+		if err == nil {
+			er := svc.producer.ProduceReadEvent(events.ReadEvent{
+				Aid: id,
+				Uid: id,
+			})
+			if er != nil {
+				svc.logger.Error("发送消息失败",
+					logger.Int64("uid", uid),
+					logger.Int64("aid", id),
+					logger.Error(err))
+			}
+		}
+	}()
+	return res, err
 }
 
 func (svc *articleService) Withdraw(ctx context.Context, uid, id int64) error {

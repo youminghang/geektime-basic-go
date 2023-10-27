@@ -16,6 +16,7 @@ type InteractiveDAO interface {
 	Get(ctx context.Context, biz string, bizId int64) (Interactive, error)
 	InsertCollectionBiz(ctx context.Context, cb UserCollectionBiz) error
 	GetCollectionInfo(ctx context.Context, biz string, bizId, uid int64) (UserCollectionBiz, error)
+	BatchIncrReadCnt(ctx context.Context, bizs []string, ids []int64) error
 }
 
 type GORMInteractiveDAO struct {
@@ -133,8 +134,12 @@ func NewGORMInteractiveDAO(db *gorm.DB) InteractiveDAO {
 
 // IncrReadCnt 是一个插入或者更新语义
 func (dao *GORMInteractiveDAO) IncrReadCnt(ctx context.Context, biz string, bizId int64) error {
+	return dao.incrReadCnt(dao.db.WithContext(ctx), biz, bizId)
+}
+
+func (dao *GORMInteractiveDAO) incrReadCnt(tx *gorm.DB, biz string, bizId int64) error {
 	now := time.Now().UnixMilli()
-	return dao.db.WithContext(ctx).Clauses(clause.OnConflict{
+	return tx.Clauses(clause.OnConflict{
 		DoUpdates: clause.Assignments(map[string]any{
 			"read_cnt": gorm.Expr("`read_cnt`+1"),
 			"utime":    now,
@@ -146,6 +151,19 @@ func (dao *GORMInteractiveDAO) IncrReadCnt(ctx context.Context, biz string, bizI
 		Biz:     biz,
 		BizId:   bizId,
 	}).Error
+}
+
+func (dao *GORMInteractiveDAO) BatchIncrReadCnt(ctx context.Context, bizs []string, ids []int64) error {
+	return dao.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// 让调用者保证两者是相等的
+		for i := 0; i < len(bizs); i++ {
+			err := dao.incrReadCnt(tx, bizs[i], ids[i])
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 func (dao *GORMInteractiveDAO) Get(ctx context.Context, biz string, bizId int64) (Interactive, error) {

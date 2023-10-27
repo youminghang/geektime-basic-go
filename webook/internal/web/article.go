@@ -281,7 +281,7 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context, uc ginx.UserClaims) (Result
 	)
 	eg.Go(func() error {
 		var er error
-		art, er = a.svc.GetPublishedById(ctx, id)
+		art, er = a.svc.GetPublishedById(ctx, id, uc.Id)
 		return er
 	})
 
@@ -301,12 +301,12 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context, uc ginx.UserClaims) (Result
 	}
 
 	// 直接异步操作，在确定我们获取到了数据之后再来操作
-	go func() {
-		err = a.intrSvc.IncrReadCnt(ctx, a.biz, art.Id)
-		if err != nil {
-			a.l.Error("增加文章阅读数失败", logger.Error(err))
-		}
-	}()
+	//go func() {
+	//	err = a.intrSvc.IncrReadCnt(ctx, a.biz, art.Id)
+	//	if err != nil {
+	//		a.l.Error("增加文章阅读数失败", logger.Error(err))
+	//	}
+	//}()
 
 	return Result{
 		Data: ArticleVo{
