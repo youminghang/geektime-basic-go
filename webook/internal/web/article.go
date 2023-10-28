@@ -9,6 +9,7 @@ import (
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"github.com/ecodeclub/ekit/slice"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/sync/errgroup"
 	"net/http"
 	"strconv"
 	"time"
@@ -101,13 +102,36 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context) {
 		a.l.Error("前端输入的 ID 不对", logger.Error(err))
 		return
 	}
-	art, err := a.svc.GetPublishedById(ctx, id)
+
+	var eg errgroup.Group
+	var art domain.Article
+	eg.Go(func() error {
+		art, err = a.svc.GetPublishedById(ctx, id)
+		return err
+	})
+
+	var intr domain.Interactive
+	eg.Go(func() error {
+		// 要在这里获得这篇文章的计数
+		uc := ctx.MustGet("users").(ijwt.UserClaims)
+		// 这个地方可以容忍错误
+		intr, err = a.intrSvc.Get(ctx, a.biz, id, uc.Id)
+		// 这种是容错的写法
+		//if err != nil {
+		//	// 记录日志
+		//}
+		//return nil
+		return err
+	})
+
+	// 在这儿等，要保证前面两个
+	err = eg.Wait()
 	if err != nil {
+		// 代表查询出错了
 		ctx.JSON(http.StatusOK, Result{
 			Code: 5,
 			Msg:  "系统错误",
 		})
-		a.l.Error("获得文章信息失败", logger.Error(err))
 		return
 	}
 
@@ -132,9 +156,14 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context) {
 			Status:  art.Status.ToUint8(),
 			Content: art.Content,
 			// 要把作者信息带出去
-			Author: art.Author.Name,
-			Ctime:  art.Ctime.Format(time.DateTime),
-			Utime:  art.Utime.Format(time.DateTime),
+			Author:     art.Author.Name,
+			Ctime:      art.Ctime.Format(time.DateTime),
+			Utime:      art.Utime.Format(time.DateTime),
+			Liked:      intr.Liked,
+			Collected:  intr.Collected,
+			LikeCnt:    intr.LikeCnt,
+			ReadCnt:    intr.ReadCnt,
+			CollectCnt: intr.CollectCnt,
 		},
 	})
 }
