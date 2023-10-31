@@ -3,11 +3,13 @@ package ioc
 import (
 	"fmt"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
+	prometheus2 "gitee.com/geekbang/basic-go/webook/pkg/gormx/callbacks/prometheus"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	glogger "gorm.io/gorm/logger"
+	"gorm.io/plugin/opentelemetry/tracing"
+	"gorm.io/plugin/prometheus"
 )
 
 func InitDB(l logger.LoggerV1) *gorm.DB {
@@ -23,15 +25,47 @@ func InitDB(l logger.LoggerV1) *gorm.DB {
 	}
 	db, err := gorm.Open(mysql.Open(c.DSN), &gorm.Config{
 		// 使用 DEBUG 来打印
-		Logger: glogger.New(gormLoggerFunc(l.Debug),
-			glogger.Config{
-				SlowThreshold: 0,
-				LogLevel:      glogger.Info,
-			}),
+		//Logger: glogger.New(gormLoggerFunc(l.Debug),
+		//	glogger.Config{
+		//		SlowThreshold: 0,
+		//		LogLevel:      glogger.Info,
+		//	}),
 	})
 	if err != nil {
 		panic(err)
 	}
+
+	// 接入 prometheus
+	err = db.Use(prometheus.New(prometheus.Config{
+		DBName: "webook",
+		// 每 15 秒采集一些数据
+		RefreshInterval: 15,
+		MetricsCollector: []prometheus.MetricsCollector{
+			&prometheus.MySQL{
+				VariableNames: []string{"Threads_running"},
+			},
+		}, // user defined metrics
+	}))
+	if err != nil {
+		panic(err)
+	}
+	err = db.Use(tracing.NewPlugin(tracing.WithoutMetrics()))
+	if err != nil {
+		panic(err)
+	}
+
+	prom := prometheus2.Callbacks{
+		Namespace:  "geekbang_daming",
+		Subsystem:  "webook",
+		Name:       "gorm",
+		InstanceID: "my-instance-1",
+		Help:       "gorm DB 查询",
+	}
+	err = prom.Register(db)
+	if err != nil {
+		panic(err)
+	}
+
 	err = dao.InitTables(db)
 	if err != nil {
 		panic(err)

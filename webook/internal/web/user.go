@@ -2,8 +2,10 @@ package web
 
 import (
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
+	"gitee.com/geekbang/basic-go/webook/internal/errs"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
+	"gitee.com/geekbang/basic-go/webook/pkg/ginx"
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -53,7 +55,7 @@ func (c *UserHandler) RegisterRoutes(server *gin.Engine) {
 
 	// 分组注册
 	ug := server.Group("/users")
-	ug.POST("/signup", c.SignUp)
+	ug.POST("/signup", ginx.WrapReq[SignUpReq](c.SignUp))
 	// session 机制
 	//ug.POST("/login", c.Login)
 	// JWT 机制
@@ -162,58 +164,68 @@ func (c *UserHandler) SendSMSLoginCode(ctx *gin.Context) {
 	}
 }
 
-// SignUp 用户注册接口
-func (c *UserHandler) SignUp(ctx *gin.Context) {
-	type SignUpReq struct {
-		Email           string `json:"email"`
-		Password        string `json:"password"`
-		ConfirmPassword string `json:"confirmPassword"`
-	}
+type SignUpReq struct {
+	Email           string `json:"email"`
+	Password        string `json:"password"`
+	ConfirmPassword string `json:"confirmPassword"`
+}
 
-	var req SignUpReq
-	// 当我们调用 Bind 方法的时候，如果有问题，Bind 方法已经直接写响应回去了
-	if err := ctx.Bind(&req); err != nil {
-		return
-	}
+// SignUp 用户注册接口
+func (c *UserHandler) SignUp(ctx *gin.Context, req SignUpReq) (ginx.Result, error) {
 
 	isEmail, err := c.emailRegexExp.MatchString(req.Email)
 	if err != nil {
-		ctx.String(http.StatusOK, "系统错误")
-		return
+		return Result{
+			Code: errs.UserInternalServerError,
+			Msg:  "系统错误",
+		}, err
 	}
 	if !isEmail {
-		ctx.String(http.StatusOK, "邮箱不正确")
-		return
+		return Result{
+			Code: errs.UserInvalidInput,
+			Msg:  "邮箱输入错误",
+		}, nil
 	}
 
 	if req.Password != req.ConfirmPassword {
-		ctx.String(http.StatusOK, "两次输入的密码不相同")
-		return
+		return Result{
+			Code: errs.UserInvalidInput,
+			Msg:  "两次输入密码不对",
+		}, nil
 	}
 
 	isPassword, err := c.passwordRegexExp.MatchString(req.Password)
 	if err != nil {
-		ctx.String(http.StatusOK, "系统错误")
-		return
+		return Result{
+			Code: errs.UserInvalidInput,
+			Msg:  "系统错误",
+		}, err
 	}
 	if !isPassword {
-		ctx.String(http.StatusOK,
-			"密码必须包含数字、特殊字符，并且长度不能小于 8 位")
-		return
+		return Result{
+			Code: errs.UserInvalidInput,
+			Msg:  "密码必须包含数字、特殊字符，并且长度不能小于 8 位",
+		}, nil
 	}
 
 	err = c.svc.Signup(ctx.Request.Context(),
 		domain.User{Email: req.Email, Password: req.ConfirmPassword})
 
 	if err == service.ErrUserDuplicateEmail {
-		ctx.String(http.StatusOK, "重复邮箱，请换一个邮箱")
-		return
+		return Result{
+			Code: errs.UserDuplicateEmail,
+			Msg:  "邮箱冲突",
+		}, err
 	}
 	if err != nil {
-		ctx.String(http.StatusOK, "服务器异常，注册失败")
-		return
+		return Result{
+			Code: errs.UserInternalServerError,
+			Msg:  "系统错误",
+		}, err
 	}
-	ctx.String(http.StatusOK, "hello, 注册成功")
+	return Result{
+		Msg: "OK",
+	}, nil
 }
 
 // LoginJWT 用户登录接口，使用的是 JWT，如果你想要测试 JWT，就启用这个

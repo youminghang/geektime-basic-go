@@ -57,6 +57,7 @@ func InitApp() *App {
 		web.NewUserHandler,
 		web.NewArticleHandler,
 		web.NewOAuth2WechatHandler,
+		web.NewObservabilityHandler,
 
 		// gin 的中间件
 		ioc.GinMiddlewares,

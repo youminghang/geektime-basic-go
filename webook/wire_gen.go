@@ -51,9 +51,10 @@ func InitApp() *App {
 	interactiveRepository := repository.NewCachedInteractiveRepository(interactiveDAO, interactiveCache, loggerV1)
 	interactiveService := service.NewInteractiveService(interactiveRepository, loggerV1)
 	articleHandler := web.NewArticleHandler(articleService, interactiveService, loggerV1)
+	observabilityHandler := web.NewObservabilityHandler()
 	wechatService := ioc.InitWechatService(loggerV1)
 	oAuth2WechatHandler := web.NewOAuth2WechatHandler(wechatService, userService, handler)
-	engine := ioc.InitWebServer(v, userHandler, articleHandler, oAuth2WechatHandler, loggerV1)
+	engine := ioc.InitWebServer(v, userHandler, articleHandler, observabilityHandler, oAuth2WechatHandler, loggerV1)
 	interactiveReadEventConsumer := article2.NewInteractiveReadEventConsumer(client, loggerV1, interactiveRepository)
 	v2 := ioc.NewConsumers(interactiveReadEventConsumer)
 	app := &App{
