@@ -103,17 +103,17 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context) {
 		return
 	}
 
+	uc := ctx.MustGet("users").(ijwt.UserClaims)
 	var eg errgroup.Group
 	var art domain.Article
 	eg.Go(func() error {
-		art, err = a.svc.GetPublishedById(ctx, id)
+
+		art, err = a.svc.GetPublishedById(ctx, id, uc.Id)
 		return err
 	})
 
 	var intr domain.Interactive
 	eg.Go(func() error {
-		// 要在这里获得这篇文章的计数
-		uc := ctx.MustGet("users").(ijwt.UserClaims)
 		// 这个地方可以容忍错误
 		intr, err = a.intrSvc.Get(ctx, a.biz, id, uc.Id)
 		// 这种是容错的写法
@@ -137,6 +137,7 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context) {
 
 	// 增加阅读计数。
 	go func() {
+		// 你都异步了，怎么还说有巨大的压力呢？
 		// 开一个 goroutine，异步去执行
 		er := a.intrSvc.IncrReadCnt(ctx, a.biz, art.Id)
 		if er != nil {

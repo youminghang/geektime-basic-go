@@ -6,3 +6,7 @@ redis:
 
 abc: "helloabc" # v1
 # abc: "helloabcdef" # v2
+
+kafka:
+  addrs:
+    - "localhost:9094"

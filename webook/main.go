@@ -29,13 +29,19 @@ func main() {
 	println(keys)
 	setting := viper.AllSettings()
 	fmt.Println(setting)
-	server := InitWebServer()
-
+	app := InitWebServer()
+	for _, c := range app.consumers {
+		err := c.Start()
+		if err != nil {
+			panic(err)
+		}
+	}
+	server := app.web
 	server.GET("/hello", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "你好，你来了")
 	})
 
-	server.Run(":8080")
+	//server.Run(":8080")
 	// 作业
 	//server.Run(":8081")
 }
