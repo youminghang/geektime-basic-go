@@ -1,17 +1,14 @@
 package ioc
 
 import (
-	"context"
 	"gitee.com/geekbang/basic-go/webook/internal/web"
 	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"gitee.com/geekbang/basic-go/webook/internal/web/middleware"
-	"gitee.com/geekbang/basic-go/webook/pkg/ginx/middlewares/logger"
+	"gitee.com/geekbang/basic-go/webook/pkg/ginx/middlewares/metric"
 	logger2 "gitee.com/geekbang/basic-go/webook/pkg/logger"
-	"github.com/fsnotify/fsnotify"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
-	"github.com/spf13/viper"
 	"strings"
 	"time"
 )
@@ -23,22 +20,31 @@ func InitWebServer(mdls []gin.HandlerFunc, userHdl *web.UserHandler,
 	userHdl.RegisterRoutes(server)
 	articleHdl.RegisterRoutes(server)
 	oauth2WechatHdl.RegisterRoutes(server)
+	(&web.ObservabilityHandler{}).RegisterRoutes(server)
 	return server
 }
 
 func InitMiddlewares(redisClient redis.Cmdable,
 	l logger2.LoggerV1,
 	jwtHdl ijwt.Handler) []gin.HandlerFunc {
-	bd := logger.NewBuilder(func(ctx context.Context, al *logger.AccessLog) {
-		l.Debug("HTTP请求", logger2.Field{Key: "al", Value: al})
-	}).AllowReqBody(true).AllowRespBody()
-	viper.OnConfigChange(func(in fsnotify.Event) {
-		ok := viper.GetBool("web.logreq")
-		bd.AllowReqBody(ok)
-	})
+	//bd := logger.NewBuilder(func(ctx context.Context, al *logger.AccessLog) {
+	//	l.Debug("HTTP请求", logger2.Field{Key: "al", Value: al})
+	//}).AllowReqBody(true).AllowRespBody()
+	//viper.OnConfigChange(func(in fsnotify.Event) {
+	//	ok := viper.GetBool("web.logreq")
+	//	bd.AllowReqBody(ok)
+	//})
+
 	return []gin.HandlerFunc{
 		corsHdl(),
-		bd.Build(),
+		(&metric.MiddlewareBuilder{
+			Namespace:  "geekbang_daming",
+			Subsystem:  "webook",
+			Name:       "gin_http",
+			Help:       "统计 GIN 的 HTTP 接口",
+			InstanceID: "my-instance-1",
+		}).Build(),
+		//bd.Build(),
 		middleware.NewLoginJWTMiddlewareBuilder(jwtHdl).
 			IgnorePaths("/users/signup").
 			IgnorePaths("/users/refresh_token").
@@ -47,6 +53,7 @@ func InitMiddlewares(redisClient redis.Cmdable,
 			IgnorePaths("/oauth2/wechat/authurl").
 			IgnorePaths("/oauth2/wechat/callback").
 			IgnorePaths("/users/login").
+			IgnorePaths("/test/metric").
 			Build(),
 		//ratelimit.NewBuilder(redisClient, time.Second, 100).Build(),
 	}

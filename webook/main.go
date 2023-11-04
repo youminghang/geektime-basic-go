@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/fsnotify/fsnotify"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	_ "github.com/spf13/viper/remote"
@@ -25,10 +26,12 @@ func main() {
 	//initViperRemote()
 	initViperV1()
 	initLogger()
+
+	initPrometheus()
 	keys := viper.AllKeys()
 	println(keys)
-	setting := viper.AllSettings()
-	fmt.Println(setting)
+	//setting := viper.AllSettings()
+	//fmt.Println(setting)
 	app := InitWebServer()
 	// Consumer 在我设计下，类似于 Web，或者 GRPC 之类的，是一个顶级入口
 	for _, c := range app.consumers {
@@ -45,6 +48,13 @@ func main() {
 	server.Run(":8080")
 	// 作业
 	//server.Run(":8081")
+}
+
+func initPrometheus() {
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		http.ListenAndServe(":8081", nil)
+	}()
 }
 
 func initLogger() {
