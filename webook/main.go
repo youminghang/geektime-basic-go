@@ -2,7 +2,9 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
+	"gitee.com/geekbang/basic-go/webook/ioc"
 	"github.com/fsnotify/fsnotify"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/pflag"
@@ -17,7 +19,12 @@ func main() {
 	// 注意，要在 Goland 里面把对应的 work director 设置到 webook
 	// 要把配置初始化放在最前面
 	initViperV2Watch()
-	//initLogger()
+	initPrometheus()
+	cancel := ioc.InitOTEL()
+	defer func() {
+		cancel(context.Background())
+	}()
+
 	app := InitApp()
 	for _, c := range app.consumers {
 		err := c.Start()

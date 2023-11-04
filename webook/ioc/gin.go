@@ -1,19 +1,19 @@
 package ioc
 
 import (
-	"context"
 	"gitee.com/geekbang/basic-go/webook/internal/web"
 	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"gitee.com/geekbang/basic-go/webook/internal/web/middleware"
 	"gitee.com/geekbang/basic-go/webook/pkg/ginx"
-	"gitee.com/geekbang/basic-go/webook/pkg/ginx/middleware/accesslog"
-	"gitee.com/geekbang/basic-go/webook/pkg/ginx/middleware/ratelimit"
+	"gitee.com/geekbang/basic-go/webook/pkg/ginx/middleware/metrics"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/memstore"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/redis/go-redis/v9"
+	otelgin "go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"strings"
 	"time"
 )
@@ -21,6 +21,7 @@ import (
 func InitWebServer(funcs []gin.HandlerFunc,
 	userHdl *web.UserHandler,
 	artHdl *web.ArticleHandler,
+	obHdl *web.ObservabilityHandler,
 	oauth2Hdl *web.OAuth2WechatHandler, l logger.LoggerV1) *gin.Engine {
 	ginx.SetLogger(l)
 	server := gin.Default()
@@ -29,24 +30,43 @@ func InitWebServer(funcs []gin.HandlerFunc,
 	userHdl.RegisterRoutes(server)
 	artHdl.RegisterRoutes(server)
 	oauth2Hdl.RegisterRoutes(server)
+	obHdl.RegisterRoutes(server)
 	return server
 }
 
 func GinMiddlewares(cmd redis.Cmdable,
 	hdl ijwt.Handler, l logger.LoggerV1) []gin.HandlerFunc {
+	pb := &metrics.PrometheusBuilder{
+		Namespace:  "geekbang_daming",
+		Subsystem:  "webook",
+		Name:       "gin_http",
+		InstanceID: "my-instance-1",
+		Help:       "GIN 中 HTTP 请求",
+	}
+	ginx.InitCounter(prometheus.CounterOpts{
+		Namespace: "geekbang_daming",
+		Subsystem: "webook",
+		Name:      "http_biz_code",
+		Help:      "GIN 中 HTTP 请求",
+		ConstLabels: map[string]string{
+			"instance_id": "my-instance-1",
+		},
+	})
 	return []gin.HandlerFunc{
-		ratelimit.NewBuilder(cmd, time.Minute, 100).Build(),
+		//ratelimit.NewBuilder(cmd, time.Minute, 100).BuildResponseTime(),
 		corsHandler(),
-
+		pb.BuildResponseTime(),
+		pb.BuildActiveRequest(),
+		otelgin.Middleware("webook"),
 		// 使用 JWT
 		middleware.NewJWTLoginMiddlewareBuilder(hdl).Build(),
-		accesslog.NewMiddlewareBuilder(func(ctx context.Context, al accesslog.AccessLog) {
-			// 设置为 DEBUG 级别
-			l.Debug("GIN 收到请求", logger.Field{
-				Key:   "req",
-				Value: al,
-			})
-		}).AllowReqBody().AllowRespBody().Build(),
+		//accesslog.NewMiddlewareBuilder(func(ctx context.Context, al accesslog.AccessLog) {
+		//	// 设置为 DEBUG 级别
+		//	l.Debug("GIN 收到请求", logger.Field{
+		//		Key:   "req",
+		//		Value: al,
+		//	})
+		//}).AllowReqBody().AllowRespBody().Build(),
 		// 使用session 登录校验
 		//sessionHandlerFunc(),
 		//middleware.NewLoginMiddlewareBuilder().CheckLogin(),
