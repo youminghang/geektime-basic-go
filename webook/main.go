@@ -30,6 +30,7 @@ func main() {
 	setting := viper.AllSettings()
 	fmt.Println(setting)
 	app := InitWebServer()
+	// Consumer 在我设计下，类似于 Web，或者 GRPC 之类的，是一个顶级入口
 	for _, c := range app.consumers {
 		err := c.Start()
 		if err != nil {
@@ -41,7 +42,7 @@ func main() {
 		ctx.String(http.StatusOK, "你好，你来了")
 	})
 
-	//server.Run(":8080")
+	server.Run(":8080")
 	// 作业
 	//server.Run(":8081")
 }

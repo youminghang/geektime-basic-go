@@ -37,24 +37,25 @@ func TestSyncProducer(t *testing.T) {
 	//cfg.Producer.Partitioner = sarama.NewHashPartitioner
 	producer, err := sarama.NewSyncProducer(addrs, cfg)
 	assert.NoError(t, err)
-	_, _, err = producer.SendMessage(&sarama.ProducerMessage{
-		Topic: "test_topic",
-		Key:   sarama.StringEncoder("oid-123"),
-		// 消息数据本体
-		// 转 JSON
-		// protobuf
-		Value: sarama.StringEncoder("Hello, 这是一条消息 A"),
-		// 会在生产者和消费者之间传递
-		Headers: []sarama.RecordHeader{
-			{
-				Key:   []byte("trace_id"),
-				Value: []byte("123456"),
-			},
-		},
-		// 只作用于发送过程
-		Metadata: "这是metadata",
-	})
-	assert.NoError(t, err)
+	for i := 0; i < 100; i++ {
+		_, _, err = producer.SendMessage(&sarama.ProducerMessage{
+			Topic: "read_article",
+			// 消息数据本体
+			// 转 JSON
+			// protobuf
+			Value: sarama.StringEncoder(`{"aid": 1, "uid": 123}`),
+			// 会在生产者和消费者之间传递
+			//Headers: []sarama.RecordHeader{
+			//	{
+			//		Key:   []byte("trace_id"),
+			//		Value: []byte("123456"),
+			//	},
+			//},
+			//// 只作用于发送过程
+			//Metadata: "这是metadata",
+		})
+		assert.NoError(t, err)
+	}
 }
 
 func TestAsyncProducer(t *testing.T) {

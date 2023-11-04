@@ -27,6 +27,13 @@ type articleService struct {
 	reader   article.ArticleReaderRepository
 	l        logger.LoggerV1
 	producer events.Producer
+
+	ch chan readInfo
+}
+
+type readInfo struct {
+	uid int64
+	aid int64
 }
 
 func (svc *articleService) GetPublishedById(ctx context.Context, id, uid int64) (domain.Article, error) {
@@ -34,6 +41,7 @@ func (svc *articleService) GetPublishedById(ctx context.Context, id, uid int64) 
 	art, err := svc.repo.GetPublishedById(ctx, id)
 	if err == nil {
 		go func() {
+			// 生产者也可以通过改批量来提高性能
 			er := svc.producer.ProduceReadEvent(
 				ctx,
 				events.ReadEvent{
@@ -44,6 +52,14 @@ func (svc *articleService) GetPublishedById(ctx context.Context, id, uid int64) 
 				})
 			if er == nil {
 				svc.l.Error("发送读者阅读事件失败")
+			}
+		}()
+
+		go func() {
+			// 改批量的做法
+			svc.ch <- readInfo{
+				aid: id,
+				uid: uid,
 			}
 		}()
 	}
@@ -115,6 +131,46 @@ func NewArticleService(repo article.ArticleRepository,
 		repo:     repo,
 		producer: producer,
 		l:        l,
+		//ch:       make(chan readInfo, 10),
+	}
+}
+
+func NewArticleServiceV2(repo article.ArticleRepository,
+	l logger.LoggerV1,
+	producer events.Producer) ArticleService {
+	ch := make(chan readInfo, 10)
+	go func() {
+		for {
+			uids := make([]int64, 0, 10)
+			aids := make([]int64, 0, 10)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			for i := 0; i < 10; i++ {
+				select {
+				case info, ok := <-ch:
+					if !ok {
+						cancel()
+						return
+					}
+					uids = append(uids, info.uid)
+					aids = append(aids, info.aid)
+				case <-ctx.Done():
+					break
+				}
+			}
+			cancel()
+			ctx, cancel = context.WithTimeout(context.Background(), time.Second)
+			producer.ProduceReadEventV1(ctx, events.ReadEventV1{
+				Uids: uids,
+				Aids: aids,
+			})
+			cancel()
+		}
+	}()
+	return &articleService{
+		repo:     repo,
+		producer: producer,
+		l:        l,
+		ch:       ch,
 	}
 }
 
