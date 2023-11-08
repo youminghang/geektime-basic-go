@@ -2,6 +2,7 @@ package web
 
 import (
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
+	"gitee.com/geekbang/basic-go/webook/internal/errs"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	regexp "github.com/dlclark/regexp2"
@@ -318,7 +319,10 @@ func (u *UserHandler) Login(ctx *gin.Context) {
 	}
 	user, err := u.svc.Login(ctx, req.Email, req.Password)
 	if err == service.ErrInvalidUserOrPassword {
-		ctx.String(http.StatusOK, "用户名或密码不对")
+		ctx.JSON(http.StatusOK, Result{
+			Code: errs.UserInvalidOrPassword,
+			Msg:  "用户不存在或者密码错误",
+		})
 		return
 	}
 	if err != nil {

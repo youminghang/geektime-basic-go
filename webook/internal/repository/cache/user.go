@@ -45,6 +45,8 @@ func NewUserCache(client redis.Cmdable) UserCache {
 
 // Get 如果没有数据，返回一个特定的 error
 func (cache *RedisUserCache) Get(ctx context.Context, id int64) (domain.User, error) {
+	//ctx = context.WithValue(ctx, "biz", "user")
+	//ctx = context.WithValue(ctx, "pattern", "user:info:%d")
 	key := cache.key(id)
 	// 数据不存在，err = redis.Nil
 	val, err := cache.client.Get(ctx, key).Bytes()

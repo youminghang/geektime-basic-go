@@ -24,14 +24,14 @@ func TestMongo(t *testing.T) {
 		},
 		// 执行成功
 		Succeeded: func(ctx context.Context, succeededEvent *event.CommandSucceededEvent) {
-
 		},
 		// 执行失败
 		Failed: func(ctx context.Context, failedEvent *event.CommandFailedEvent) {
 
 		},
 	}
-	opts := options.Client().ApplyURI("mongodb://root:example@localhost:27017").
+	opts := options.Client().
+		ApplyURI("mongodb://root:example@localhost:27017").
 		SetMonitor(monitor)
 	client, err := mongo.Connect(ctx, opts)
 	assert.NoError(t, err)
