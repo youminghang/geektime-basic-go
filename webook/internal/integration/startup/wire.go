@@ -3,6 +3,7 @@
 package startup
 
 import (
+	article2 "gitee.com/geekbang/basic-go/webook/internal/events/article"
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
@@ -15,9 +16,14 @@ import (
 	"gitee.com/geekbang/basic-go/webook/ioc"
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
+	"time"
 )
 
-var thirdProvider = wire.NewSet(InitRedis, InitTestDB, InitLog)
+var thirdProvider = wire.NewSet(InitRedis, InitTestDB,
+	InitLog,
+	NewSyncProducer,
+	InitKafka,
+)
 var userSvcProvider = wire.NewSet(
 	dao.NewGORMUserDAO,
 	cache.NewRedisUserCache,
@@ -25,6 +31,7 @@ var userSvcProvider = wire.NewSet(
 	service.NewUserService)
 var articlSvcProvider = wire.NewSet(
 	article.NewGORMArticleDAO,
+	article2.NewSaramaSyncProducer,
 	cache.NewRedisArticleCache,
 	repository.NewArticleRepository,
 	service.NewArticleService)
@@ -34,6 +41,12 @@ var interactiveSvcProvider = wire.NewSet(
 	repository.NewCachedInteractiveRepository,
 	dao.NewGORMInteractiveDAO,
 	cache.NewRedisInteractiveCache,
+)
+
+var rankServiceProvider = wire.NewSet(
+	service.NewBatchRankingService,
+	repository.NewCachedRankingRepository,
+	cache.NewRedisRankingCache,
 )
 
 //go:generate wire
@@ -56,6 +69,7 @@ func InitWebServer() *gin.Engine {
 		web.NewUserHandler,
 		web.NewOAuth2WechatHandler,
 		web.NewArticleHandler,
+		web.NewObservabilityHandler,
 		ijwt.NewRedisHandler,
 
 		// gin 的中间件
@@ -72,6 +86,7 @@ func InitArticleHandler(dao article.ArticleDAO) *web.ArticleHandler {
 	wire.Build(thirdProvider,
 		userSvcProvider,
 		interactiveSvcProvider,
+		article2.NewSaramaSyncProducer,
 		cache.NewRedisArticleCache,
 		//wire.InterfaceValue(new(article.ArticleDAO), dao),
 		repository.NewArticleRepository,
@@ -91,6 +106,17 @@ func InitAsyncSmsService(svc sms.Service) *async.Service {
 		async.NewService,
 	)
 	return &async.Service{}
+}
+
+func InitRankingService(expiration time.Duration) service.RankingService {
+	wire.Build(thirdProvider,
+		interactiveSvcProvider,
+		articlSvcProvider,
+		// 用不上这个 user repo，所以随便搞一个
+		wire.InterfaceValue(new(repository.UserRepository),
+			&repository.CachedUserRepository{}),
+		rankServiceProvider)
+	return &service.BatchRankingService{}
 }
 
 func InitInteractiveService() service.InteractiveService {

@@ -7,7 +7,6 @@ generate:
 .PHONY: mock
 mock:
 	@go generate -tags=wireinject ./...
-	@mockgen -package=redismocks -destination=./webook/internal/repository/cache/redismocks/cmd.mock.go github.com/redis/go-redis/v9 Cmdable
 	@go mod tidy
 
 .PHONY: e2e

@@ -8,6 +8,7 @@ import (
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"github.com/ecodeclub/ekit/slice"
 	"gorm.io/gorm"
+	"time"
 )
 
 //go:generate mockgen -source=./article.go -package=repomocks -destination=mocks/article.mock.go ArticleRepository
@@ -24,6 +25,7 @@ type ArticleRepository interface {
 	GetById(ctx context.Context, id int64) (domain.Article, error)
 
 	GetPublishedById(ctx context.Context, id int64) (domain.Article, error)
+	ListPub(ctx context.Context, utime time.Time, offset int, limit int) ([]domain.Article, error)
 }
 
 type CachedArticleRepository struct {
@@ -40,6 +42,17 @@ type CachedArticleRepository struct {
 	// SyncV2 用
 	db *gorm.DB
 	l  logger.LoggerV1
+}
+
+func (repo *CachedArticleRepository) ListPub(ctx context.Context, utime time.Time, offset int, limit int) ([]domain.Article, error) {
+	val, err := repo.dao.ListPubByUtime(ctx, utime, offset, limit)
+	if err != nil {
+		return nil, err
+	}
+	return slice.Map[article.PublishedArticle, domain.Article](val, func(idx int, src article.PublishedArticle) domain.Article {
+		// 偷懒写法
+		return repo.toDomain(article.Article(src))
+	}), nil
 }
 
 func NewArticleRepository(dao article.ArticleDAO,

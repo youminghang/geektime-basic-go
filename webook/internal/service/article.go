@@ -6,6 +6,7 @@ import (
 	events "gitee.com/geekbang/basic-go/webook/internal/events/article"
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
+	"time"
 )
 
 //go:generate mockgen -source=./article.go -package=svcmocks -destination=mocks/article.mock.go ArticleService
@@ -24,6 +25,8 @@ type ArticleService interface {
 	// 正常来说在微服务架构下，读者服务和创作者服务会是两个独立的服务
 	// 单体应用下可以混在一起，毕竟现在也没几个方法
 	GetPublishedById(ctx context.Context, id, uid int64) (domain.Article, error)
+	// ListPub 根据更新时间来分页，更新时间必须小于 startTime
+	ListPub(ctx context.Context, startTime time.Time, offset, limit int) ([]domain.Article, error)
 }
 
 type articleService struct {
@@ -38,6 +41,12 @@ type articleService struct {
 
 	// 搞个异步的
 	producer events.Producer
+}
+
+func (svc *articleService) ListPub(ctx context.Context,
+	startTime time.Time,
+	offset, limit int) ([]domain.Article, error) {
+	return svc.repo.ListPub(ctx, startTime, offset, limit)
 }
 
 func (svc *articleService) GetById(ctx context.Context, id int64) (domain.Article, error) {
