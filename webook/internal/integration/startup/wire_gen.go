@@ -20,7 +20,6 @@ import (
 	"gitee.com/geekbang/basic-go/webook/ioc"
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
-	"time"
 )
 
 // Injectors from wire.go:
@@ -100,7 +99,7 @@ func InitAsyncSmsService(svc sms.Service) *async.Service {
 	return asyncService
 }
 
-func InitRankingService(expiration time.Duration) service.RankingService {
+func InitRankingService() service.RankingService {
 	gormDB := InitTestDB()
 	interactiveDAO := dao.NewGORMInteractiveDAO(gormDB)
 	cmdable := InitRedis()
@@ -116,8 +115,9 @@ func InitRankingService(expiration time.Duration) service.RankingService {
 	syncProducer := NewSyncProducer(client)
 	producer := article2.NewSaramaSyncProducer(syncProducer)
 	articleService := service.NewArticleService(articleRepository, loggerV1, producer)
-	rankingCache := cache.NewRedisRankingCache(cmdable, expiration)
-	rankingRepository := repository.NewCachedRankingRepository(rankingCache)
+	redisRankingCache := cache.NewRedisRankingCache(cmdable)
+	rankingLocalCache := cache.NewRankingLocalCache()
+	rankingRepository := repository.NewCachedRankingRepository(redisRankingCache, rankingLocalCache)
 	rankingService := service.NewBatchRankingService(interactiveService, articleService, rankingRepository)
 	return rankingService
 }
@@ -157,4 +157,4 @@ var articlSvcProvider = wire.NewSet(article.NewGORMArticleDAO, article2.NewSaram
 
 var interactiveSvcProvider = wire.NewSet(service.NewInteractiveService, repository.NewCachedInteractiveRepository, dao.NewGORMInteractiveDAO, cache.NewRedisInteractiveCache)
 
-var rankServiceProvider = wire.NewSet(service.NewBatchRankingService, repository.NewCachedRankingRepository, cache.NewRedisRankingCache)
+var rankServiceProvider = wire.NewSet(service.NewBatchRankingService, repository.NewCachedRankingRepository, cache.NewRedisRankingCache, cache.NewRankingLocalCache)

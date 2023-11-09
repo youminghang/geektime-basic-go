@@ -6,6 +6,7 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/integration/startup"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao/article"
+	"gitee.com/geekbang/basic-go/webook/internal/service"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -39,7 +40,9 @@ func (r *RankingServiceTestSuite) TearDownTest() {
 
 func (r *RankingServiceTestSuite) TestRankTopN() {
 	// 设置一分钟过期时间
-	svc := startup.InitRankingService(time.Minute)
+	svc := startup.InitRankingService().(*service.BatchRankingService)
+	svc.BatchSize = 10
+	svc.N = 10
 	rdb := startup.InitRedis()
 	db := startup.InitTestDB()
 	testCases := []struct {
@@ -90,11 +93,11 @@ func (r *RankingServiceTestSuite) TestRankTopN() {
 	for _, tc := range testCases {
 		r.T().Run(tc.name, func(t *testing.T) {
 			tc.before(t)
-			defer tc.after(t)
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 			defer cancel()
 			err := svc.RankTopN(ctx)
 			assert.Equal(t, tc.wantErr, err)
+			tc.after(t)
 		})
 	}
 }

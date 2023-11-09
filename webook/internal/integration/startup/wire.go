@@ -16,7 +16,6 @@ import (
 	"gitee.com/geekbang/basic-go/webook/ioc"
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
-	"time"
 )
 
 var thirdProvider = wire.NewSet(InitRedis, InitTestDB,
@@ -47,6 +46,7 @@ var rankServiceProvider = wire.NewSet(
 	service.NewBatchRankingService,
 	repository.NewCachedRankingRepository,
 	cache.NewRedisRankingCache,
+	cache.NewRankingLocalCache,
 )
 
 //go:generate wire
@@ -108,7 +108,7 @@ func InitAsyncSmsService(svc sms.Service) *async.Service {
 	return &async.Service{}
 }
 
-func InitRankingService(expiration time.Duration) service.RankingService {
+func InitRankingService() service.RankingService {
 	wire.Build(thirdProvider,
 		interactiveSvcProvider,
 		articlSvcProvider,

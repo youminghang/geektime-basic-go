@@ -3,13 +3,14 @@ package cache
 import (
 	"context"
 	"encoding/json"
+	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"github.com/redis/go-redis/v9"
 	"time"
 )
 
 type RankingCache interface {
-	Set(ctx context.Context, ids []int64) error
-	Get(ctx context.Context) ([]int64, error)
+	Set(ctx context.Context, arts []domain.Article) error
+	Get(ctx context.Context) ([]domain.Article, error)
 }
 
 type RedisRankingCache struct {
@@ -18,8 +19,12 @@ type RedisRankingCache struct {
 	expiration time.Duration
 }
 
-func (r *RedisRankingCache) Set(ctx context.Context, ids []int64) error {
-	val, err := json.Marshal(ids)
+func (r *RedisRankingCache) Set(ctx context.Context, arts []domain.Article) error {
+	// 这里我们不会缓存内容
+	for i := 0; i < len(arts); i++ {
+		arts[i].Content = arts[i].Abstract()
+	}
+	val, err := json.Marshal(arts)
 	if err != nil {
 		return err
 	}
@@ -28,20 +33,20 @@ func (r *RedisRankingCache) Set(ctx context.Context, ids []int64) error {
 		r.expiration).Err()
 }
 
-func (r *RedisRankingCache) Get(ctx context.Context) ([]int64, error) {
+func (r *RedisRankingCache) Get(ctx context.Context) ([]domain.Article, error) {
 	val, err := r.client.Get(ctx, r.key).Bytes()
 	if err != nil {
 		return nil, err
 	}
-	var res []int64
+	var res []domain.Article
 	err = json.Unmarshal(val, &res)
 	return nil, err
 }
 
-func NewRedisRankingCache(client redis.Cmdable, expiration time.Duration) RankingCache {
+func NewRedisRankingCache(client redis.Cmdable) *RedisRankingCache {
 	return &RedisRankingCache{
 		key:        "ranking:article",
 		client:     client,
-		expiration: expiration,
+		expiration: time.Minute * 3,
 	}
 }

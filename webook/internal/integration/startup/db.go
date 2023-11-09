@@ -65,7 +65,7 @@ func InitTestDB() *gorm.DB {
 		if err != nil {
 			panic(err)
 		}
-		db = db.Debug()
+		//db = db.Debug()
 	}
 	return db
 }

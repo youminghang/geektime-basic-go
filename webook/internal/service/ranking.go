@@ -14,16 +14,17 @@ type RankingService interface {
 	// RankTopN 计算 TopN
 	RankTopN(ctx context.Context) error
 	// TopN 返回业务的 ID
-	TopN(ctx context.Context) ([]int64, error)
+	TopN(ctx context.Context) ([]domain.Article, error)
 }
 
 // BatchRankingService 分批计算
 type BatchRankingService struct {
-	intrSvc   InteractiveService
-	artSvc    ArticleService
-	repo      repository.RankingRepository
-	batchSize int
-	n         int
+	intrSvc InteractiveService
+	artSvc  ArticleService
+	repo    repository.RankingRepository
+	// 为了测试，不得已暴露出去
+	BatchSize int
+	N         int
 	// 将来扩展，以及支持测试
 	scoreFunc func(likeCnt int64, utime time.Time) float64
 }
@@ -32,30 +33,38 @@ func NewBatchRankingService(
 	intrSvc InteractiveService,
 	artSvc ArticleService,
 	repo repository.RankingRepository) RankingService {
-	return &BatchRankingService{intrSvc: intrSvc, artSvc: artSvc, repo: repo}
+	res := &BatchRankingService{
+		intrSvc:   intrSvc,
+		artSvc:    artSvc,
+		repo:      repo,
+		BatchSize: 100,
+		N:         100,
+	}
+	res.scoreFunc = res.score
+	return res
 }
 
 func (a *BatchRankingService) RankTopN(ctx context.Context) error {
-	ids, err := a.rankTopN(ctx)
+	arts, err := a.rankTopN(ctx)
 	if err != nil {
 		return err
 	}
 	// 准备放到缓存里面
-	return a.repo.ReplaceTopN(ctx, ids)
+	return a.repo.ReplaceTopN(ctx, arts)
 }
 
-func (a *BatchRankingService) rankTopN(ctx context.Context) ([]int64, error) {
+func (a *BatchRankingService) rankTopN(ctx context.Context) ([]domain.Article, error) {
 	now := time.Now()
 	// 只计算七天内的，因为超过七天的我们可以认为绝对不可能成为热榜了
 	// 如果一个批次里面 utime 最小已经是七天之前的，我们就中断当前计算
 	ddl := now.Add(-time.Hour * 24 * 7)
 	offset := 0
 	type Score struct {
-		id    int64
+		art   domain.Article
 		score float64
 	}
 	// 这是一个优先级队列，维持住了 topN 的 id。
-	que := queue.NewPriorityQueue[Score](a.n,
+	que := queue.NewPriorityQueue[Score](a.N,
 		func(src Score, dst Score) int {
 			if src.score > dst.score {
 				return 1
@@ -67,7 +76,7 @@ func (a *BatchRankingService) rankTopN(ctx context.Context) ([]int64, error) {
 		})
 
 	for {
-		arts, err := a.artSvc.ListPub(ctx, now, offset, a.batchSize)
+		arts, err := a.artSvc.ListPub(ctx, now, offset, a.BatchSize)
 		if err != nil {
 			return nil, err
 		}
@@ -86,7 +95,7 @@ func (a *BatchRankingService) rankTopN(ctx context.Context) ([]int64, error) {
 			}
 			score := a.scoreFunc(intr.LikeCnt, art.Utime)
 			if score > minScore {
-				ele := Score{id: art.Id, score: score}
+				ele := Score{art: art, score: score}
 				err = que.Enqueue(ele)
 				if err == queue.ErrOutOfCapacity {
 					_, _ = que.Dequeue()
@@ -96,17 +105,17 @@ func (a *BatchRankingService) rankTopN(ctx context.Context) ([]int64, error) {
 				minScore = score
 			}
 		}
-		if len(arts) < a.batchSize ||
+		if len(arts) == 0 || len(arts) < a.BatchSize ||
 			arts[len(arts)-1].Utime.Before(ddl) {
 			break
 		}
 		offset = offset + len(arts)
 	}
 	ql := que.Len()
-	res := make([]int64, ql)
+	res := make([]domain.Article, ql)
 	for i := ql - 1; i >= 0; i-- {
 		val, _ := que.Dequeue()
-		res[i] = val.id
+		res[i] = val.art
 	}
 	return res, nil
 }
@@ -119,6 +128,6 @@ func (a *BatchRankingService) score(likeCnt int64, utime time.Time) float64 {
 		math.Pow(time.Since(utime).Hours()+2, factor)
 }
 
-func (a *BatchRankingService) TopN(ctx context.Context) ([]int64, error) {
+func (a *BatchRankingService) TopN(ctx context.Context) ([]domain.Article, error) {
 	return a.repo.GetTopN(ctx)
 }
