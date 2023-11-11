@@ -8,6 +8,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	glogger "gorm.io/gorm/logger"
+	"gorm.io/plugin/opentelemetry/tracing"
 	"gorm.io/plugin/prometheus"
 	"time"
 )
@@ -79,6 +80,17 @@ func InitDB(l logger.LoggerV1) *gorm.DB {
 	pcb := newCallbacks()
 	//pcb.registerAll(db)
 	db.Use(pcb)
+
+	db.Use(tracing.NewPlugin(tracing.WithDBName("webook"),
+		tracing.WithQueryFormatter(func(query string) string {
+			l.Debug("", logger.String("query", query))
+			return query
+
+		}),
+		// 不要记录 metrics
+		tracing.WithoutMetrics(),
+		// 不要记录查询参数
+		tracing.WithoutQueryVariables()))
 
 	//dao.NewUserDAOV1(func() *gorm.DB {
 	//viper.OnConfigChange(func(in fsnotify.Event) {

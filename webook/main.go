@@ -2,8 +2,10 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
+	"gitee.com/geekbang/basic-go/webook/ioc"
 	"github.com/fsnotify/fsnotify"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -12,6 +14,7 @@ import (
 	_ "github.com/spf13/viper/remote"
 	"go.uber.org/zap"
 	"net/http"
+	"time"
 )
 
 func main() {
@@ -27,6 +30,7 @@ func main() {
 	initViperV1()
 	initLogger()
 
+	closeFunc := ioc.InitOTEL()
 	initPrometheus()
 	keys := viper.AllKeys()
 	println(keys)
@@ -46,6 +50,10 @@ func main() {
 	})
 
 	server.Run(":8080")
+	// 一分钟内你要关完，要退出
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	closeFunc(ctx)
 	// 作业
 	//server.Run(":8081")
 }

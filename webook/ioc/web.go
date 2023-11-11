@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/redis/go-redis/v9"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"strings"
 	"time"
 )
@@ -51,6 +52,7 @@ func InitMiddlewares(redisClient redis.Cmdable,
 			Help:       "统计 GIN 的 HTTP 接口",
 			InstanceID: "my-instance-1",
 		}).Build(),
+		otelgin.Middleware("webook"),
 		//bd.Build(),
 		middleware.NewLoginJWTMiddlewareBuilder(jwtHdl).
 			IgnorePaths("/users/signup").
