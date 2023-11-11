@@ -15,12 +15,24 @@ import (
 	"github.com/google/wire"
 )
 
+var rankServiceProvider = wire.NewSet(
+	service.NewBatchRankingService,
+	repository.NewCachedRankingRepository,
+	cache.NewRedisRankingCache,
+	cache.NewRankingLocalCache,
+)
+
 func InitApp() *App {
 	wire.Build(
 		ioc.InitRedis, ioc.InitDB,
 		ioc.InitLogger,
 		ioc.InitKafka,
+		ioc.InitRLockClient,
 		ioc.NewSyncProducer,
+
+		rankServiceProvider,
+		ioc.InitJobs,
+		ioc.InitRankingJob,
 
 		// DAO 部分
 		dao.NewGORMUserDAO,

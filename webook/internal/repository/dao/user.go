@@ -104,13 +104,13 @@ type User struct {
 	// 自我介绍
 	// 指定是 varchar 这个类型，并且长度是 1024
 	// 因此你可以看到在 web 里面有这个校验
-	AboutMe sql.NullString `gorm:"type=varchar(1024)"`
+	AboutMe sql.NullString `gorm:"type:varchar(1024)"`
 
 	// 微信有关数据。有些公司会尝试把这些数据分离出去做一个单独的表
 	// 从而避免这个表有过多的列，但是暂时来说
 	// 我们还没到这个地步
-	WechatOpenId  sql.NullString `gorm:"type=varchar(1024),unique"`
-	WechatUnionId sql.NullString `gorm:"type=varchar(1024)"`
+	WechatOpenId  sql.NullString `gorm:"type:varchar(256);unique"`
+	WechatUnionId sql.NullString `gorm:"type:varchar(256)"`
 
 	// 创建时间
 	Ctime int64
