@@ -1,0 +1,17 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: demojob
+spec:
+#  难点就是要学会写正确的表达式
+#  我从网上抄的，五分钟一次，这里的表达式是咩有秒的部分的
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: helloworld
+              image: flycash/cron_job:v0.0.1
+              imagePullPolicy: IfNotPresent
+          restartPolicy: OnFailure

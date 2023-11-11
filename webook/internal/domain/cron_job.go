@@ -1,0 +1,23 @@
+package domain
+
+import (
+	"github.com/robfig/cron/v3"
+	"time"
+)
+
+type CronJob struct {
+	Id         int64
+	Executor   string
+	Cfg        string
+	Expression string
+}
+
+func (j CronJob) Next(t time.Time) time.Time {
+	expr := cron.NewParser(cron.Second | cron.Minute |
+		cron.Hour | cron.Dom |
+		cron.Month | cron.Dow |
+		cron.Descriptor)
+	// 这个地方 Expression 必须不能出错，这需要用户在注册的时候确保
+	s, _ := expr.Parse(j.Expression)
+	return s.Next(t)
+}
