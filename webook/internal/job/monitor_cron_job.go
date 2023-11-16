@@ -20,7 +20,7 @@ func NewCronJobBuilder(l logger.LoggerV1,
 	opt prometheus.SummaryOpts) *CronJobBuilder {
 	vector := prometheus.NewSummaryVec(opt,
 		[]string{"name", "success"})
-	prometheus.MustRegister()
+	prometheus.MustRegister(vector)
 	return &CronJobBuilder{vector: vector, l: l}
 }
 
