@@ -6,7 +6,10 @@ import (
 )
 
 type CronJob struct {
-	Id         int64
+	Id int64
+	// Job 的名称，必须唯一
+	Name string
+	// 用什么来运行
 	Executor   string
 	Cfg        string
 	Expression string

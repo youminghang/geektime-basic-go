@@ -7,6 +7,9 @@ import (
 	"time"
 )
 
+var ErrNoMoreJob = repository.ErrNoMoreJob
+
+//go:generate mockgen -source=./cron_job.go -package=svcmocks -destination=mocks/cron_job.mock.go CronJobService
 type CronJobService interface {
 	Preempt(ctx context.Context) (domain.CronJob, error)
 	ResetNextTime(ctx context.Context, job domain.CronJob) error
@@ -14,6 +17,12 @@ type CronJobService interface {
 
 type cronJobService struct {
 	repo repository.CronJobRepository
+}
+
+func NewCronJobService(repo repository.CronJobRepository) CronJobService {
+	return &cronJobService{
+		repo: repo,
+	}
 }
 
 func (s *cronJobService) Preempt(ctx context.Context) (domain.CronJob, error) {
