@@ -13,6 +13,10 @@ type CronJob struct {
 	Executor   string
 	Cfg        string
 	Expression string
+	NextTime   time.Time
+
+	// 放弃抢占状态
+	CancelFunc func()
 }
 
 func (j CronJob) Next(t time.Time) time.Time {

@@ -26,7 +26,7 @@ func NewLocalFuncExecutor() *LocalFuncExecutor {
 	return &LocalFuncExecutor{funcs: make(map[string]func(ctx context.Context, j domain.CronJob) error)}
 }
 
-func (l *LocalFuncExecutor) AddLocalJob(name string,
+func (l *LocalFuncExecutor) AddLocalFunc(name string,
 	fn func(ctx context.Context, j domain.CronJob) error) {
 	l.funcs[name] = fn
 }
@@ -65,6 +65,10 @@ func NewScheduler(svc service.CronJobService, l logger.LoggerV1) *Scheduler {
 	}
 }
 
+func (s *Scheduler) RegisterJob(ctx context.Context, j CronJob) error {
+	return s.svc.AddJob(ctx, j)
+}
+
 func (s *Scheduler) RegisterExecutor(exec Executor) {
 	s.execs[exec.Name()] = exec
 }
@@ -99,10 +103,16 @@ func (s *Scheduler) Start(ctx context.Context) error {
 			// 不支持的执行方式。
 			// 比如说，这里要求的runner是调用 gRPC，我们就不支持
 			s.l.Error("不支持的Executor方式")
+			j.CancelFunc()
 			continue
 		}
 		// 要单独开一个 goroutine 来执行，这样我们就可以进入下一个循环了
 		go func() {
+			defer func() {
+				s.limiter.Release(1)
+				j.CancelFunc()
+			}()
+
 			err1 := exec.Exec(ctx, j)
 			if err1 != nil {
 				s.l.Error("调度任务执行失败",
@@ -110,7 +120,6 @@ func (s *Scheduler) Start(ctx context.Context) error {
 					logger.Error(err1))
 				return
 			}
-			s.limiter.Release(1)
 			err1 = s.svc.ResetNextTime(ctx, j)
 			if err1 != nil {
 				s.l.Error("更新下一次的执行失败", logger.Error(err1))

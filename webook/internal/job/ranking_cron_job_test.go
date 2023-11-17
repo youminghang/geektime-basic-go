@@ -74,7 +74,7 @@ func TestScheduler_Start(t *testing.T) {
 
 			exector := NewLocalFuncExecutor()
 			testJob := &TestJob{}
-			exector.AddLocalJob("test_job", testJob.Do)
+			exector.AddLocalFunc("test_job", testJob.Do)
 			scheduler.RegisterExecutor(exector)
 			err := scheduler.Start(ctx)
 			assert.Error(t, tc.wantErr, err)

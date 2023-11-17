@@ -8,6 +8,7 @@ package startup
 
 import (
 	article2 "gitee.com/geekbang/basic-go/webook/internal/events/article"
+	"gitee.com/geekbang/basic-go/webook/internal/job"
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
@@ -137,6 +138,16 @@ func InitInteractiveService() service.InteractiveService {
 	return interactiveService
 }
 
+func InitJobScheduler() *job.Scheduler {
+	gormDB := InitTestDB()
+	jobDAO := dao.NewGORMJobDAO(gormDB)
+	cronJobRepository := repository.NewPreemptCronJobRepository(jobDAO)
+	loggerV1 := InitLog()
+	cronJobService := service.NewCronJobService(cronJobRepository, loggerV1)
+	scheduler := job.NewScheduler(cronJobService, loggerV1)
+	return scheduler
+}
+
 func InitJwtHdl() jwt.Handler {
 	cmdable := InitRedis()
 	handler := jwt.NewRedisHandler(cmdable)
@@ -158,3 +169,5 @@ var articlSvcProvider = wire.NewSet(article.NewGORMArticleDAO, article2.NewSaram
 var interactiveSvcProvider = wire.NewSet(service.NewInteractiveService, repository.NewCachedInteractiveRepository, dao.NewGORMInteractiveDAO, cache.NewRedisInteractiveCache)
 
 var rankServiceProvider = wire.NewSet(service.NewBatchRankingService, repository.NewCachedRankingRepository, cache.NewRedisRankingCache, cache.NewRankingLocalCache)
+
+var jobProviderSet = wire.NewSet(service.NewCronJobService, repository.NewPreemptCronJobRepository, dao.NewGORMJobDAO)
