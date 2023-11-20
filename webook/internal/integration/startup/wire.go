@@ -4,6 +4,7 @@ package startup
 
 import (
 	article2 "gitee.com/geekbang/basic-go/webook/internal/events/article"
+	"gitee.com/geekbang/basic-go/webook/internal/job"
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
@@ -48,6 +49,11 @@ var rankServiceProvider = wire.NewSet(
 	cache.NewRedisRankingCache,
 	cache.NewRankingLocalCache,
 )
+
+var jobProviderSet = wire.NewSet(
+	service.NewCronJobService,
+	repository.NewPreemptCronJobRepository,
+	dao.NewGORMJobDAO)
 
 //go:generate wire
 func InitWebServer() *gin.Engine {
@@ -122,6 +128,11 @@ func InitRankingService() service.RankingService {
 func InitInteractiveService() service.InteractiveService {
 	wire.Build(thirdProvider, interactiveSvcProvider)
 	return service.NewInteractiveService(nil, nil)
+}
+
+func InitJobScheduler() *job.Scheduler {
+	wire.Build(jobProviderSet, thirdProvider, job.NewScheduler)
+	return &job.Scheduler{}
 }
 
 func InitJwtHdl() ijwt.Handler {
