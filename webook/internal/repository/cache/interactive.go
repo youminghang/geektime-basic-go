@@ -90,6 +90,7 @@ func (r *RedisInteractiveCache) Get(ctx context.Context,
 
 	return domain.Interactive{
 		// 懒惰的写法
+		BizId:      bizId,
 		CollectCnt: collectCnt,
 		LikeCnt:    likeCnt,
 		ReadCnt:    readCnt,
