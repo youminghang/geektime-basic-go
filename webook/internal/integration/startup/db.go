@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	intrDAO "gitee.com/geekbang/basic-go/webook/interactive/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -62,6 +63,11 @@ func InitTestDB() *gorm.DB {
 			panic(err)
 		}
 		err = dao.InitTables(db)
+		// 真就是
+		if err != nil {
+			panic(err)
+		}
+		err = intrDAO.InitTables(db)
 		if err != nil {
 			panic(err)
 		}

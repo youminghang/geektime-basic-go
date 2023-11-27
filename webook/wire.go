@@ -3,6 +3,11 @@
 package main
 
 import (
+	"gitee.com/geekbang/basic-go/webook/interactive/events"
+	repository2 "gitee.com/geekbang/basic-go/webook/interactive/repository"
+	cache2 "gitee.com/geekbang/basic-go/webook/interactive/repository/cache"
+	dao2 "gitee.com/geekbang/basic-go/webook/interactive/repository/dao"
+	service2 "gitee.com/geekbang/basic-go/webook/interactive/service"
 	article2 "gitee.com/geekbang/basic-go/webook/internal/events/article"
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
@@ -36,24 +41,24 @@ func InitApp() *App {
 
 		// DAO 部分
 		dao.NewGORMUserDAO,
-		dao.NewGORMInteractiveDAO,
+		dao2.NewGORMInteractiveDAO,
 		article.NewGORMArticleDAO,
 
 		// Cache 部分
 		cache.NewRedisUserCache,
 		cache.NewRedisCodeCache,
 		cache.NewRedisArticleCache,
-		cache.NewRedisInteractiveCache,
+		cache2.NewRedisInteractiveCache,
 
 		// repository 部分
 		repository.NewCachedUserRepository,
 		repository.NewCachedCodeRepository,
 		repository.NewArticleRepository,
-		repository.NewCachedInteractiveRepository,
+		repository2.NewCachedInteractiveRepository,
 
 		// events 部分
 		article2.NewSaramaSyncProducer,
-		article2.NewInteractiveReadEventConsumer,
+		events.NewInteractiveReadEventConsumer,
 		ioc.NewConsumers,
 
 		// service 部分
@@ -62,7 +67,7 @@ func InitApp() *App {
 		service.NewSMSCodeService,
 		service.NewUserService,
 		service.NewArticleService,
-		service.NewInteractiveService,
+		service2.NewInteractiveService,
 
 		// handler 部分
 		ijwt.NewRedisHandler,

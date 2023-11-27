@@ -1,9 +1,8 @@
-package integration
+package startup
 
 import (
-	"gitee.com/geekbang/basic-go/webook/internal/domain"
-	"gitee.com/geekbang/basic-go/webook/internal/integration/startup"
-	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
+	"gitee.com/geekbang/basic-go/webook/interactive/domain"
+	"gitee.com/geekbang/basic-go/webook/interactive/repository/dao"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -20,8 +19,8 @@ type InteractiveTestSuite struct {
 }
 
 func (s *InteractiveTestSuite) SetupSuite() {
-	s.db = startup.InitTestDB()
-	s.rdb = startup.InitRedis()
+	s.db = InitTestDB()
+	s.rdb = InitRedis()
 }
 
 func (s *InteractiveTestSuite) TearDownTest() {
@@ -171,7 +170,7 @@ func (s *InteractiveTestSuite) TestIncrReadCnt() {
 
 	// 不同于 AsyncSms 服务，我们不需要 mock，所以创建一个就可以
 	// 不需要每个测试都创建
-	svc := startup.InitInteractiveService()
+	svc := InitInteractiveService()
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
 			tc.before(t)
@@ -308,7 +307,7 @@ func (s *InteractiveTestSuite) TestLike() {
 		},
 	}
 
-	svc := startup.InitInteractiveService()
+	svc := InitInteractiveService()
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.before(t)
@@ -406,7 +405,7 @@ func (s *InteractiveTestSuite) TestDislike() {
 		},
 	}
 
-	svc := startup.InitInteractiveService()
+	svc := InitInteractiveService()
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.before(t)
@@ -600,7 +599,7 @@ func (s *InteractiveTestSuite) TestCollect() {
 		},
 	}
 
-	svc := startup.InitInteractiveService()
+	svc := InitInteractiveService()
 
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
@@ -692,7 +691,7 @@ func (s *InteractiveTestSuite) TestGet() {
 		},
 	}
 
-	svc := startup.InitInteractiveService()
+	svc := InitInteractiveService()
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
 			tc.before(t)
@@ -759,7 +758,7 @@ func (s *InteractiveTestSuite) TestGetByIds() {
 		},
 	}
 
-	svc := startup.InitInteractiveService()
+	svc := InitInteractiveService()
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
 			res, err := svc.GetByIds(context.Background(), tc.biz, tc.ids)

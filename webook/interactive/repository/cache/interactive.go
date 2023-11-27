@@ -4,7 +4,8 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
-	"gitee.com/geekbang/basic-go/webook/internal/domain"
+	"gitee.com/geekbang/basic-go/webook/interactive/domain"
+	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
 	"github.com/redis/go-redis/v9"
 	"strconv"
 	"time"
@@ -80,7 +81,7 @@ func (r *RedisInteractiveCache) Get(ctx context.Context,
 
 	if len(data) == 0 {
 		// 缓存不存在
-		return domain.Interactive{}, ErrKeyNotExist
+		return domain.Interactive{}, cache.ErrKeyNotExist
 	}
 
 	// 理论上来说，这里不可能有 error

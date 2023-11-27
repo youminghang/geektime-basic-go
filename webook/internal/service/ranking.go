@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"gitee.com/geekbang/basic-go/webook/interactive/service"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
 	"github.com/ecodeclub/ekit/queue"
@@ -20,7 +21,7 @@ type RankingService interface {
 
 // BatchRankingService 分批计算
 type BatchRankingService struct {
-	intrSvc InteractiveService
+	intrSvc service.InteractiveService
 	artSvc  ArticleService
 	repo    repository.RankingRepository
 	// 为了测试，不得已暴露出去
@@ -31,7 +32,7 @@ type BatchRankingService struct {
 }
 
 func NewBatchRankingService(
-	intrSvc InteractiveService,
+	intrSvc service.InteractiveService,
 	artSvc ArticleService,
 	repo repository.RankingRepository) RankingService {
 	res := &BatchRankingService{
