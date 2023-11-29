@@ -47,7 +47,7 @@ func (c *CachedReadCntRepository) Liked(ctx context.Context, biz string, id int6
 	switch err {
 	case nil:
 		return true, nil
-	case dao.ErrDataNotFound:
+	case dao2.ErrRecordNotFound:
 		return false, nil
 	default:
 		return false, err
@@ -59,7 +59,7 @@ func (c *CachedReadCntRepository) Collected(ctx context.Context, biz string, id 
 	switch err {
 	case nil:
 		return true, nil
-	case dao.ErrDataNotFound:
+	case dao2.ErrRecordNotFound:
 		return false, nil
 	default:
 		return false, err
@@ -124,7 +124,7 @@ func (c *CachedReadCntRepository) Get(ctx context.Context,
 		return intr, nil
 	}
 	ie, err := c.dao.Get(ctx, biz, bizId)
-	if err == nil {
+	if err == dao.ErrDataNotFound || err == nil {
 		res := c.toDomain(ie)
 		if er := c.cache.Set(ctx, biz, bizId, res); er != nil {
 			c.l.Error("回写缓存失败",
@@ -139,6 +139,7 @@ func (c *CachedReadCntRepository) Get(ctx context.Context,
 
 func (c *CachedReadCntRepository) toDomain(intr dao2.Interactive) domain.Interactive {
 	return domain.Interactive{
+		Biz:        intr.Biz,
 		BizId:      intr.BizId,
 		LikeCnt:    intr.LikeCnt,
 		CollectCnt: intr.CollectCnt,

@@ -3,7 +3,6 @@
 package main
 
 import (
-	"gitee.com/geekbang/basic-go/webook/interactive/events"
 	repository2 "gitee.com/geekbang/basic-go/webook/interactive/repository"
 	cache2 "gitee.com/geekbang/basic-go/webook/interactive/repository/cache"
 	dao2 "gitee.com/geekbang/basic-go/webook/interactive/repository/dao"
@@ -27,6 +26,13 @@ var rankServiceProvider = wire.NewSet(
 	cache.NewRankingLocalCache,
 )
 
+var interactiveServiceProducer = wire.NewSet(
+	dao2.NewGORMInteractiveDAO,
+	cache2.NewRedisInteractiveCache,
+	repository2.NewCachedInteractiveRepository,
+	service2.NewInteractiveService,
+)
+
 func InitApp() *App {
 	wire.Build(
 		ioc.InitRedis, ioc.InitDB,
@@ -41,24 +47,24 @@ func InitApp() *App {
 
 		// DAO 部分
 		dao.NewGORMUserDAO,
-		dao2.NewGORMInteractiveDAO,
+
 		article.NewGORMArticleDAO,
+
+		interactiveServiceProducer,
+		ioc.InitIntrGRPCClient,
 
 		// Cache 部分
 		cache.NewRedisUserCache,
 		cache.NewRedisCodeCache,
 		cache.NewRedisArticleCache,
-		cache2.NewRedisInteractiveCache,
 
 		// repository 部分
 		repository.NewCachedUserRepository,
 		repository.NewCachedCodeRepository,
 		repository.NewArticleRepository,
-		repository2.NewCachedInteractiveRepository,
 
 		// events 部分
 		article2.NewSaramaSyncProducer,
-		events.NewInteractiveReadEventConsumer,
 		ioc.NewConsumers,
 
 		// service 部分
@@ -67,7 +73,6 @@ func InitApp() *App {
 		service.NewSMSCodeService,
 		service.NewUserService,
 		service.NewArticleService,
-		service2.NewInteractiveService,
 
 		// handler 部分
 		ijwt.NewRedisHandler,
