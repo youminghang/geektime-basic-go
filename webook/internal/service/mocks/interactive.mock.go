@@ -10,9 +10,9 @@ package svcmocks
 
 import (
 	context "context"
+	"gitee.com/geekbang/basic-go/webook/interactive/domain"
 	reflect "reflect"
 
-	domain "gitee.com/geekbang/basic-go/webook/internal/domain"
 	gomock "go.uber.org/mock/gomock"
 )
 

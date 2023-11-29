@@ -9,6 +9,7 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/integration/startup"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao/article"
 	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
+	"github.com/IBM/sarama"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -20,8 +21,9 @@ import (
 
 type ArticleGORMHandlerTestSuite struct {
 	suite.Suite
-	server *gin.Engine
-	db     *gorm.DB
+	server      *gin.Engine
+	db          *gorm.DB
+	kafkaClient sarama.Client
 }
 
 func (s *ArticleGORMHandlerTestSuite) SetupSuite() {
@@ -34,6 +36,7 @@ func (s *ArticleGORMHandlerTestSuite) SetupSuite() {
 		context.Next()
 	})
 	s.db = startup.InitTestDB()
+	s.kafkaClient = startup.InitKafka()
 	hdl := startup.InitArticleHandler(article.NewGORMArticleDAO(s.db))
 	hdl.RegisterRoutes(s.server)
 }
@@ -426,6 +429,101 @@ func (s *ArticleGORMHandlerTestSuite) TestArticle_Publish() {
 		})
 	}
 }
+
+//func (s *ArticleGORMHandlerTestSuite) TestPubDetail() {
+//	testCases := []struct {
+//		name   string
+//		before func(t *testing.T)
+//		after  func(t *testing.T)
+//		id     int64
+//		// 预期响应
+//		wantCode   int
+//		wantResult Result[Article]
+//	}{
+//		{
+//			name: "查找成功",
+//			before: func(t *testing.T) {
+//				// 准备数据，首先准备文章数据
+//				err := s.db.Create(&article.PublishedArticle{
+//					Id:       1,
+//					Title:    "我的标题",
+//					Content:  "我的内容",
+//					AuthorId: 123,
+//					Status:   domain.ArticleStatusPublished.ToUint8(),
+//					Ctime:    123,
+//					Utime:    234,
+//				}).Error
+//				assert.NoError(t, err)
+//				// 准备点赞、收藏的数据
+//				err = s.db.Create(&article2.Interactive{
+//					Id:         1,
+//					BizId:      123,
+//					Biz:        "article",
+//					ReadCnt:    1,
+//					CollectCnt: 2,
+//					LikeCnt:    3,
+//				}).Error
+//				assert.NoError(t, err)
+//			},
+//			after: func(t *testing.T) {
+//				// 我们需要确保，MQ 里面有这个消息
+//				// 所以需要拿到一条消息
+//				consumer, err := sarama.NewConsumerGroupFromClient("test_group1",
+//					s.kafkaClient)
+//				assert.NoError(t, err)
+//				ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+//				defer cancel()
+//				err = consumer.Consume(ctx, []string{}, saramax.HandlerFunc(func(session sarama.ConsumerGroupSession,
+//					claim sarama.ConsumerGroupClaim) error {
+//					select {
+//					case <-ctx.Done():
+//						return ctx.Err()
+//					case msg := <-claim.Messages():
+//						// 等一条消息就可以了
+//						// 这里进一步确认 msg 的内容
+//						var evt article2.ReadEvent
+//						err := json.Unmarshal(msg.Value, &evt)
+//						if err != nil {
+//							return err
+//						}
+//						assert.Equal(t, article2.ReadEvent{
+//							Aid: 1,
+//							Uid: 123,
+//						}, evt)
+//					}
+//					return nil
+//				}))
+//				assert.NoError(t, err)
+//			},
+//		},
+//	}
+//
+//	for _, tc := range testCases {
+//		s.T().Run(tc.name, func(t *testing.T) {
+//			tc.before(t)
+//			req, err := http.NewRequest(http.MethodGet,
+//				fmt.Sprintf("/articles/pub/%d", tc.id), nil)
+//			assert.NoError(t, err)
+//			req.Header.Set("Content-Type",
+//				"application/json")
+//			recorder := httptest.NewRecorder()
+//
+//			s.server.ServeHTTP(recorder, req)
+//			code := recorder.Code
+//			assert.Equal(t, tc.wantCode, code)
+//			if code != http.StatusOK {
+//				return
+//			}
+//			// 反序列化为结果
+//			// 利用泛型来限定结果必须是 int64
+//			var result Result[int64]
+//			err = json.Unmarshal(recorder.Body.Bytes(), &result)
+//			assert.NoError(t, err)
+//			assert.Equal(t, tc.wantResult, result)
+//			tc.after(t)
+//		})
+//	}
+//}
 
 func TestGORMArticle(t *testing.T) {
 	suite.Run(t, new(ArticleGORMHandlerTestSuite))

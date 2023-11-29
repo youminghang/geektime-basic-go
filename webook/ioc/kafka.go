@@ -1,8 +1,8 @@
 package ioc
 
 import (
+	intrEvents "gitee.com/geekbang/basic-go/webook/interactive/events"
 	"gitee.com/geekbang/basic-go/webook/internal/events"
-	"gitee.com/geekbang/basic-go/webook/internal/events/article"
 	"github.com/IBM/sarama"
 	"github.com/spf13/viper"
 )
@@ -34,6 +34,6 @@ func NewSyncProducer(client sarama.Client) sarama.SyncProducer {
 }
 
 // NewConsumers 面临的问题依旧是所有的 Consumer 在这里注册一下
-func NewConsumers(c1 *article.InteractiveReadEventConsumer) []events.Consumer {
+func NewConsumers(c1 *intrEvents.InteractiveReadEventConsumer) []events.Consumer {
 	return []events.Consumer{c1}
 }

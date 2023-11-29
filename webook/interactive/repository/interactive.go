@@ -2,8 +2,9 @@ package repository
 
 import (
 	"context"
-	"gitee.com/geekbang/basic-go/webook/internal/domain"
-	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
+	"gitee.com/geekbang/basic-go/webook/interactive/domain"
+	"gitee.com/geekbang/basic-go/webook/interactive/repository/cache"
+	dao2 "gitee.com/geekbang/basic-go/webook/interactive/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"github.com/ecodeclub/ekit/slice"
@@ -26,7 +27,7 @@ type InteractiveRepository interface {
 
 type CachedReadCntRepository struct {
 	cache cache.InteractiveCache
-	dao   dao.InteractiveDAO
+	dao   dao2.InteractiveDAO
 	l     logger.LoggerV1
 }
 
@@ -35,8 +36,8 @@ func (c *CachedReadCntRepository) GetByIds(ctx context.Context, biz string, ids 
 	if err != nil {
 		return nil, err
 	}
-	return slice.Map[dao.Interactive, domain.Interactive](vals,
-		func(idx int, src dao.Interactive) domain.Interactive {
+	return slice.Map[dao2.Interactive, domain.Interactive](vals,
+		func(idx int, src dao2.Interactive) domain.Interactive {
 			return c.toDomain(src)
 		}), nil
 }
@@ -101,7 +102,7 @@ func (c *CachedReadCntRepository) BatchIncrReadCnt(ctx context.Context,
 
 func (c *CachedReadCntRepository) AddCollectionItem(ctx context.Context,
 	biz string, bizId, cid, uid int64) error {
-	err := c.dao.InsertCollectionBiz(ctx, dao.UserCollectionBiz{
+	err := c.dao.InsertCollectionBiz(ctx, dao2.UserCollectionBiz{
 		Biz:   biz,
 		Cid:   cid,
 		BizId: bizId,
@@ -136,7 +137,7 @@ func (c *CachedReadCntRepository) Get(ctx context.Context,
 	return domain.Interactive{}, err
 }
 
-func (c *CachedReadCntRepository) toDomain(intr dao.Interactive) domain.Interactive {
+func (c *CachedReadCntRepository) toDomain(intr dao2.Interactive) domain.Interactive {
 	return domain.Interactive{
 		BizId:      intr.BizId,
 		LikeCnt:    intr.LikeCnt,
@@ -145,7 +146,7 @@ func (c *CachedReadCntRepository) toDomain(intr dao.Interactive) domain.Interact
 	}
 }
 
-func NewCachedInteractiveRepository(dao dao.InteractiveDAO,
+func NewCachedInteractiveRepository(dao dao2.InteractiveDAO,
 	cache cache.InteractiveCache, l logger.LoggerV1) InteractiveRepository {
 	return &CachedReadCntRepository{
 		dao:   dao,

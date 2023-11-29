@@ -3,6 +3,10 @@
 package startup
 
 import (
+	repository2 "gitee.com/geekbang/basic-go/webook/interactive/repository"
+	cache2 "gitee.com/geekbang/basic-go/webook/interactive/repository/cache"
+	dao2 "gitee.com/geekbang/basic-go/webook/interactive/repository/dao"
+	service2 "gitee.com/geekbang/basic-go/webook/interactive/service"
 	article2 "gitee.com/geekbang/basic-go/webook/internal/events/article"
 	"gitee.com/geekbang/basic-go/webook/internal/job"
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
@@ -37,10 +41,10 @@ var articlSvcProvider = wire.NewSet(
 	service.NewArticleService)
 
 var interactiveSvcProvider = wire.NewSet(
-	service.NewInteractiveService,
-	repository.NewCachedInteractiveRepository,
-	dao.NewGORMInteractiveDAO,
-	cache.NewRedisInteractiveCache,
+	service2.NewInteractiveService,
+	repository2.NewCachedInteractiveRepository,
+	dao2.NewGORMInteractiveDAO,
+	cache2.NewRedisInteractiveCache,
 )
 
 var rankServiceProvider = wire.NewSet(
@@ -125,9 +129,9 @@ func InitRankingService() service.RankingService {
 	return &service.BatchRankingService{}
 }
 
-func InitInteractiveService() service.InteractiveService {
+func InitInteractiveService() service2.InteractiveService {
 	wire.Build(thirdProvider, interactiveSvcProvider)
-	return service.NewInteractiveService(nil, nil)
+	return service2.NewInteractiveService(nil, nil)
 }
 
 func InitJobScheduler() *job.Scheduler {

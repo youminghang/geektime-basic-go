@@ -2,6 +2,8 @@ package web
 
 import (
 	"fmt"
+	domain2 "gitee.com/geekbang/basic-go/webook/interactive/domain"
+	service2 "gitee.com/geekbang/basic-go/webook/interactive/service"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	"gitee.com/geekbang/basic-go/webook/internal/web/jwt"
@@ -19,13 +21,13 @@ var _ handler = (*ArticleHandler)(nil)
 
 type ArticleHandler struct {
 	svc     service.ArticleService
-	intrSvc service.InteractiveService
+	intrSvc service2.InteractiveService
 	l       logger.LoggerV1
 	biz     string
 }
 
 func NewArticleHandler(svc service.ArticleService,
-	intrSvc service.InteractiveService,
+	intrSvc service2.InteractiveService,
 	l logger.LoggerV1) *ArticleHandler {
 	return &ArticleHandler{
 		svc:     svc,
@@ -277,7 +279,7 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context, uc ginx.UserClaims) (Result
 	var (
 		eg   errgroup.Group
 		art  domain.Article
-		intr domain.Interactive
+		intr domain2.Interactive
 	)
 	eg.Go(func() error {
 		var er error

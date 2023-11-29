@@ -3,8 +3,8 @@ package integration
 import (
 	"context"
 	"encoding/json"
+	"gitee.com/geekbang/basic-go/webook/interactive/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/internal/integration/startup"
-	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao/article"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	"github.com/redis/go-redis/v9"
