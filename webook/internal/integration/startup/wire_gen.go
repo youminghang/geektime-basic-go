@@ -56,7 +56,8 @@ func InitWebServer() *gin.Engine {
 	interactiveCache := cache2.NewRedisInteractiveCache(cmdable)
 	interactiveRepository := repository2.NewCachedInteractiveRepository(interactiveDAO, interactiveCache, loggerV1)
 	interactiveService := service2.NewInteractiveService(interactiveRepository, loggerV1)
-	articleHandler := web.NewArticleHandler(articleService, interactiveService, loggerV1)
+	interactiveServiceClient := InitInteractiveClient(interactiveService)
+	articleHandler := web.NewArticleHandler(articleService, interactiveServiceClient, loggerV1)
 	observabilityHandler := web.NewObservabilityHandler()
 	wechatService := InitPhantomWechatService(loggerV1)
 	oAuth2WechatHandler := web.NewOAuth2WechatHandler(wechatService, userService, handler)
@@ -81,7 +82,8 @@ func InitArticleHandler(dao3 article.ArticleDAO) *web.ArticleHandler {
 	interactiveCache := cache2.NewRedisInteractiveCache(cmdable)
 	interactiveRepository := repository2.NewCachedInteractiveRepository(interactiveDAO, interactiveCache, loggerV1)
 	interactiveService := service2.NewInteractiveService(interactiveRepository, loggerV1)
-	articleHandler := web.NewArticleHandler(articleService, interactiveService, loggerV1)
+	interactiveServiceClient := InitInteractiveClient(interactiveService)
+	articleHandler := web.NewArticleHandler(articleService, interactiveServiceClient, loggerV1)
 	return articleHandler
 }
 
@@ -112,6 +114,7 @@ func InitRankingService() service.RankingService {
 	loggerV1 := InitLog()
 	interactiveRepository := repository2.NewCachedInteractiveRepository(interactiveDAO, interactiveCache, loggerV1)
 	interactiveService := service2.NewInteractiveService(interactiveRepository, loggerV1)
+	interactiveServiceClient := InitInteractiveClient(interactiveService)
 	articleDAO := article.NewGORMArticleDAO(gormDB)
 	articleCache := cache.NewRedisArticleCache(cmdable)
 	userRepository := _wireCachedUserRepositoryValue
@@ -123,7 +126,7 @@ func InitRankingService() service.RankingService {
 	redisRankingCache := cache.NewRedisRankingCache(cmdable)
 	rankingLocalCache := cache.NewRankingLocalCache()
 	rankingRepository := repository.NewCachedRankingRepository(redisRankingCache, rankingLocalCache)
-	rankingService := service.NewBatchRankingService(interactiveService, articleService, rankingRepository)
+	rankingService := service.NewBatchRankingService(interactiveServiceClient, articleService, rankingRepository)
 	return rankingService
 }
 

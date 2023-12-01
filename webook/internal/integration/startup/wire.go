@@ -66,6 +66,7 @@ func InitWebServer() *gin.Engine {
 		userSvcProvider,
 		articlSvcProvider,
 		interactiveSvcProvider,
+		InitInteractiveClient,
 		cache.NewRedisCodeCache,
 		repository.NewCachedCodeRepository,
 		// service 部分
@@ -98,6 +99,7 @@ func InitArticleHandler(dao article.ArticleDAO) *web.ArticleHandler {
 		interactiveSvcProvider,
 		article2.NewSaramaSyncProducer,
 		cache.NewRedisArticleCache,
+		InitInteractiveClient,
 		//wire.InterfaceValue(new(article.ArticleDAO), dao),
 		repository.NewArticleRepository,
 		service.NewArticleService,
@@ -122,6 +124,7 @@ func InitRankingService() service.RankingService {
 	wire.Build(thirdProvider,
 		interactiveSvcProvider,
 		articlSvcProvider,
+		InitInteractiveClient,
 		// 用不上这个 user repo，所以随便搞一个
 		wire.InterfaceValue(new(repository.UserRepository),
 			&repository.CachedUserRepository{}),
