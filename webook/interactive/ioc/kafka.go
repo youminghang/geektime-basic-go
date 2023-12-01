@@ -1,7 +1,7 @@
 package ioc
 
 import (
-	"gitee.com/geekbang/basic-go/webook/internal/events"
+	"gitee.com/geekbang/basic-go/webook/interactive/events"
 	"github.com/IBM/sarama"
 	"github.com/spf13/viper"
 )
@@ -24,15 +24,9 @@ func InitKafka() sarama.Client {
 	return client
 }
 
-func NewSyncProducer(client sarama.Client) sarama.SyncProducer {
-	res, err := sarama.NewSyncProducerFromClient(client)
-	if err != nil {
-		panic(err)
-	}
-	return res
-}
-
 // NewConsumers 面临的问题依旧是所有的 Consumer 在这里注册一下
-func NewConsumers() []events.Consumer {
-	return []events.Consumer{}
+func NewConsumers(intr *events.InteractiveReadEventConsumer) []events.Consumer {
+	return []events.Consumer{
+		intr,
+	}
 }

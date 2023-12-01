@@ -9,6 +9,10 @@ mock:
 	@go generate -tags=wireinject ./...
 	@go mod tidy
 
+.PHONY: grpc
+grpc:
+	@buf generate webook/api/proto
+
 .PHONY: e2e
 e2e:
 	@docker compose -f webook/docker-compose.yaml down

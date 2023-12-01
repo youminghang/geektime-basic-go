@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"gitee.com/geekbang/basic-go/webook/interactive/service"
+	intrv1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/intr/v1"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
 	"github.com/ecodeclub/ekit/queue"
@@ -21,7 +21,7 @@ type RankingService interface {
 
 // BatchRankingService 分批计算
 type BatchRankingService struct {
-	intrSvc service.InteractiveService
+	intrSvc intrv1.InteractiveServiceClient
 	artSvc  ArticleService
 	repo    repository.RankingRepository
 	// 为了测试，不得已暴露出去
@@ -32,7 +32,7 @@ type BatchRankingService struct {
 }
 
 func NewBatchRankingService(
-	intrSvc service.InteractiveService,
+	intrSvc intrv1.InteractiveServiceClient,
 	artSvc ArticleService,
 	repo repository.RankingRepository) RankingService {
 	res := &BatchRankingService{
@@ -85,13 +85,15 @@ func (a *BatchRankingService) rankTopN(ctx context.Context) ([]domain.Article, e
 		artIds := slice.Map[domain.Article, int64](arts, func(idx int, src domain.Article) int64 {
 			return src.Id
 		})
-		intrMap, err := a.intrSvc.GetByIds(ctx, "article", artIds)
+		intrResp, err := a.intrSvc.GetByIds(ctx, &intrv1.GetByIdsRequest{
+			Biz: "article", Ids: artIds,
+		})
 		if err != nil {
 			return nil, err
 		}
 		minScore := float64(0)
 		for _, art := range arts {
-			intr, ok := intrMap[art.Id]
+			intr, ok := intrResp.GetIntrs()[art.Id]
 			if !ok {
 				continue
 			}

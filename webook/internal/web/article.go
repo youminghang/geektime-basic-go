@@ -2,8 +2,7 @@ package web
 
 import (
 	"fmt"
-	domain2 "gitee.com/geekbang/basic-go/webook/interactive/domain"
-	service2 "gitee.com/geekbang/basic-go/webook/interactive/service"
+	intrv1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/intr/v1"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	"gitee.com/geekbang/basic-go/webook/internal/web/jwt"
@@ -21,13 +20,13 @@ var _ handler = (*ArticleHandler)(nil)
 
 type ArticleHandler struct {
 	svc     service.ArticleService
-	intrSvc service2.InteractiveService
+	intrSvc intrv1.InteractiveServiceClient
 	l       logger.LoggerV1
 	biz     string
 }
 
 func NewArticleHandler(svc service.ArticleService,
-	intrSvc service2.InteractiveService,
+	intrSvc intrv1.InteractiveServiceClient,
 	l logger.LoggerV1) *ArticleHandler {
 	return &ArticleHandler{
 		svc:     svc,
@@ -277,9 +276,9 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context, uc ginx.UserClaims) (Result
 
 	// 使用 error group 来同时查询数据
 	var (
-		eg   errgroup.Group
-		art  domain.Article
-		intr domain2.Interactive
+		eg       errgroup.Group
+		art      domain.Article
+		intrResp *intrv1.GetResponse
 	)
 	eg.Go(func() error {
 		var er error
@@ -289,7 +288,9 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context, uc ginx.UserClaims) (Result
 
 	eg.Go(func() error {
 		var er error
-		intr, er = a.intrSvc.Get(ctx, a.biz, id, uc.Id)
+		intrResp, er = a.intrSvc.Get(ctx, &intrv1.GetRequest{
+			Biz: a.biz, BizId: id, Uid: uc.Id,
+		})
 		return er
 	})
 
@@ -309,7 +310,7 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context, uc ginx.UserClaims) (Result
 	//		a.l.Error("增加文章阅读数失败", logger.Error(err))
 	//	}
 	//}()
-
+	intr := intrResp.Intr
 	return Result{
 		Data: ArticleVo{
 			Id:      art.Id,
@@ -332,9 +333,13 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context, uc ginx.UserClaims) (Result
 func (a *ArticleHandler) Like(ctx *gin.Context, req LikeReq, uc jwt.UserClaims) (ginx.Result, error) {
 	var err error
 	if req.Like {
-		err = a.intrSvc.Like(ctx, a.biz, req.Id, uc.Id)
+		_, err = a.intrSvc.Like(ctx, &intrv1.LikeRequest{
+			Biz: a.biz, BizId: req.Id, Uid: uc.Id,
+		})
 	} else {
-		err = a.intrSvc.CancelLike(ctx, a.biz, req.Id, uc.Id)
+		_, err = a.intrSvc.CancelLike(ctx, &intrv1.CancelLikeRequest{
+			Biz: a.biz, BizId: req.Id, Uid: uc.Id,
+		})
 	}
 
 	if err != nil {
@@ -350,7 +355,10 @@ func (a *ArticleHandler) Collect(
 	ctx *gin.Context,
 	req CollectReq,
 	uc jwt.UserClaims) (Result, error) {
-	err := a.intrSvc.Collect(ctx, a.biz, req.Id, req.Cid, uc.Id)
+	_, err := a.intrSvc.Collect(ctx, &intrv1.CollectRequest{
+		Biz: a.biz, BizId: req.Id, Uid: uc.Id,
+		Cid: req.Cid,
+	})
 	if err != nil {
 		return Result{
 			Code: 5,

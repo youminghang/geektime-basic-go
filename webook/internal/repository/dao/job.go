@@ -91,8 +91,8 @@ func (dao *GORMJobDAO) UpdateNextTime(ctx context.Context, id int64, t time.Time
 }
 
 type Job struct {
-	Id         int64 `gorm:"primaryKey,autoIncrement"`
-	Name       string
+	Id         int64  `gorm:"primaryKey,autoIncrement"`
+	Name       string `gorm:"type:varchar(256);unique"`
 	Executor   string
 	Cfg        string
 	Expression string

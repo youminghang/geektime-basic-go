@@ -34,7 +34,7 @@ func (s *SaramaSyncProducer) ProduceReadEvent(evt ReadEvent) error {
 	_, _, err = s.producer.
 		SendMessage(&sarama.ProducerMessage{
 			Topic: topicReadEvent,
-			Key:   sarama.ByteEncoder(val),
+			Value: sarama.ByteEncoder(val),
 		})
 	return err
 }

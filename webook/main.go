@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"gitee.com/geekbang/basic-go/webook/ioc"
-	"github.com/fsnotify/fsnotify"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -120,9 +119,6 @@ func initViperV2Watch() {
 	// 直接指定文件路径
 	viper.SetConfigFile(*cfile)
 	viper.WatchConfig()
-	viper.OnConfigChange(func(in fsnotify.Event) {
-		fmt.Println(in.Name, in.Op)
-	})
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(err)
