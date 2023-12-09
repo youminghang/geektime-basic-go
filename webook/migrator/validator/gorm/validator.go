@@ -22,6 +22,10 @@ type Validator[T migrator.Entity] struct {
 
 	l        logger.LoggerV1
 	producer events.Producer
+
+	minUtime int64
+	// utime 最大值距离当前时间戳多远
+	nowDelta int64
 }
 
 func NewValidator[T migrator.Entity](
@@ -38,6 +42,8 @@ func NewValidator[T migrator.Entity](
 		l:         l,
 		producer:  producer,
 		batchSize: 100,
+		minUtime:  0,
+		nowDelta:  0,
 	}
 }
 
@@ -62,7 +68,13 @@ func (v *Validator[T]) baseToTarget(ctx context.Context) error {
 		offset++
 		var src T
 		// 这里假定主键的规范都是叫做 id，基本上大部分公司都有这种规范
-		err := base.WithContext(ctx).Order("id").Offset(offset).First(&src).Error
+		// 在叠加了 utime 作为查询条件之后，就可以达成增量校验的效果。
+		maxUtime := time.Now().UnixMilli() - v.nowDelta
+
+		err := base.WithContext(ctx).
+			Where("utime <? AND utime > ?", maxUtime, v.minUtime).
+			Order("id").
+			Offset(offset).First(&src).Error
 		if err == gorm.ErrRecordNotFound {
 			// 已经没有数据了
 			return nil
