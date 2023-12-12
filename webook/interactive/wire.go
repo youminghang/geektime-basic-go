@@ -20,15 +20,26 @@ var serviceProviderSet = wire.NewSet(
 	service.NewInteractiveService)
 
 var thirdProvider = wire.NewSet(
-	ioc.InitRedis, ioc.InitDB,
+	ioc.InitSRC,
+	ioc.InitDST,
+	ioc.InitDoubleWritePool,
+	ioc.InitBizDB,
+	ioc.InitRedis,
 	ioc.InitLogger,
 	ioc.InitKafka,
+	ioc.InitSyncProducer,
 )
+
+var migratorSet = wire.NewSet(
+	ioc.InitMigratorWeb,
+	ioc.InitFixDataConsumer,
+	ioc.InitMigradatorProducer)
 
 func Init() *App {
 	wire.Build(
 		thirdProvider,
 		serviceProviderSet,
+		migratorSet,
 		grpc.NewInteractiveServiceServer,
 		events.NewInteractiveReadEventConsumer,
 		ioc.InitGRPCxServer,

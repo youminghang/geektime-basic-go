@@ -29,7 +29,7 @@ func (s *DoubleWriteTestSuite) SetupSuite() {
 		Conn: &DoubleWritePool{
 			src:     src.ConnPool,
 			dst:     dst.ConnPool,
-			pattern: atomicx.NewValueOf(patternSrcFirst),
+			pattern: atomicx.NewValueOf(PatternSrcFirst),
 		},
 	}))
 	require.NoError(t, err)

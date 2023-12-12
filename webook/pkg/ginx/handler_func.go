@@ -75,6 +75,18 @@ func WrapReq[Req any](fn func(*gin.Context, Req) (Result, error)) gin.HandlerFun
 	}
 }
 
+func Wrap(fn func(*gin.Context) (Result, error)) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		res, err := fn(ctx)
+		if err != nil {
+			log.Error("执行业务逻辑失败",
+				logger.Error(err))
+		}
+		vector.WithLabelValues(strconv.Itoa(res.Code)).Inc()
+		ctx.JSON(http.StatusOK, res)
+	}
+}
+
 // WrapClaims 复制粘贴
 func WrapClaims(fn func(*gin.Context, UserClaims) (Result, error)) gin.HandlerFunc {
 	return func(ctx *gin.Context) {

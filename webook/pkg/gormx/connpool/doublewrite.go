@@ -20,23 +20,23 @@ func NewDoubleWritePool(srcDB *gorm.DB, dst *gorm.DB) *DoubleWritePool {
 	return &DoubleWritePool{
 		src:     srcDB.ConnPool,
 		dst:     dst.ConnPool,
-		pattern: atomicx.NewValueOf(patternSrcOnly)}
+		pattern: atomicx.NewValueOf(PatternSrcOnly)}
 }
 
 func (d *DoubleWritePool) BeginTx(ctx context.Context, opts *sql.TxOptions) (gorm.ConnPool, error) {
 	pattern := d.pattern.Load()
 	switch pattern {
-	case patternSrcOnly:
+	case PatternSrcOnly:
 		tx, err := d.src.(gorm.TxBeginner).BeginTx(ctx, opts)
 		return &DoubleWriteTx{
 			pattern: pattern,
 			src:     tx,
 		}, err
-	case patternSrcFirst:
+	case PatternSrcFirst:
 		return d.startTwoTx(d.src, d.dst, pattern, ctx, opts)
-	case patternDstFirst:
+	case PatternDstFirst:
 		return d.startTwoTx(d.src, d.dst, pattern, ctx, opts)
-	case patternDstOnly:
+	case PatternDstOnly:
 		tx, err := d.dst.(gorm.TxBeginner).BeginTx(ctx, opts)
 		return &DoubleWriteTx{
 			pattern: pattern,
@@ -76,9 +76,9 @@ func (d *DoubleWritePool) PrepareContext(ctx context.Context, query string) (*sq
 
 func (d *DoubleWritePool) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	switch d.pattern.Load() {
-	case patternSrcOnly:
+	case PatternSrcOnly:
 		return d.src.ExecContext(ctx, query, args...)
-	case patternSrcFirst:
+	case PatternSrcFirst:
 		res, err := d.src.ExecContext(ctx, query, args...)
 		if err == nil {
 			_, err1 := d.dst.ExecContext(ctx, query, args...)
@@ -88,7 +88,7 @@ func (d *DoubleWritePool) ExecContext(ctx context.Context, query string, args ..
 			}
 		}
 		return res, err
-	case patternDstFirst:
+	case PatternDstFirst:
 		res, err := d.dst.ExecContext(ctx, query, args...)
 		if err == nil {
 			_, err1 := d.src.ExecContext(ctx, query, args...)
@@ -98,7 +98,7 @@ func (d *DoubleWritePool) ExecContext(ctx context.Context, query string, args ..
 			}
 		}
 		return res, err
-	case patternDstOnly:
+	case PatternDstOnly:
 		return d.dst.ExecContext(ctx, query, args...)
 	default:
 		return nil, errUnknownPattern
@@ -107,9 +107,9 @@ func (d *DoubleWritePool) ExecContext(ctx context.Context, query string, args ..
 
 func (d *DoubleWritePool) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	switch d.pattern.Load() {
-	case patternSrcFirst, patternSrcOnly:
+	case PatternSrcFirst, PatternSrcOnly:
 		return d.src.QueryContext(ctx, query, args...)
-	case patternDstFirst, patternDstOnly:
+	case PatternDstFirst, PatternDstOnly:
 		return d.dst.QueryContext(ctx, query, args...)
 	default:
 		return nil, errUnknownPattern
@@ -118,9 +118,9 @@ func (d *DoubleWritePool) QueryContext(ctx context.Context, query string, args .
 
 func (d *DoubleWritePool) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	switch d.pattern.Load() {
-	case patternSrcFirst, patternSrcOnly:
+	case PatternSrcFirst, PatternSrcOnly:
 		return d.src.QueryRowContext(ctx, query, args...)
-	case patternDstFirst, patternDstOnly:
+	case PatternDstFirst, PatternDstOnly:
 		return d.dst.QueryRowContext(ctx, query, args...)
 	default:
 		// 因为返回值里面咩有 error，只能 panic 掉
@@ -136,23 +136,23 @@ type DoubleWriteTx struct {
 
 func (d *DoubleWriteTx) Commit() error {
 	switch d.pattern {
-	case patternSrcFirst:
+	case PatternSrcFirst:
 		err := d.src.Commit()
 		err1 := d.dst.Commit()
 		if err1 != nil {
 			// 记录日志
 		}
 		return err
-	case patternSrcOnly:
+	case PatternSrcOnly:
 		return d.src.Commit()
-	case patternDstFirst:
+	case PatternDstFirst:
 		err := d.dst.Commit()
 		err1 := d.src.Commit()
 		if err1 != nil {
 			// 记录日志
 		}
 		return err
-	case patternDstOnly:
+	case PatternDstOnly:
 		return d.dst.Commit()
 	default:
 		return errUnknownPattern
@@ -161,7 +161,7 @@ func (d *DoubleWriteTx) Commit() error {
 
 func (d *DoubleWriteTx) Rollback() error {
 	switch d.pattern {
-	case patternSrcFirst:
+	case PatternSrcFirst:
 		err := d.src.Rollback()
 		err1 := d.dst.Rollback()
 		if err1 != nil {
@@ -179,9 +179,9 @@ func (d *DoubleWriteTx) PrepareContext(ctx context.Context, query string) (*sql.
 
 func (d *DoubleWriteTx) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	switch d.pattern {
-	case patternSrcOnly:
+	case PatternSrcOnly:
 		return d.src.ExecContext(ctx, query, args...)
-	case patternSrcFirst:
+	case PatternSrcFirst:
 		res, err := d.src.ExecContext(ctx, query, args...)
 		if err == nil {
 			_, err1 := d.dst.ExecContext(ctx, query, args...)
@@ -191,7 +191,7 @@ func (d *DoubleWriteTx) ExecContext(ctx context.Context, query string, args ...i
 			}
 		}
 		return res, err
-	case patternDstFirst:
+	case PatternDstFirst:
 		res, err := d.dst.ExecContext(ctx, query, args...)
 		if err == nil {
 			_, err1 := d.src.ExecContext(ctx, query, args...)
@@ -201,7 +201,7 @@ func (d *DoubleWriteTx) ExecContext(ctx context.Context, query string, args ...i
 			}
 		}
 		return res, err
-	case patternDstOnly:
+	case PatternDstOnly:
 		return d.dst.ExecContext(ctx, query, args...)
 	default:
 		return nil, errUnknownPattern
@@ -210,9 +210,9 @@ func (d *DoubleWriteTx) ExecContext(ctx context.Context, query string, args ...i
 
 func (d *DoubleWriteTx) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	switch d.pattern {
-	case patternSrcFirst, patternSrcOnly:
+	case PatternSrcFirst, PatternSrcOnly:
 		return d.src.QueryContext(ctx, query, args...)
-	case patternDstFirst, patternDstOnly:
+	case PatternDstFirst, PatternDstOnly:
 		return d.dst.QueryContext(ctx, query, args...)
 	default:
 		return nil, errUnknownPattern
@@ -221,9 +221,9 @@ func (d *DoubleWriteTx) QueryContext(ctx context.Context, query string, args ...
 
 func (d *DoubleWriteTx) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	switch d.pattern {
-	case patternSrcFirst, patternSrcOnly:
+	case PatternSrcFirst, PatternSrcOnly:
 		return d.src.QueryRowContext(ctx, query, args...)
-	case patternDstFirst, patternDstOnly:
+	case PatternDstFirst, PatternDstOnly:
 		return d.dst.QueryRowContext(ctx, query, args...)
 	default:
 		// 因为返回值里面咩有 error，只能 panic 掉
@@ -232,8 +232,8 @@ func (d *DoubleWriteTx) QueryRowContext(ctx context.Context, query string, args 
 }
 
 const (
-	patternSrcOnly  = "src_only"
-	patternSrcFirst = "src_first"
-	patternDstFirst = "dst_first"
-	patternDstOnly  = "dst_only"
+	PatternSrcOnly  = "src_only"
+	PatternSrcFirst = "src_first"
+	PatternDstFirst = "dst_first"
+	PatternDstOnly  = "dst_only"
 )

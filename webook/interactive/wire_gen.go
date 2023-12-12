@@ -20,21 +20,29 @@ import (
 // Injectors from wire.go:
 
 func Init() *App {
-	loggerV1 := ioc.InitLogger()
-	db := ioc.InitDB(loggerV1)
+	srcDB := ioc.InitSRC()
+	dstDB := ioc.InitDST()
+	doubleWritePool := ioc.InitDoubleWritePool(srcDB, dstDB)
+	db := ioc.InitBizDB(doubleWritePool)
 	interactiveDAO := dao.NewGORMInteractiveDAO(db)
 	cmdable := ioc.InitRedis()
 	interactiveCache := cache.NewRedisInteractiveCache(cmdable)
+	loggerV1 := ioc.InitLogger()
 	interactiveRepository := repository.NewCachedInteractiveRepository(interactiveDAO, interactiveCache, loggerV1)
 	interactiveService := service.NewInteractiveService(interactiveRepository, loggerV1)
 	interactiveServiceServer := grpc.NewInteractiveServiceServer(interactiveService)
 	server := ioc.InitGRPCxServer(interactiveServiceServer)
 	client := ioc.InitKafka()
+	syncProducer := ioc.InitSyncProducer(client)
+	producer := ioc.InitMigradatorProducer(syncProducer)
+	ginxServer := ioc.InitMigratorWeb(loggerV1, srcDB, dstDB, doubleWritePool, producer)
 	interactiveReadEventConsumer := events.NewInteractiveReadEventConsumer(client, loggerV1, interactiveRepository)
-	v := ioc.NewConsumers(interactiveReadEventConsumer)
+	consumer := ioc.InitFixDataConsumer(loggerV1, srcDB, dstDB, client)
+	v := ioc.NewConsumers(interactiveReadEventConsumer, consumer)
 	app := &App{
-		server:    server,
-		consumers: v,
+		server:         server,
+		migratorServer: ginxServer,
+		consumers:      v,
 	}
 	return app
 }
@@ -43,4 +51,6 @@ func Init() *App {
 
 var serviceProviderSet = wire.NewSet(dao.NewGORMInteractiveDAO, cache.NewRedisInteractiveCache, repository.NewCachedInteractiveRepository, service.NewInteractiveService)
 
-var thirdProvider = wire.NewSet(ioc.InitRedis, ioc.InitDB, ioc.InitLogger, ioc.InitKafka)
+var thirdProvider = wire.NewSet(ioc.InitSRC, ioc.InitDST, ioc.InitDoubleWritePool, ioc.InitBizDB, ioc.InitRedis, ioc.InitLogger, ioc.InitKafka, ioc.InitSyncProducer)
+
+var migratorSet = wire.NewSet(ioc.InitMigratorWeb, ioc.InitFixDataConsumer, ioc.InitMigradatorProducer)

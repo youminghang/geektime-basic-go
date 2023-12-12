@@ -2,12 +2,12 @@ package integration
 
 import (
 	"context"
-	"gitee.com/geekbang/basic-go/webook/migrator"
-	"gitee.com/geekbang/basic-go/webook/migrator/events"
-	evtmocks "gitee.com/geekbang/basic-go/webook/migrator/events/mocks"
-	"gitee.com/geekbang/basic-go/webook/migrator/integration/startup"
-	gorm2 "gitee.com/geekbang/basic-go/webook/migrator/validator/gorm"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
+	"gitee.com/geekbang/basic-go/webook/pkg/migrator"
+	events2 "gitee.com/geekbang/basic-go/webook/pkg/migrator/events"
+	"gitee.com/geekbang/basic-go/webook/pkg/migrator/events/mocks"
+	"gitee.com/geekbang/basic-go/webook/pkg/migrator/integration/startup"
+	gorm2 "gitee.com/geekbang/basic-go/webook/pkg/migrator/validator"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -42,7 +42,7 @@ func (i *InteractiveTestSuite) TestValidator() {
 		before func(t *testing.T)
 		after  func(t *testing.T)
 		// 不想真的从 Kafka 里面读取数据，所以mock 一下
-		mock func(ctrl *gomock.Controller) events.Producer
+		mock func(ctrl *gomock.Controller) events2.Producer
 
 		wantErr error
 	}{
@@ -64,11 +64,11 @@ func (i *InteractiveTestSuite) TestValidator() {
 			after: func(t *testing.T) {
 				i.TearDownTest()
 			},
-			mock: func(ctrl *gomock.Controller) events.Producer {
+			mock: func(ctrl *gomock.Controller) events2.Producer {
 				p := evtmocks.NewMockProducer(ctrl)
 				p.EXPECT().ProduceInconsistentEvent(gomock.Any(),
-					events.InconsistentEvent{
-						Type:      events.InconsistentEventTypeTargetMissing,
+					events2.InconsistentEvent{
+						Type:      events2.InconsistentEventTypeTargetMissing,
 						Direction: "SRC",
 						ID:        1,
 					}).Return(nil)
@@ -96,7 +96,7 @@ func (i *InteractiveTestSuite) TestValidator() {
 			after: func(t *testing.T) {
 				i.TearDownTest()
 			},
-			mock: func(ctrl *gomock.Controller) events.Producer {
+			mock: func(ctrl *gomock.Controller) events2.Producer {
 				p := evtmocks.NewMockProducer(ctrl)
 				return p
 			},
@@ -130,11 +130,11 @@ func (i *InteractiveTestSuite) TestValidator() {
 			after: func(t *testing.T) {
 				i.TearDownTest()
 			},
-			mock: func(ctrl *gomock.Controller) events.Producer {
+			mock: func(ctrl *gomock.Controller) events2.Producer {
 				p := evtmocks.NewMockProducer(ctrl)
 				p.EXPECT().ProduceInconsistentEvent(gomock.Any(),
-					events.InconsistentEvent{
-						Type:      events.InconsistentEventTypeNotEqual,
+					events2.InconsistentEvent{
+						Type:      events2.InconsistentEventTypeNotEqual,
 						Direction: "SRC",
 						ID:        1,
 					}).Return(nil)
@@ -160,11 +160,11 @@ func (i *InteractiveTestSuite) TestValidator() {
 			after: func(t *testing.T) {
 				i.TearDownTest()
 			},
-			mock: func(ctrl *gomock.Controller) events.Producer {
+			mock: func(ctrl *gomock.Controller) events2.Producer {
 				p := evtmocks.NewMockProducer(ctrl)
 				p.EXPECT().ProduceInconsistentEvent(gomock.Any(),
-					events.InconsistentEvent{
-						Type:      events.InconsistentEventTypeBaseMissing,
+					events2.InconsistentEvent{
+						Type:      events2.InconsistentEventTypeBaseMissing,
 						Direction: "SRC",
 						ID:        1,
 					}).Return(nil)
