@@ -138,19 +138,24 @@ func (d *DoubleWriteTx) Commit() error {
 	switch d.pattern {
 	case PatternSrcFirst:
 		err := d.src.Commit()
-		err1 := d.dst.Commit()
-		if err1 != nil {
-			// 记录日志
+		if d.dst != nil {
+			err1 := d.dst.Commit()
+			if err1 != nil {
+				// 记录日志
+			}
 		}
 		return err
 	case PatternSrcOnly:
 		return d.src.Commit()
 	case PatternDstFirst:
 		err := d.dst.Commit()
-		err1 := d.src.Commit()
-		if err1 != nil {
-			// 记录日志
+		if d.src != nil {
+			err1 := d.src.Commit()
+			if err1 != nil {
+				// 记录日志
+			}
 		}
+
 		return err
 	case PatternDstOnly:
 		return d.dst.Commit()
@@ -163,9 +168,24 @@ func (d *DoubleWriteTx) Rollback() error {
 	switch d.pattern {
 	case PatternSrcFirst:
 		err := d.src.Rollback()
-		err1 := d.dst.Rollback()
-		if err1 != nil {
-			// 记录日志
+		if d.dst != nil {
+			err1 := d.dst.Rollback()
+			if err1 != nil {
+				// 记录日志
+			}
+		}
+		return err
+	case PatternSrcOnly:
+		return d.src.Rollback()
+	case PatternDstOnly:
+		return d.dst.Rollback()
+	case PatternDstFirst:
+		err := d.dst.Rollback()
+		if d.src != nil {
+			err1 := d.src.Rollback()
+			if err1 != nil {
+				// 记录日志
+			}
 		}
 		return err
 	default:
