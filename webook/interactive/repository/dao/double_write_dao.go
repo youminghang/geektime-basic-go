@@ -40,18 +40,24 @@ func (d *DoubleWriteDAO) IncrReadCnt(ctx context.Context, biz string, bizId int6
 		return d.src.IncrReadCnt(ctx, biz, bizId)
 	case patternSrcFirst:
 		err := d.src.IncrReadCnt(ctx, biz, bizId)
-		if err != nil {
+		if err == nil {
 			// 如果 src 出错了，不需要考虑 dst 了
-			return err
+			err1 := d.dst.IncrReadCnt(ctx, biz, bizId)
+			if err1 != nil {
+				// 这里只能记录一下日志，做好监控
+			}
 		}
-		return d.dst.IncrReadCnt(ctx, biz, bizId)
+		return err
 	case patternDstFirst:
 		err := d.dst.IncrReadCnt(ctx, biz, bizId)
-		if err != nil {
+		if err == nil {
 			// 如果 dst 出错了，不需要考虑 src 了
-			return err
+			err1 := d.src.IncrReadCnt(ctx, biz, bizId)
+			if err1 != nil {
+				// 这里只能记录一下日志，做好监控
+			}
 		}
-		return d.src.IncrReadCnt(ctx, biz, bizId)
+		return err
 	case patternDstOnly:
 		return d.dst.IncrReadCnt(ctx, biz, bizId)
 	default:

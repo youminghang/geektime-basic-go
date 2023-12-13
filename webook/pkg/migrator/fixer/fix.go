@@ -37,11 +37,8 @@ func NewOverrideFixer[T migrator.Entity](base *gorm.DB,
 func (o *OverrideFixer[T]) Fix(ctx context.Context, id int64) error {
 	var src T
 	// 找出数据
-	err := o.base.Where("id = ?", id).
+	err := o.base.WithContext(ctx).Where("id = ?", id).
 		First(&src).Error
-	if err != nil {
-		return err
-	}
 	switch err {
 	// 找到了数据
 	case nil:
