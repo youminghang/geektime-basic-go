@@ -7,8 +7,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"gitee.com/geekbang/basic-go/webook/bff"
 	"gitee.com/geekbang/basic-go/webook/internal/integration/startup"
-	"gitee.com/geekbang/basic-go/webook/internal/web"
 	"gitee.com/geekbang/basic-go/webook/ioc"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -34,7 +34,7 @@ func TestUserHandler_SendSMSLoginCode(t *testing.T) {
 
 		// 预期响应
 		wantCode   int
-		wantResult web.Result
+		wantResult bff.Result
 	}{
 		{
 			name: "发送成功",
@@ -61,7 +61,7 @@ func TestUserHandler_SendSMSLoginCode(t *testing.T) {
 			},
 			phone:    "15212345678",
 			wantCode: 200,
-			wantResult: web.Result{
+			wantResult: bff.Result{
 				Msg: "发送成功",
 			},
 		},
@@ -74,7 +74,7 @@ func TestUserHandler_SendSMSLoginCode(t *testing.T) {
 
 			},
 			wantCode: 200,
-			wantResult: web.Result{
+			wantResult: bff.Result{
 				Code: 4,
 				Msg:  "请输入手机号码",
 			},
@@ -106,7 +106,7 @@ func TestUserHandler_SendSMSLoginCode(t *testing.T) {
 			},
 			phone:    "15212345679",
 			wantCode: 200,
-			wantResult: web.Result{
+			wantResult: bff.Result{
 				Code: 4,
 				Msg:  "短信发送太频繁，请稍后再试",
 			},
@@ -138,7 +138,7 @@ func TestUserHandler_SendSMSLoginCode(t *testing.T) {
 			},
 			phone:    "15212345670",
 			wantCode: 200,
-			wantResult: web.Result{
+			wantResult: bff.Result{
 				Code: 5,
 				Msg:  "系统错误",
 			},
@@ -159,7 +159,7 @@ func TestUserHandler_SendSMSLoginCode(t *testing.T) {
 
 			code := recorder.Code
 			// 反序列化为结果
-			var result web.Result
+			var result bff.Result
 			err = json.Unmarshal(recorder.Body.Bytes(), &result)
 			assert.NoError(t, err)
 			assert.Equal(t, tc.wantCode, code)

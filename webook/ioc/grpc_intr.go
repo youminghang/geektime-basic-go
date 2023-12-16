@@ -2,8 +2,8 @@ package ioc
 
 import (
 	intrv1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/intr/v1"
+	client2 "gitee.com/geekbang/basic-go/webook/bff/client"
 	"gitee.com/geekbang/basic-go/webook/interactive/service"
-	"gitee.com/geekbang/basic-go/webook/internal/web/client"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
@@ -33,8 +33,8 @@ func InitIntrGRPCClient(svc service.InteractiveService,
 	}
 
 	remote := intrv1.NewInteractiveServiceClient(cc)
-	local := client.NewInteractiveServiceAdapter(svc)
-	res := client.NewInteractiveClient(remote, local, cfg.Threshold)
+	local := client2.NewInteractiveServiceAdapter(svc)
+	res := client2.NewInteractiveClient(remote, local, cfg.Threshold)
 
 	viper.OnConfigChange(func(in fsnotify.Event) {
 		// 重置整个 Config

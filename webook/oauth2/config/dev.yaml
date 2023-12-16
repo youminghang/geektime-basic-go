@@ -1,0 +1,13 @@
+grpc:
+  #  启动监听 9000 端口
+  addr: ":9000"
+
+weChatConf:
+  appId: "xxxxxxx"
+  appSecret: "ooooooo"
+
+prometheus:
+  nameSpace: ""
+  subsystem: ""
+  instanceId: ""
+  name: ""

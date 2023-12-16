@@ -3,6 +3,8 @@
 package startup
 
 import (
+	"gitee.com/geekbang/basic-go/webook/bff"
+	"gitee.com/geekbang/basic-go/webook/bff/jwt"
 	repository2 "gitee.com/geekbang/basic-go/webook/interactive/repository"
 	cache2 "gitee.com/geekbang/basic-go/webook/interactive/repository/cache"
 	dao2 "gitee.com/geekbang/basic-go/webook/interactive/repository/dao"
@@ -16,8 +18,6 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	"gitee.com/geekbang/basic-go/webook/internal/service/sms"
 	"gitee.com/geekbang/basic-go/webook/internal/service/sms/async"
-	"gitee.com/geekbang/basic-go/webook/internal/web"
-	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"gitee.com/geekbang/basic-go/webook/ioc"
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
@@ -77,11 +77,11 @@ func InitWebServer() *gin.Engine {
 		InitPhantomWechatService,
 		service.NewSMSCodeService,
 		// handler 部分
-		web.NewUserHandler,
-		web.NewOAuth2WechatHandler,
-		web.NewArticleHandler,
-		web.NewObservabilityHandler,
-		ijwt.NewRedisHandler,
+		bff.NewUserHandler,
+		bff.NewOAuth2WechatHandler,
+		bff.NewArticleHandler,
+		bff.NewObservabilityHandler,
+		jwt.NewRedisHandler,
 
 		// gin 的中间件
 		ioc.GinMiddlewares,
@@ -93,7 +93,7 @@ func InitWebServer() *gin.Engine {
 	return gin.Default()
 }
 
-func InitArticleHandler(dao article.ArticleDAO) *web.ArticleHandler {
+func InitArticleHandler(dao article.ArticleDAO) *bff.ArticleHandler {
 	wire.Build(thirdProvider,
 		userSvcProvider,
 		interactiveSvcProvider,
@@ -103,8 +103,8 @@ func InitArticleHandler(dao article.ArticleDAO) *web.ArticleHandler {
 		//wire.InterfaceValue(new(article.ArticleDAO), dao),
 		repository.NewArticleRepository,
 		service.NewArticleService,
-		web.NewArticleHandler)
-	return new(web.ArticleHandler)
+		bff.NewArticleHandler)
+	return new(bff.ArticleHandler)
 }
 
 func InitUserSvc() service.UserService {
@@ -142,7 +142,7 @@ func InitJobScheduler() *job.Scheduler {
 	return &job.Scheduler{}
 }
 
-func InitJwtHdl() ijwt.Handler {
-	wire.Build(thirdProvider, ijwt.NewRedisHandler)
-	return ijwt.NewRedisHandler(nil)
+func InitJwtHdl() jwt.Handler {
+	wire.Build(thirdProvider, jwt.NewRedisHandler)
+	return jwt.NewRedisHandler(nil)
 }

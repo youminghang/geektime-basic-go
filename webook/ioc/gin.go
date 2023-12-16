@@ -1,9 +1,9 @@
 package ioc
 
 import (
-	"gitee.com/geekbang/basic-go/webook/internal/web"
-	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
-	"gitee.com/geekbang/basic-go/webook/internal/web/middleware"
+	"gitee.com/geekbang/basic-go/webook/bff"
+	ijwt "gitee.com/geekbang/basic-go/webook/bff/jwt"
+	"gitee.com/geekbang/basic-go/webook/bff/middleware"
 	"gitee.com/geekbang/basic-go/webook/pkg/ginx"
 	"gitee.com/geekbang/basic-go/webook/pkg/ginx/middleware/metrics"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
@@ -19,10 +19,10 @@ import (
 )
 
 func InitWebServer(funcs []gin.HandlerFunc,
-	userHdl *web.UserHandler,
-	artHdl *web.ArticleHandler,
-	obHdl *web.ObservabilityHandler,
-	oauth2Hdl *web.OAuth2WechatHandler, l logger.LoggerV1) *gin.Engine {
+	userHdl *bff.UserHandler,
+	artHdl *bff.ArticleHandler,
+	obHdl *bff.ObservabilityHandler,
+	oauth2Hdl *bff.OAuth2WechatHandler, l logger.LoggerV1) *gin.Engine {
 	ginx.SetLogger(l)
 	server := gin.Default()
 	server.Use(funcs...)

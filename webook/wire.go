@@ -3,6 +3,8 @@
 package main
 
 import (
+	"gitee.com/geekbang/basic-go/webook/bff"
+	ijwt "gitee.com/geekbang/basic-go/webook/bff/jwt"
 	repository2 "gitee.com/geekbang/basic-go/webook/interactive/repository"
 	cache2 "gitee.com/geekbang/basic-go/webook/interactive/repository/cache"
 	dao2 "gitee.com/geekbang/basic-go/webook/interactive/repository/dao"
@@ -13,8 +15,6 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao/article"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
-	"gitee.com/geekbang/basic-go/webook/internal/web"
-	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"gitee.com/geekbang/basic-go/webook/ioc"
 	"github.com/google/wire"
 )
@@ -76,10 +76,10 @@ func InitApp() *App {
 
 		// handler 部分
 		ijwt.NewRedisHandler,
-		web.NewUserHandler,
-		web.NewArticleHandler,
-		web.NewOAuth2WechatHandler,
-		web.NewObservabilityHandler,
+		bff.NewUserHandler,
+		bff.NewArticleHandler,
+		bff.NewOAuth2WechatHandler,
+		bff.NewObservabilityHandler,
 
 		// gin 的中间件
 		ioc.GinMiddlewares,

@@ -1,0 +1,9 @@
+grpc:
+  #  启动监听 9000 端口
+  addr: ":9002"
+
+redis:
+  addr: "localhost:6379"
+
+smsGrpc:
+  addr: "127.0.0.1:9001"

@@ -5,10 +5,10 @@ package integration
 import (
 	"bytes"
 	"encoding/json"
+	ijwt "gitee.com/geekbang/basic-go/webook/bff/jwt"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/integration/startup"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao/article"
-	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"github.com/IBM/sarama"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"

@@ -1,0 +1,7 @@
+grpc:
+  #  启动监听 9001 端口
+  addr: ":9001"
+
+tencentSms:
+  secretId: "xxxxxx"
+  secretKey: "oooooo"

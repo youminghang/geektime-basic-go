@@ -7,6 +7,8 @@
 package startup
 
 import (
+	"gitee.com/geekbang/basic-go/webook/bff"
+	jwt2 "gitee.com/geekbang/basic-go/webook/bff/jwt"
 	repository2 "gitee.com/geekbang/basic-go/webook/interactive/repository"
 	cache2 "gitee.com/geekbang/basic-go/webook/interactive/repository/cache"
 	dao2 "gitee.com/geekbang/basic-go/webook/interactive/repository/dao"
@@ -20,8 +22,6 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	"gitee.com/geekbang/basic-go/webook/internal/service/sms"
 	"gitee.com/geekbang/basic-go/webook/internal/service/sms/async"
-	"gitee.com/geekbang/basic-go/webook/internal/web"
-	"gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"gitee.com/geekbang/basic-go/webook/ioc"
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
@@ -32,7 +32,7 @@ import (
 //go:generate wire
 func InitWebServer() *gin.Engine {
 	cmdable := InitRedis()
-	handler := jwt.NewRedisHandler(cmdable)
+	handler := jwt2.NewRedisHandler(cmdable)
 	loggerV1 := InitLog()
 	v := ioc.GinMiddlewares(cmdable, handler, loggerV1)
 	gormDB := InitTestDB()
@@ -44,7 +44,7 @@ func InitWebServer() *gin.Engine {
 	codeCache := cache.NewRedisCodeCache(cmdable)
 	codeRepository := repository.NewCachedCodeRepository(codeCache)
 	codeService := service.NewSMSCodeService(smsService, codeRepository)
-	userHandler := web.NewUserHandler(userService, codeService, handler)
+	userHandler := bff.NewUserHandler(userService, codeService, handler)
 	articleDAO := article.NewGORMArticleDAO(gormDB)
 	articleCache := cache.NewRedisArticleCache(cmdable)
 	articleRepository := repository.NewArticleRepository(articleDAO, articleCache, userRepository, loggerV1)
@@ -57,15 +57,15 @@ func InitWebServer() *gin.Engine {
 	interactiveRepository := repository2.NewCachedInteractiveRepository(interactiveDAO, interactiveCache, loggerV1)
 	interactiveService := service2.NewInteractiveService(interactiveRepository, loggerV1)
 	interactiveServiceClient := InitInteractiveClient(interactiveService)
-	articleHandler := web.NewArticleHandler(articleService, interactiveServiceClient, loggerV1)
-	observabilityHandler := web.NewObservabilityHandler()
+	articleHandler := bff.NewArticleHandler(articleService, interactiveServiceClient, loggerV1)
+	observabilityHandler := bff.NewObservabilityHandler()
 	wechatService := InitPhantomWechatService(loggerV1)
-	oAuth2WechatHandler := web.NewOAuth2WechatHandler(wechatService, userService, handler)
+	oAuth2WechatHandler := bff.NewOAuth2WechatHandler(wechatService, userService, handler)
 	engine := ioc.InitWebServer(v, userHandler, articleHandler, observabilityHandler, oAuth2WechatHandler, loggerV1)
 	return engine
 }
 
-func InitArticleHandler(dao3 article.ArticleDAO) *web.ArticleHandler {
+func InitArticleHandler(dao3 article.ArticleDAO) *bff.ArticleHandler {
 	cmdable := InitRedis()
 	articleCache := cache.NewRedisArticleCache(cmdable)
 	gormDB := InitTestDB()
@@ -83,7 +83,7 @@ func InitArticleHandler(dao3 article.ArticleDAO) *web.ArticleHandler {
 	interactiveRepository := repository2.NewCachedInteractiveRepository(interactiveDAO, interactiveCache, loggerV1)
 	interactiveService := service2.NewInteractiveService(interactiveRepository, loggerV1)
 	interactiveServiceClient := InitInteractiveClient(interactiveService)
-	articleHandler := web.NewArticleHandler(articleService, interactiveServiceClient, loggerV1)
+	articleHandler := bff.NewArticleHandler(articleService, interactiveServiceClient, loggerV1)
 	return articleHandler
 }
 
@@ -155,9 +155,9 @@ func InitJobScheduler() *job.Scheduler {
 	return scheduler
 }
 
-func InitJwtHdl() jwt.Handler {
+func InitJwtHdl() jwt2.Handler {
 	cmdable := InitRedis()
-	handler := jwt.NewRedisHandler(cmdable)
+	handler := jwt2.NewRedisHandler(cmdable)
 	return handler
 }
 

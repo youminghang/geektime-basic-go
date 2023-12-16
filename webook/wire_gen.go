@@ -7,6 +7,8 @@
 package main
 
 import (
+	"gitee.com/geekbang/basic-go/webook/bff"
+	"gitee.com/geekbang/basic-go/webook/bff/jwt"
 	repository2 "gitee.com/geekbang/basic-go/webook/interactive/repository"
 	cache2 "gitee.com/geekbang/basic-go/webook/interactive/repository/cache"
 	dao2 "gitee.com/geekbang/basic-go/webook/interactive/repository/dao"
@@ -17,8 +19,6 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao/article"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
-	"gitee.com/geekbang/basic-go/webook/internal/web"
-	"gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"gitee.com/geekbang/basic-go/webook/ioc"
 	"github.com/google/wire"
 )
@@ -43,7 +43,7 @@ func InitApp() *App {
 	codeCache := cache.NewRedisCodeCache(cmdable)
 	codeRepository := repository.NewCachedCodeRepository(codeCache)
 	codeService := service.NewSMSCodeService(smsService, codeRepository)
-	userHandler := web.NewUserHandler(userService, codeService, handler)
+	userHandler := bff.NewUserHandler(userService, codeService, handler)
 	articleDAO := article.NewGORMArticleDAO(db)
 	articleCache := cache.NewRedisArticleCache(cmdable)
 	articleRepository := repository.NewArticleRepository(articleDAO, articleCache, userRepository, loggerV1)
@@ -56,10 +56,10 @@ func InitApp() *App {
 	interactiveRepository := repository2.NewCachedInteractiveRepository(interactiveDAO, interactiveCache, loggerV1)
 	interactiveService := service2.NewInteractiveService(interactiveRepository, loggerV1)
 	interactiveServiceClient := ioc.InitIntrGRPCClient(interactiveService, loggerV1)
-	articleHandler := web.NewArticleHandler(articleService, interactiveServiceClient, loggerV1)
-	observabilityHandler := web.NewObservabilityHandler()
+	articleHandler := bff.NewArticleHandler(articleService, interactiveServiceClient, loggerV1)
+	observabilityHandler := bff.NewObservabilityHandler()
 	wechatService := ioc.InitWechatService(loggerV1)
-	oAuth2WechatHandler := web.NewOAuth2WechatHandler(wechatService, userService, handler)
+	oAuth2WechatHandler := bff.NewOAuth2WechatHandler(wechatService, userService, handler)
 	engine := ioc.InitWebServer(v, userHandler, articleHandler, observabilityHandler, oAuth2WechatHandler, loggerV1)
 	v2 := ioc.NewConsumers()
 	redisRankingCache := cache.NewRedisRankingCache(cmdable)

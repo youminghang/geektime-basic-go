@@ -5,12 +5,12 @@ package integration
 import (
 	"database/sql"
 	"encoding/json"
+	"gitee.com/geekbang/basic-go/webook/bff"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/integration/startup"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/internal/service/oauth2/wechat"
 	wechatmocks "gitee.com/geekbang/basic-go/webook/internal/service/oauth2/wechat/mocks"
-	"gitee.com/geekbang/basic-go/webook/internal/web"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -30,7 +30,7 @@ func TestWechatCallback(t *testing.T) {
 		// 验证并且删除数据
 		after      func(t *testing.T)
 		wantCode   int
-		wantResult web.Result
+		wantResult bff.Result
 	}{
 		{
 			name: "注册新用户",
@@ -57,7 +57,7 @@ func TestWechatCallback(t *testing.T) {
 				db.Delete(&u, "wechat_open_id = ?", "123")
 			},
 			wantCode: 200,
-			wantResult: web.Result{
+			wantResult: bff.Result{
 				Msg: "登录成功",
 			},
 		},
@@ -96,7 +96,7 @@ func TestWechatCallback(t *testing.T) {
 				db.Delete(&u, "wechat_open_id = ?", "123")
 			},
 			wantCode: 200,
-			wantResult: web.Result{
+			wantResult: bff.Result{
 				Msg: "登录成功",
 			},
 		},
@@ -110,7 +110,7 @@ func TestWechatCallback(t *testing.T) {
 			userSvc := startup.InitUserSvc()
 			jwtHdl := startup.InitJwtHdl()
 			wechatSvc := tc.mock(ctrl)
-			hdl := web.NewOAuth2WechatHandler(wechatSvc, userSvc, jwtHdl)
+			hdl := bff.NewOAuth2WechatHandler(wechatSvc, userSvc, jwtHdl)
 			server := gin.Default()
 			hdl.RegisterRoutes(server)
 
@@ -122,7 +122,7 @@ func TestWechatCallback(t *testing.T) {
 
 			code := recorder.Code
 			// 反序列化为结果
-			var result web.Result
+			var result bff.Result
 			err = json.Unmarshal(recorder.Body.Bytes(), &result)
 			assert.NoError(t, err)
 			assert.Equal(t, tc.wantCode, code)

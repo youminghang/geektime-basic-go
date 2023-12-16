@@ -1,0 +1,15 @@
+
+redis:
+  addr: "localhost:6379"
+
+
+
+grpc:
+#  启动监听 8090 端口
+  addr: ":9006"
+
+userGrpc:
+  addr: ":8090"
+
+articleGrpc:
+  addr: ":9003"
