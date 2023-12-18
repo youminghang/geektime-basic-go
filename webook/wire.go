@@ -50,8 +50,9 @@ func InitApp() *App {
 
 		article.NewGORMArticleDAO,
 
-		interactiveServiceProducer,
-		ioc.InitIntrGRPCClient,
+		//interactiveServiceProducer,
+		//ioc.InitIntrGRPCClient,
+		ioc.InitIntrGRPCClientV1,
 
 		// Cache 部分
 		cache.NewRedisUserCache,

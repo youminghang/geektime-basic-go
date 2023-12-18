@@ -7,9 +7,42 @@ import (
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
+	clientv3 "go.etcd.io/etcd/client/v3"
+	"go.etcd.io/etcd/client/v3/naming/resolver"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
+
+// InitIntrGRPCClientV1 这个版本是使用 ETCD 做服务发现的版本
+func InitIntrGRPCClientV1(l logger.LoggerV1) intrv1.InteractiveServiceClient {
+	type Config struct {
+		Name     string `yaml:"name"`
+		EtcdAddr string `yaml:"etcdAddr"`
+		Secure   bool   `yaml:"secure"`
+	}
+	var cfg Config
+	err := viper.UnmarshalKey("grpc.client.intr", &cfg)
+	if err != nil {
+		panic(err)
+	}
+	cli, err := clientv3.NewFromURL("http://localhost:12379")
+	if err != nil {
+		panic(err)
+	}
+	etcdResolver, err := resolver.NewBuilder(cli)
+	if err != nil {
+		panic(err)
+	}
+	opts := []grpc.DialOption{grpc.WithResolvers(etcdResolver)}
+	if !cfg.Secure {
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	}
+	cc, err := grpc.Dial("etcd:///service/"+cfg.Name, opts...)
+	if err != nil {
+		panic(err)
+	}
+	return intrv1.NewInteractiveServiceClient(cc)
+}
 
 func InitIntrGRPCClient(svc service.InteractiveService,
 	l logger.LoggerV1) intrv1.InteractiveServiceClient {

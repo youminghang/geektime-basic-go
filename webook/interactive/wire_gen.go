@@ -20,6 +20,7 @@ import (
 // Injectors from wire.go:
 
 func Init() *App {
+	loggerV1 := ioc.InitLogger()
 	srcDB := ioc.InitSRC()
 	dstDB := ioc.InitDST()
 	doubleWritePool := ioc.InitDoubleWritePool(srcDB, dstDB)
@@ -27,11 +28,10 @@ func Init() *App {
 	interactiveDAO := dao.NewGORMInteractiveDAO(db)
 	cmdable := ioc.InitRedis()
 	interactiveCache := cache.NewRedisInteractiveCache(cmdable)
-	loggerV1 := ioc.InitLogger()
 	interactiveRepository := repository.NewCachedInteractiveRepository(interactiveDAO, interactiveCache, loggerV1)
 	interactiveService := service.NewInteractiveService(interactiveRepository, loggerV1)
 	interactiveServiceServer := grpc.NewInteractiveServiceServer(interactiveService)
-	server := ioc.InitGRPCxServer(interactiveServiceServer)
+	server := ioc.InitGRPCxServer(loggerV1, interactiveServiceServer)
 	client := ioc.InitKafka()
 	syncProducer := ioc.InitSyncProducer(client)
 	producer := ioc.InitMigradatorProducer(syncProducer)
