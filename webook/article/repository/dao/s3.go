@@ -3,7 +3,7 @@ package dao
 import (
 	"bytes"
 	"context"
-	"gitee.com/geekbang/basic-go/webook/internal/article/domain"
+	"gitee.com/geekbang/basic-go/webook/article/domain"
 	_ "github.com/aws/aws-sdk-go"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/ecodeclub/ekit"

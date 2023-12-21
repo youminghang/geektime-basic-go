@@ -1,7 +1,7 @@
 package ioc
 
 import (
-	grpc2 "gitee.com/geekbang/basic-go/webook/internal/cronjob/grpc"
+	grpc2 "gitee.com/geekbang/basic-go/webook/cronjob/grpc"
 	"gitee.com/geekbang/basic-go/webook/pkg/grpcx"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
@@ -12,7 +12,7 @@ func InitGRPCxServer(cronJobGrpc *grpc2.CronJobServiceServer) *grpcx.Server {
 		Addr string `yaml:"addr"`
 	}
 	var cfg Config
-	err := viper.UnmarshalKey("grpc", &cfg)
+	err := viper.UnmarshalKey("grpc.server", &cfg)
 	if err != nil {
 		panic(err)
 	}

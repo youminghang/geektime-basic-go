@@ -2,7 +2,7 @@ package metric
 
 import (
 	"context"
-	"gitee.com/geekbang/basic-go/webook/internal/sms/service"
+	"gitee.com/geekbang/basic-go/webook/sms/service"
 	"github.com/prometheus/client_golang/prometheus"
 	"time"
 )

@@ -3,8 +3,8 @@
 package main
 
 import (
-	"gitee.com/geekbang/basic-go/webook/internal/oauth2/grpc"
-	ioc2 "gitee.com/geekbang/basic-go/webook/internal/oauth2/ioc"
+	"gitee.com/geekbang/basic-go/webook/oauth2/grpc"
+	ioc2 "gitee.com/geekbang/basic-go/webook/oauth2/ioc"
 	"github.com/google/wire"
 )
 

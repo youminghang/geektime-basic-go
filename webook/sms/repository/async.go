@@ -2,8 +2,8 @@ package repository
 
 import (
 	"context"
-	"gitee.com/geekbang/basic-go/webook/internal/sms/domain"
-	"gitee.com/geekbang/basic-go/webook/internal/sms/repository/dao"
+	"gitee.com/geekbang/basic-go/webook/sms/domain"
+	"gitee.com/geekbang/basic-go/webook/sms/repository/dao"
 	"github.com/ecodeclub/ekit/sqlx"
 )
 

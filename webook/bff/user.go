@@ -1,17 +1,18 @@
 package bff
 
 import (
+	codev1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/code/v1"
+	userv1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/user/v1"
 	jwt2 "gitee.com/geekbang/basic-go/webook/bff/jwt"
-	"gitee.com/geekbang/basic-go/webook/internal/domain"
-	"gitee.com/geekbang/basic-go/webook/internal/errs"
-	"gitee.com/geekbang/basic-go/webook/internal/service"
 	"gitee.com/geekbang/basic-go/webook/pkg/ginx"
+	"gitee.com/geekbang/basic-go/webook/user/errs"
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"net/http"
 	"time"
 )
@@ -28,15 +29,15 @@ const (
 var _ handler = &UserHandler{}
 
 type UserHandler struct {
-	svc              service.UserService
-	codeSvc          service.CodeService
+	svc              userv1.UserServiceClient
+	codeSvc          codev1.CodeServiceClient
 	emailRegexExp    *regexp.Regexp
 	passwordRegexExp *regexp.Regexp
 	jwt2.Handler
 }
 
-func NewUserHandler(svc service.UserService,
-	codeSvc service.CodeService, jwthdl jwt2.Handler) *UserHandler {
+func NewUserHandler(svc userv1.UserServiceClient,
+	codeSvc codev1.CodeServiceClient, jwthdl jwt2.Handler) *UserHandler {
 	return &UserHandler{
 		svc:              svc,
 		codeSvc:          codeSvc,
@@ -109,27 +110,31 @@ func (c *UserHandler) LoginSMS(ctx *gin.Context) {
 	if err := ctx.Bind(&req); err != nil {
 		return
 	}
-	ok, err := c.codeSvc.Verify(ctx, bizLogin, req.Phone, req.Code)
+	resp, err := c.codeSvc.Verify(ctx, &codev1.VerifyRequest{
+		Biz: bizLogin, Phone: req.Phone, InputCode: req.Code,
+	})
 	if err != nil {
 		ctx.JSON(http.StatusOK, Result{Code: 5, Msg: "系统异常"})
 		zap.L().Error("用户手机号码登录失败", zap.Error(err))
 		return
 	}
-	if !ok {
+	if resp.Answer {
 		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "验证码错误"})
 		return
 	}
 
 	// 验证码是对的
 	// 登录或者注册用户
-	u, err := c.svc.FindOrCreate(ctx, req.Phone)
+	u, err := c.svc.FindOrCreate(ctx, &userv1.FindOrCreateRequest{
+		Phone: req.Phone,
+	})
 	if err != nil {
 		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "系统错误"})
 		return
 	}
 	// 用 uuid 来标识这一次会话
 	ssid := uuid.New().String()
-	err = c.SetJWTToken(ctx, ssid, u.Id)
+	err = c.SetJWTToken(ctx, ssid, u.User.Id)
 	if err != nil {
 		ctx.JSON(http.StatusOK, Result{Msg: "系统错误"})
 		return
@@ -151,12 +156,15 @@ func (c *UserHandler) SendSMSLoginCode(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "请输入手机号码"})
 		return
 	}
-	err := c.codeSvc.Send(ctx, bizLogin, req.Phone)
+	_, err := c.codeSvc.Send(ctx, &codev1.CodeSendRequest{
+		Biz: bizLogin, Phone: req.Phone,
+	})
 	switch err {
 	case nil:
 		ctx.JSON(http.StatusOK, Result{Msg: "发送成功"})
-	case service.ErrCodeSendTooMany:
-		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "短信发送太频繁，请稍后再试"})
+	//case .ErrCodeSendTooMany:
+	// TODO 利用 grpc 来传递错误码
+	//	ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "短信发送太频繁，请稍后再试"})
 	default:
 		ctx.JSON(http.StatusOK, Result{Code: 5, Msg: "系统错误"})
 		// 要打印日志
@@ -208,15 +216,15 @@ func (c *UserHandler) SignUp(ctx *gin.Context, req SignUpReq) (ginx.Result, erro
 		}, nil
 	}
 
-	err = c.svc.Signup(ctx.Request.Context(),
-		domain.User{Email: req.Email, Password: req.ConfirmPassword})
+	_, err = c.svc.Signup(ctx.Request.Context(), &userv1.SignupRequest{User: &userv1.User{Email: req.Email, Password: req.ConfirmPassword}})
 
-	if err == service.ErrUserDuplicateEmail {
-		return Result{
-			Code: errs.UserDuplicateEmail,
-			Msg:  "邮箱冲突",
-		}, err
-	}
+	// TODO 利用 grpc 来传递错误码
+	//if err == service.ErrUserDuplicateEmail {
+	//	return Result{
+	//		Code: errs.UserDuplicateEmail,
+	//		Msg:  "邮箱冲突",
+	//	}, err
+	//}
 	if err != nil {
 		return Result{
 			Code: errs.UserInternalServerError,
@@ -240,12 +248,19 @@ func (c *UserHandler) LoginJWT(ctx *gin.Context) {
 	if err := ctx.Bind(&req); err != nil {
 		return
 	}
-	u, err := c.svc.Login(ctx.Request.Context(), req.Email, req.Password)
-	if err == service.ErrInvalidUserOrPassword {
-		ctx.String(http.StatusOK, "用户名或者密码不正确，请重试")
-		return
+	u, err := c.svc.Login(ctx.Request.Context(), &userv1.LoginRequest{
+		Email: req.Email, Password: req.Password,
+	})
+
+	// TODO 利用 grpc 来传递错误码
+	//if err == service.ErrInvalidUserOrPassword {
+	//	ctx.String(http.StatusOK, "用户名或者密码不正确，请重试")
+	//	return
+	//}
+	if err != nil {
+		ctx.String(http.StatusOK, "系统错误")
 	}
-	err = c.SetLoginToken(ctx, u.Id)
+	err = c.SetLoginToken(ctx, u.User.Id)
 	if err != nil {
 		ctx.String(http.StatusOK, "系统异常")
 		return
@@ -278,13 +293,19 @@ func (c *UserHandler) Login(ctx *gin.Context) {
 	if err := ctx.Bind(&req); err != nil {
 		return
 	}
-	u, err := c.svc.Login(ctx.Request.Context(), req.Email, req.Password)
-	if err == service.ErrInvalidUserOrPassword {
-		ctx.String(http.StatusOK, "用户名或者密码不正确，请重试")
+	u, err := c.svc.Login(ctx.Request.Context(), &userv1.LoginRequest{
+		Email: req.Email, Password: req.Password})
+	if err != nil {
+		ctx.String(http.StatusOK, "系统错误")
 		return
 	}
+	// TODO 利用 grpc 来传递错误码
+	//if err == service.ErrInvalidUserOrPassword {
+	//	ctx.String(http.StatusOK, "用户名或者密码不正确，请重试")
+	//	return
+	//}
 	sess := sessions.Default(ctx)
-	sess.Set(userIdKey, u.Id)
+	sess.Set(userIdKey, u.User.Id)
 	sess.Options(sessions.Options{
 		// 60 秒过期
 		MaxAge: 60,
@@ -335,12 +356,15 @@ func (c *UserHandler) Edit(ctx *gin.Context) {
 	}
 
 	uc := ctx.MustGet("user").(jwt2.UserClaims)
-	err = c.svc.UpdateNonSensitiveInfo(ctx, domain.User{
-		Id:       uc.Id,
-		Nickname: req.Nickname,
-		AboutMe:  req.AboutMe,
-		Birthday: birthday,
-	})
+	_, err = c.svc.UpdateNonSensitiveInfo(ctx,
+		&userv1.UpdateNonSensitiveInfoRequest{
+			User: &userv1.User{
+				Id:       uc.Id,
+				Nickname: req.Nickname,
+				AboutMe:  req.AboutMe,
+				Birthday: timestamppb.New(birthday),
+			},
+		})
 	if err != nil {
 		ctx.JSON(http.StatusOK, Result{Code: 5, Msg: "系统错误"})
 		return
@@ -358,18 +382,19 @@ func (c *UserHandler) ProfileJWT(ctx *gin.Context) {
 		AboutMe  string
 	}
 	uc := ctx.MustGet("user").(jwt2.UserClaims)
-	u, err := c.svc.Profile(ctx, uc.Id)
+	resp, err := c.svc.Profile(ctx, &userv1.ProfileRequest{Id: uc.Id})
 	if err != nil {
 		// 按照道理来说，这边 id 对应的数据肯定存在，所以要是没找到，
 		// 那就说明是系统出了问题。
 		ctx.String(http.StatusOK, "系统错误")
 		return
 	}
+	u := resp.User
 	ctx.JSON(http.StatusOK, Profile{
 		Email:    u.Email,
 		Phone:    u.Phone,
 		Nickname: u.Nickname,
-		Birthday: u.Birthday.Format(time.DateOnly),
+		Birthday: u.Birthday.AsTime().Format(time.DateOnly),
 		AboutMe:  u.AboutMe,
 	})
 }
@@ -381,7 +406,9 @@ func (c *UserHandler) Profile(ctx *gin.Context) {
 	}
 	sess := sessions.Default(ctx)
 	id := sess.Get(userIdKey).(int64)
-	u, err := c.svc.Profile(ctx, id)
+	u, err := c.svc.Profile(ctx, &userv1.ProfileRequest{
+		Id: id,
+	})
 	if err != nil {
 		// 按照道理来说，这边 id 对应的数据肯定存在，所以要是没找到，
 		// 那就说明是系统出了问题。
@@ -389,6 +416,6 @@ func (c *UserHandler) Profile(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, Profile{
-		Email: u.Email,
+		Email: u.User.Email,
 	})
 }

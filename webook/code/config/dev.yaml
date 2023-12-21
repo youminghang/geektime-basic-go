@@ -1,6 +1,7 @@
 grpc:
   #  启动监听 9000 端口
-  addr: ":9002"
+  server:
+    addr: ":8096"
 
 redis:
   addr: "localhost:6379"

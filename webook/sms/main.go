@@ -13,7 +13,7 @@ type App struct {
 func main() {
 	initViperV2Watch()
 	app := Init()
-	err := app.server.Serve()
+	err := app.GRPCServer.Serve()
 	if err != nil {
 		panic(err)
 	}

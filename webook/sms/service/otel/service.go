@@ -2,7 +2,7 @@ package otel
 
 import (
 	"context"
-	sms "gitee.com/geekbang/basic-go/webook/internal/sms/service"
+	sms "gitee.com/geekbang/basic-go/webook/sms/service"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"

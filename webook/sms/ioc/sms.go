@@ -1,9 +1,9 @@
 package ioc
 
 import (
-	"gitee.com/geekbang/basic-go/webook/internal/sms/service"
-	"gitee.com/geekbang/basic-go/webook/internal/sms/service/localsms"
-	"gitee.com/geekbang/basic-go/webook/internal/sms/service/tencent"
+	"gitee.com/geekbang/basic-go/webook/sms/service"
+	"gitee.com/geekbang/basic-go/webook/sms/service/localsms"
+	"gitee.com/geekbang/basic-go/webook/sms/service/tencent"
 	"github.com/spf13/viper"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"

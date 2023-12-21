@@ -11,7 +11,7 @@ func InitInterActiveRpcClient() intrv1.InteractiveServiceClient {
 		Addr string `yaml:"addr"`
 	}
 	var cfg config
-	err := viper.UnmarshalKey("intrGrpc", &cfg)
+	err := viper.UnmarshalKey("grpc.client.intr", &cfg)
 	if err != nil {
 		panic(err)
 	}

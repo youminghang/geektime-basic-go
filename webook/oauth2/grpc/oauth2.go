@@ -3,7 +3,7 @@ package grpc
 import (
 	"context"
 	oauth2v1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/oauth2/v1"
-	"gitee.com/geekbang/basic-go/webook/internal/oauth2/service/wechat"
+	"gitee.com/geekbang/basic-go/webook/oauth2/service/wechat"
 	"google.golang.org/grpc"
 )
 

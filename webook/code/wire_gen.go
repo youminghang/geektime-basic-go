@@ -7,11 +7,11 @@
 package main
 
 import (
-	"gitee.com/geekbang/basic-go/webook/internal/code/grpc"
-	"gitee.com/geekbang/basic-go/webook/internal/code/ioc"
-	"gitee.com/geekbang/basic-go/webook/internal/code/repository"
-	"gitee.com/geekbang/basic-go/webook/internal/code/repository/cache"
-	"gitee.com/geekbang/basic-go/webook/internal/code/service"
+	"gitee.com/geekbang/basic-go/webook/code/grpc"
+	"gitee.com/geekbang/basic-go/webook/code/ioc"
+	"gitee.com/geekbang/basic-go/webook/code/repository"
+	"gitee.com/geekbang/basic-go/webook/code/repository/cache"
+	"gitee.com/geekbang/basic-go/webook/code/service"
 	"github.com/google/wire"
 )
 

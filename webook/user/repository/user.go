@@ -3,9 +3,9 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"gitee.com/geekbang/basic-go/webook/internal/user/domain"
-	"gitee.com/geekbang/basic-go/webook/internal/user/repository/cache"
-	"gitee.com/geekbang/basic-go/webook/internal/user/repository/dao"
+	"gitee.com/geekbang/basic-go/webook/user/domain"
+	"gitee.com/geekbang/basic-go/webook/user/repository/cache"
+	"gitee.com/geekbang/basic-go/webook/user/repository/dao"
 	"time"
 )
 

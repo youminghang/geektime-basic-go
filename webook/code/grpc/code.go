@@ -3,7 +3,7 @@ package grpc
 import (
 	"context"
 	codev1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/code/v1"
-	"gitee.com/geekbang/basic-go/webook/internal/code/service"
+	"gitee.com/geekbang/basic-go/webook/code/service"
 	"google.golang.org/grpc"
 )
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"gitee.com/geekbang/basic-go/webook/internal/oauth2/domain/wechat"
+	"gitee.com/geekbang/basic-go/webook/oauth2/domain/wechat"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"github.com/pkg/errors"
 	"net/http"

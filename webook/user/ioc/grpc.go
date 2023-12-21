@@ -1,8 +1,8 @@
 package ioc
 
 import (
-	grpc2 "gitee.com/geekbang/basic-go/webook/internal/user/grpc"
 	"gitee.com/geekbang/basic-go/webook/pkg/grpcx"
+	grpc2 "gitee.com/geekbang/basic-go/webook/user/grpc"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 )
@@ -12,7 +12,7 @@ func InitGRPCxServer(userServer *grpc2.UserServiceServer) *grpcx.Server {
 		Addr string `yaml:"addr"`
 	}
 	var cfg Config
-	err := viper.UnmarshalKey("grpc", &cfg)
+	err := viper.UnmarshalKey("grpc.server", &cfg)
 	if err != nil {
 		panic(err)
 	}

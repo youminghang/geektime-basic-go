@@ -3,7 +3,7 @@ package cache
 import (
 	"context"
 	"encoding/json"
-	"gitee.com/geekbang/basic-go/webook/internal/ranking/domain"
+	"gitee.com/geekbang/basic-go/webook/ranking/domain"
 	"github.com/redis/go-redis/v9"
 	"time"
 )

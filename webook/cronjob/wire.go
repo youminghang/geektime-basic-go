@@ -3,11 +3,11 @@
 package main
 
 import (
-	"gitee.com/geekbang/basic-go/webook/internal/cronjob/grpc"
-	"gitee.com/geekbang/basic-go/webook/internal/cronjob/ioc"
-	"gitee.com/geekbang/basic-go/webook/internal/cronjob/repository"
-	"gitee.com/geekbang/basic-go/webook/internal/cronjob/repository/dao"
-	"gitee.com/geekbang/basic-go/webook/internal/cronjob/service"
+	"gitee.com/geekbang/basic-go/webook/cronjob/grpc"
+	"gitee.com/geekbang/basic-go/webook/cronjob/ioc"
+	"gitee.com/geekbang/basic-go/webook/cronjob/repository"
+	"gitee.com/geekbang/basic-go/webook/cronjob/repository/dao"
+	"gitee.com/geekbang/basic-go/webook/cronjob/service"
 	"github.com/google/wire"
 )
 

@@ -5,7 +5,6 @@ import (
 	_ "embed"
 	"fmt"
 	"gitee.com/geekbang/basic-go/webook/interactive/domain"
-	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
 	"github.com/redis/go-redis/v9"
 	"strconv"
 	"time"
@@ -13,7 +12,8 @@ import (
 
 var (
 	//go:embed lua/interative_incr_cnt.lua
-	luaIncrCnt string
+	luaIncrCnt     string
+	ErrKeyNotExist = redis.Nil
 )
 
 const (
@@ -81,7 +81,7 @@ func (r *RedisInteractiveCache) Get(ctx context.Context,
 
 	if len(data) == 0 {
 		// 缓存不存在
-		return domain.Interactive{}, cache.ErrKeyNotExist
+		return domain.Interactive{}, ErrKeyNotExist
 	}
 
 	// 理论上来说，这里不可能有 error

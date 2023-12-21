@@ -3,8 +3,8 @@ package repository
 import (
 	"context"
 	userv1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/user/v1"
-	"gitee.com/geekbang/basic-go/webook/internal/article/domain"
-	"gitee.com/geekbang/basic-go/webook/internal/article/repository/dao"
+	"gitee.com/geekbang/basic-go/webook/article/domain"
+	"gitee.com/geekbang/basic-go/webook/article/repository/dao"
 )
 
 // AuthorRepository 封装user的client用于获取用户信息

@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 	"errors"
-	"gitee.com/geekbang/basic-go/webook/internal/user/domain"
-	"gitee.com/geekbang/basic-go/webook/internal/user/repository"
+	"gitee.com/geekbang/basic-go/webook/user/domain"
+	"gitee.com/geekbang/basic-go/webook/user/repository"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )

@@ -6,7 +6,7 @@ package repomocks
 
 import (
 	context "context"
-	"gitee.com/geekbang/basic-go/webook/internal/sms/domain"
+	"gitee.com/geekbang/basic-go/webook/sms/domain"
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"

@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"gitee.com/geekbang/basic-go/webook/internal/article/domain"
+	"gitee.com/geekbang/basic-go/webook/article/domain"
 	"github.com/redis/go-redis/v9"
 	"time"
 )

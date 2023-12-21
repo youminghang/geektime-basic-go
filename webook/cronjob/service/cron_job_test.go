@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 	"errors"
-	"gitee.com/geekbang/basic-go/webook/internal/cronjob/domain"
-	"gitee.com/geekbang/basic-go/webook/internal/cronjob/repository"
-	repomocks "gitee.com/geekbang/basic-go/webook/internal/cronjob/repository/mocks"
+	"gitee.com/geekbang/basic-go/webook/cronjob/domain"
+	"gitee.com/geekbang/basic-go/webook/cronjob/repository"
+	repomocks "gitee.com/geekbang/basic-go/webook/cronjob/repository/mocks"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"

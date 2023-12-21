@@ -7,18 +7,19 @@
 package main
 
 import (
-	"gitee.com/geekbang/basic-go/webook/internal/user/grpc"
-	"gitee.com/geekbang/basic-go/webook/internal/user/ioc"
-	"gitee.com/geekbang/basic-go/webook/internal/user/repository"
-	"gitee.com/geekbang/basic-go/webook/internal/user/repository/cache"
-	"gitee.com/geekbang/basic-go/webook/internal/user/repository/dao"
-	"gitee.com/geekbang/basic-go/webook/internal/user/service"
+	"gitee.com/geekbang/basic-go/webook/pkg/wego"
+	"gitee.com/geekbang/basic-go/webook/user/grpc"
+	"gitee.com/geekbang/basic-go/webook/user/ioc"
+	"gitee.com/geekbang/basic-go/webook/user/repository"
+	"gitee.com/geekbang/basic-go/webook/user/repository/cache"
+	"gitee.com/geekbang/basic-go/webook/user/repository/dao"
+	"gitee.com/geekbang/basic-go/webook/user/service"
 	"github.com/google/wire"
 )
 
 // Injectors from wire.go:
 
-func Init() *App {
+func Init() *wego.App {
 	loggerV1 := ioc.InitLogger()
 	db := ioc.InitDB(loggerV1)
 	userDAO := dao.NewGORMUserDAO(db)
@@ -28,8 +29,8 @@ func Init() *App {
 	userService := service.NewUserService(userRepository)
 	userServiceServer := grpc.NewUserServiceServer(userService)
 	server := ioc.InitGRPCxServer(userServiceServer)
-	app := &App{
-		server: server,
+	app := &wego.App{
+		GRPCServer: server,
 	}
 	return app
 }

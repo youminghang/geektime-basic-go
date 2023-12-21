@@ -2,7 +2,7 @@ package ioc
 
 import (
 	"fmt"
-	"gitee.com/geekbang/basic-go/webook/internal/article/repository/dao"
+	"gitee.com/geekbang/basic-go/webook/article/repository/dao"
 	prometheus2 "gitee.com/geekbang/basic-go/webook/pkg/gormx/callbacks/prometheus"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"github.com/spf13/viper"

@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 	"errors"
-	"gitee.com/geekbang/basic-go/webook/internal/article/domain"
-	"gitee.com/geekbang/basic-go/webook/internal/article/repository"
-	repomocks "gitee.com/geekbang/basic-go/webook/internal/article/repository/mocks"
+	"gitee.com/geekbang/basic-go/webook/article/domain"
+	"gitee.com/geekbang/basic-go/webook/article/repository"
+	repomocks "gitee.com/geekbang/basic-go/webook/article/repository/mocks"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"

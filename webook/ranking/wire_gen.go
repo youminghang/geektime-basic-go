@@ -7,11 +7,11 @@
 package main
 
 import (
-	"gitee.com/geekbang/basic-go/webook/internal/ranking/grpc"
-	"gitee.com/geekbang/basic-go/webook/internal/ranking/ioc"
-	"gitee.com/geekbang/basic-go/webook/internal/ranking/repository"
-	"gitee.com/geekbang/basic-go/webook/internal/ranking/repository/cache"
-	"gitee.com/geekbang/basic-go/webook/internal/ranking/service"
+	"gitee.com/geekbang/basic-go/webook/ranking/grpc"
+	"gitee.com/geekbang/basic-go/webook/ranking/ioc"
+	"gitee.com/geekbang/basic-go/webook/ranking/repository"
+	"gitee.com/geekbang/basic-go/webook/ranking/repository/cache"
+	"gitee.com/geekbang/basic-go/webook/ranking/service"
 	"github.com/google/wire"
 )
 

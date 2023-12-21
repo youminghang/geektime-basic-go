@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"gitee.com/geekbang/basic-go/webook/internal/sms/service"
 	"gitee.com/geekbang/basic-go/webook/pkg/ratelimit"
+	"gitee.com/geekbang/basic-go/webook/sms/service"
 )
 
 const key = "sms_tencent"

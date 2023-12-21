@@ -3,8 +3,8 @@ package grpc
 import (
 	"context"
 	articlev1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/article/v1"
-	"gitee.com/geekbang/basic-go/webook/internal/article/domain"
-	"gitee.com/geekbang/basic-go/webook/internal/article/service"
+	"gitee.com/geekbang/basic-go/webook/article/domain"
+	"gitee.com/geekbang/basic-go/webook/article/service"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

@@ -2,8 +2,8 @@ package repository
 
 import (
 	"context"
-	"gitee.com/geekbang/basic-go/webook/internal/article/domain"
-	articleDAO "gitee.com/geekbang/basic-go/webook/internal/article/repository/dao"
+	"gitee.com/geekbang/basic-go/webook/article/domain"
+	articleDAO "gitee.com/geekbang/basic-go/webook/article/repository/dao"
 )
 
 // ArticleAuthorRepository 演示在 service 层面上分流

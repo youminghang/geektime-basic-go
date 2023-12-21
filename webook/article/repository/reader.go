@@ -2,8 +2,8 @@ package repository
 
 import (
 	"context"
-	"gitee.com/geekbang/basic-go/webook/internal/article/domain"
-	articleDao "gitee.com/geekbang/basic-go/webook/internal/article/repository/dao"
+	"gitee.com/geekbang/basic-go/webook/article/domain"
+	articleDao "gitee.com/geekbang/basic-go/webook/article/repository/dao"
 )
 
 //go:generate mockgen -source=./reader.go -package=repomocks -destination=mocks/article_reader.mock.go ArticleReaderRepository

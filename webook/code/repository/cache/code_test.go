@@ -2,7 +2,7 @@ package cache
 
 import (
 	"context"
-	"gitee.com/geekbang/basic-go/webook/internal/code/repository/cache/redismocks"
+	"gitee.com/geekbang/basic-go/webook/code/repository/cache/redismocks"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"

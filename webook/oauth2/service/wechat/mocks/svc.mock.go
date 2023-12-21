@@ -6,7 +6,7 @@ package wechatmocks
 
 import (
 	context "context"
-	"gitee.com/geekbang/basic-go/webook/internal/oauth2/domain/wechat"
+	"gitee.com/geekbang/basic-go/webook/oauth2/domain/wechat"
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"

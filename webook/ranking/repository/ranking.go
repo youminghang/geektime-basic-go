@@ -2,8 +2,8 @@ package repository
 
 import (
 	"context"
-	"gitee.com/geekbang/basic-go/webook/internal/ranking/domain"
-	"gitee.com/geekbang/basic-go/webook/internal/ranking/repository/cache"
+	"gitee.com/geekbang/basic-go/webook/ranking/domain"
+	"gitee.com/geekbang/basic-go/webook/ranking/repository/cache"
 	"github.com/ecodeclub/ekit/syncx/atomicx"
 )
 

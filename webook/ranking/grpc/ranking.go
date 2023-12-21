@@ -3,8 +3,8 @@ package grpc
 import (
 	"context"
 	rankingv1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/ranking/v1"
-	"gitee.com/geekbang/basic-go/webook/internal/ranking/domain"
-	"gitee.com/geekbang/basic-go/webook/internal/ranking/service"
+	"gitee.com/geekbang/basic-go/webook/ranking/domain"
+	"gitee.com/geekbang/basic-go/webook/ranking/service"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

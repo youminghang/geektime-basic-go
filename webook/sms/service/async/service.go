@@ -2,10 +2,10 @@ package async
 
 import (
 	"context"
-	"gitee.com/geekbang/basic-go/webook/internal/sms/domain"
-	"gitee.com/geekbang/basic-go/webook/internal/sms/repository"
-	"gitee.com/geekbang/basic-go/webook/internal/sms/service"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
+	"gitee.com/geekbang/basic-go/webook/sms/domain"
+	"gitee.com/geekbang/basic-go/webook/sms/repository"
+	"gitee.com/geekbang/basic-go/webook/sms/service"
 	"time"
 )
 

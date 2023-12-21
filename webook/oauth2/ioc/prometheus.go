@@ -1,7 +1,7 @@
 package ioc
 
 import (
-	wechat2 "gitee.com/geekbang/basic-go/webook/internal/oauth2/service/wechat"
+	wechat2 "gitee.com/geekbang/basic-go/webook/oauth2/service/wechat"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"github.com/spf13/viper"
 )

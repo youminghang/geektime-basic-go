@@ -2,7 +2,7 @@ package wechat
 
 import (
 	"context"
-	"gitee.com/geekbang/basic-go/webook/internal/oauth2/domain/wechat"
+	"gitee.com/geekbang/basic-go/webook/oauth2/domain/wechat"
 )
 
 //go:generate mockgen -source=./oauth2.go -package=wechatmocks -destination=mocks/svc.mock.go Service

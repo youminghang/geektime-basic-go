@@ -3,7 +3,7 @@ package grpc
 import (
 	"context"
 	smsv1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/sms/v1"
-	"gitee.com/geekbang/basic-go/webook/internal/sms/service"
+	"gitee.com/geekbang/basic-go/webook/sms/service"
 	"google.golang.org/grpc"
 )
 

@@ -7,18 +7,19 @@
 package main
 
 import (
-	"gitee.com/geekbang/basic-go/webook/internal/sms/grpc"
-	ioc2 "gitee.com/geekbang/basic-go/webook/internal/sms/ioc"
+	"gitee.com/geekbang/basic-go/webook/pkg/wego"
+	"gitee.com/geekbang/basic-go/webook/sms/grpc"
+	"gitee.com/geekbang/basic-go/webook/sms/ioc"
 )
 
 // Injectors from wire.go:
 
-func Init() *App {
-	service := ioc2.InitSmsTencentService()
+func Init() *wego.App {
+	service := ioc.InitSmsTencentService()
 	smsServiceServer := grpc.NewSmsServiceServer(service)
-	server := ioc2.InitGRPCxServer(smsServiceServer)
-	app := &App{
-		server: server,
+	server := ioc.InitGRPCxServer(smsServiceServer)
+	app := &wego.App{
+		GRPCServer: server,
 	}
 	return app
 }

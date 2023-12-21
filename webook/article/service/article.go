@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
-	"gitee.com/geekbang/basic-go/webook/internal/article/domain"
-	"gitee.com/geekbang/basic-go/webook/internal/article/events"
-	"gitee.com/geekbang/basic-go/webook/internal/article/repository"
+	"gitee.com/geekbang/basic-go/webook/article/domain"
+	"gitee.com/geekbang/basic-go/webook/article/events"
+	"gitee.com/geekbang/basic-go/webook/article/repository"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"golang.org/x/sync/errgroup"
 	"time"

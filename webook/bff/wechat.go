@@ -3,9 +3,9 @@ package bff
 import (
 	"errors"
 	"fmt"
+	oauth2v1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/oauth2/v1"
+	userv1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/user/v1"
 	ijwt "gitee.com/geekbang/basic-go/webook/bff/jwt"
-	"gitee.com/geekbang/basic-go/webook/internal/service"
-	"gitee.com/geekbang/basic-go/webook/internal/service/oauth2/wechat"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	uuid "github.com/lithammer/shortuuid/v4"
@@ -17,15 +17,15 @@ var _ handler = (*OAuth2WechatHandler)(nil)
 type OAuth2WechatHandler struct {
 	// 这边也可以直接定义成 wechat.Service
 	// 但是为了保持使用 mock 来测试，这里还是用了接口
-	wechatSvc       wechat.Service
-	userSvc         service.UserService
+	wechatSvc       oauth2v1.Oauth2ServiceClient
+	userSvc         userv1.UserServiceClient
 	stateCookieName string
 	stateTokenKey   []byte
 	ijwt.Handler
 }
 
-func NewOAuth2WechatHandler(service wechat.Service,
-	userSvc service.UserService,
+func NewOAuth2WechatHandler(service oauth2v1.Oauth2ServiceClient,
+	userSvc userv1.UserServiceClient,
 	jwthdl ijwt.Handler) *OAuth2WechatHandler {
 	return &OAuth2WechatHandler{
 		wechatSvc: service,
@@ -58,7 +58,9 @@ func (h *OAuth2WechatHandler) Callback(ctx *gin.Context) {
 	}
 
 	code := ctx.Query("code")
-	info, err := h.wechatSvc.VerifyCode(ctx, code)
+	info, err := h.wechatSvc.VerifyCode(ctx, &oauth2v1.VerifyCodeRequest{
+		Code: code,
+	})
 	if err != nil {
 		// 实际上这个错误，也有可能是 code 不对
 		// 但是给前端的信息没有太大的必要区分究竟是代码不对还是系统本身有问题
@@ -70,7 +72,13 @@ func (h *OAuth2WechatHandler) Callback(ctx *gin.Context) {
 	}
 	// 这里就是登录成功
 	// 所以你需要设置 JWT
-	u, err := h.userSvc.FindOrCreateByWechat(ctx, info)
+	u, err := h.userSvc.FindOrCreateByWechat(ctx,
+		&userv1.FindOrCreateByWechatRequest{
+			Info: &userv1.WechatInfo{
+				OpenId:  info.OpenId,
+				UnionId: info.UnionId,
+			},
+		})
 	if err != nil {
 		ctx.JSON(http.StatusOK, Result{
 			Code: 5,
@@ -78,7 +86,7 @@ func (h *OAuth2WechatHandler) Callback(ctx *gin.Context) {
 		})
 		return
 	}
-	err = h.SetLoginToken(ctx, u.Id)
+	err = h.SetLoginToken(ctx, u.User.Id)
 	if err != nil {
 		ctx.JSON(http.StatusOK, Result{
 			Code: 5,
@@ -113,7 +121,9 @@ func (h *OAuth2WechatHandler) verifyState(ctx *gin.Context) error {
 
 func (h *OAuth2WechatHandler) OAuth2URL(ctx *gin.Context) {
 	state := uuid.New()
-	url, err := h.wechatSvc.AuthURL(ctx, state)
+	url, err := h.wechatSvc.AuthURL(ctx, &oauth2v1.AuthURLRequest{
+		State: state,
+	})
 	if err != nil {
 		ctx.JSON(http.StatusOK, Result{
 			Code: 5,

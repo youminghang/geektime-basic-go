@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	intrDAO "gitee.com/geekbang/basic-go/webook/interactive/repository/dao"
-	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"log"
@@ -31,11 +30,6 @@ func InitTestDB() *gorm.DB {
 			log.Println("等待连接 MySQL", err)
 		}
 		db, err = gorm.Open(mysql.Open(dsn))
-		if err != nil {
-			panic(err)
-		}
-		err = dao.InitTables(db)
-		// 真就是
 		if err != nil {
 			panic(err)
 		}

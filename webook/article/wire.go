@@ -3,13 +3,14 @@
 package main
 
 import (
-	"gitee.com/geekbang/basic-go/webook/internal/article/events"
-	"gitee.com/geekbang/basic-go/webook/internal/article/grpc"
-	"gitee.com/geekbang/basic-go/webook/internal/article/ioc"
-	"gitee.com/geekbang/basic-go/webook/internal/article/repository"
-	"gitee.com/geekbang/basic-go/webook/internal/article/repository/cache"
-	"gitee.com/geekbang/basic-go/webook/internal/article/repository/dao"
-	"gitee.com/geekbang/basic-go/webook/internal/article/service"
+	"gitee.com/geekbang/basic-go/webook/article/events"
+	"gitee.com/geekbang/basic-go/webook/article/grpc"
+	"gitee.com/geekbang/basic-go/webook/article/ioc"
+	"gitee.com/geekbang/basic-go/webook/article/repository"
+	"gitee.com/geekbang/basic-go/webook/article/repository/cache"
+	"gitee.com/geekbang/basic-go/webook/article/repository/dao"
+	"gitee.com/geekbang/basic-go/webook/article/service"
+	"gitee.com/geekbang/basic-go/webook/pkg/wego"
 	"github.com/google/wire"
 )
 
@@ -21,7 +22,7 @@ var thirdProvider = wire.NewSet(
 	ioc.InitDB,
 )
 
-func Init() *App {
+func Init() *wego.App {
 	wire.Build(
 		thirdProvider,
 		events.NewSaramaSyncProducer,
@@ -32,7 +33,7 @@ func Init() *App {
 		service.NewArticleService,
 		grpc.NewArticleServiceServer,
 		ioc.InitGRPCxServer,
-		wire.Struct(new(App), "*"),
+		wire.Struct(new(wego.App), "GRPCServer"),
 	)
-	return new(App)
+	return new(wego.App)
 }

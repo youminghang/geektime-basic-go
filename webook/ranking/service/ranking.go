@@ -4,8 +4,8 @@ import (
 	"context"
 	articlev1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/article/v1"
 	intrv1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/intr/v1"
-	"gitee.com/geekbang/basic-go/webook/internal/ranking/domain"
-	"gitee.com/geekbang/basic-go/webook/internal/ranking/repository"
+	"gitee.com/geekbang/basic-go/webook/ranking/domain"
+	"gitee.com/geekbang/basic-go/webook/ranking/repository"
 	"github.com/ecodeclub/ekit/queue"
 	"github.com/ecodeclub/ekit/slice"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -93,7 +93,7 @@ func (a *BatchRankingService) rankTopN(ctx context.Context) ([]domain.Article, e
 		for _, art := range arts.Articles {
 			domainArts = append(domainArts, articleToDomain(art))
 		}
-		
+
 		artIds := slice.Map[domain.Article, int64](domainArts, func(idx int, src domain.Article) int64 {
 			return src.Id
 		})

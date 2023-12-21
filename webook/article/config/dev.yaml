@@ -1,5 +1,5 @@
 db:
-  dsn: "root:root@tcp(localhost:13316)/webook"
+  dsn: "root:root@tcp(localhost:13316)/webook_article"
 
 redis:
   addr: "localhost:6379"
@@ -9,8 +9,9 @@ kafka:
     - "localhost:9094"
 
 grpc:
-#  启动监听 8090 端口
-  addr: ":9003"
-
-userGrpc:
-  addr: ":9004"
+  server:
+    #  启动监听 8090 端口，你如果启动很多个服务的话，小心端口冲突
+    addr: ":8097"
+  client:
+    user:
+      addr: ":8091"

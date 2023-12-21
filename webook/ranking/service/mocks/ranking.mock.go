@@ -12,7 +12,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	domain "gitee.com/geekbang/basic-go/webook/internal/ranking/domain"
+	domain "gitee.com/geekbang/basic-go/webook/ranking/domain"
 	gomock "go.uber.org/mock/gomock"
 )
 

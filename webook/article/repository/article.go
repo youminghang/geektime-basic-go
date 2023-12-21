@@ -2,9 +2,9 @@ package repository
 
 import (
 	"context"
-	"gitee.com/geekbang/basic-go/webook/internal/article/domain"
-	"gitee.com/geekbang/basic-go/webook/internal/article/repository/cache"
-	"gitee.com/geekbang/basic-go/webook/internal/article/repository/dao"
+	"gitee.com/geekbang/basic-go/webook/article/domain"
+	"gitee.com/geekbang/basic-go/webook/article/repository/cache"
+	"gitee.com/geekbang/basic-go/webook/article/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"github.com/ecodeclub/ekit/slice"
 	"gorm.io/gorm"

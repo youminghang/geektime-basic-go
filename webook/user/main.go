@@ -1,7 +1,6 @@
 package main
 
 import (
-	"gitee.com/geekbang/basic-go/webook/pkg/grpcx"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -9,7 +8,7 @@ import (
 func main() {
 	initViperV2Watch()
 	app := Init()
-	err := app.server.Serve()
+	err := app.GRPCServer.Serve()
 	if err != nil {
 		panic(err)
 	}
@@ -26,8 +25,4 @@ func initViperV2Watch() {
 	if err != nil {
 		panic(err)
 	}
-}
-
-type App struct {
-	server *grpcx.Server
 }

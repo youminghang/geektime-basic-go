@@ -3,8 +3,8 @@ package grpc
 import (
 	"context"
 	cronjobv1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/cronjob/v1"
-	"gitee.com/geekbang/basic-go/webook/internal/cronjob/domain"
-	"gitee.com/geekbang/basic-go/webook/internal/cronjob/service"
+	"gitee.com/geekbang/basic-go/webook/cronjob/domain"
+	"gitee.com/geekbang/basic-go/webook/cronjob/service"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

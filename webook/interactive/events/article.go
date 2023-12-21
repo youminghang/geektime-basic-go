@@ -3,7 +3,6 @@ package events
 import (
 	"context"
 	"gitee.com/geekbang/basic-go/webook/interactive/repository"
-	"gitee.com/geekbang/basic-go/webook/internal/events"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"gitee.com/geekbang/basic-go/webook/pkg/saramax"
 	"github.com/IBM/sarama"
@@ -17,7 +16,7 @@ type ReadEvent struct {
 	Uid int64
 }
 
-var _ events.Consumer = &InteractiveReadEventConsumer{}
+var _ saramax.Consumer = &InteractiveReadEventConsumer{}
 
 type InteractiveReadEventConsumer struct {
 	client sarama.Client

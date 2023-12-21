@@ -2,8 +2,8 @@ package repository
 
 import (
 	"context"
-	"gitee.com/geekbang/basic-go/webook/internal/cronjob/domain"
-	"gitee.com/geekbang/basic-go/webook/internal/cronjob/repository/dao"
+	"gitee.com/geekbang/basic-go/webook/cronjob/domain"
+	"gitee.com/geekbang/basic-go/webook/cronjob/repository/dao"
 	"time"
 )
 

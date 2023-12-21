@@ -2,9 +2,9 @@ package ioc
 
 import (
 	"fmt"
-	"gitee.com/geekbang/basic-go/webook/internal/user/repository/dao"
 	prometheus2 "gitee.com/geekbang/basic-go/webook/pkg/gormx/callbacks/prometheus"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
+	"gitee.com/geekbang/basic-go/webook/user/repository/dao"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"

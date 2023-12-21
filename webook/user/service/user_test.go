@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
-	"gitee.com/geekbang/basic-go/webook/internal/user/domain"
-	"gitee.com/geekbang/basic-go/webook/internal/user/repository"
-	repomocks "gitee.com/geekbang/basic-go/webook/internal/user/repository/mocks"
+	"gitee.com/geekbang/basic-go/webook/user/domain"
+	"gitee.com/geekbang/basic-go/webook/user/repository"
+	repomocks "gitee.com/geekbang/basic-go/webook/user/repository/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"

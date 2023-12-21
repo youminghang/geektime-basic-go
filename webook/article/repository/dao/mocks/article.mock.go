@@ -13,7 +13,7 @@ import (
 	reflect "reflect"
 	time "time"
 
-	dao "gitee.com/geekbang/basic-go/webook/internal/article/repository/dao"
+	dao "gitee.com/geekbang/basic-go/webook/article/repository/dao"
 	gomock "go.uber.org/mock/gomock"
 )
 

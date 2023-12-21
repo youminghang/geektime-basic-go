@@ -7,19 +7,20 @@
 package main
 
 import (
-	"gitee.com/geekbang/basic-go/webook/internal/article/events"
-	"gitee.com/geekbang/basic-go/webook/internal/article/grpc"
-	"gitee.com/geekbang/basic-go/webook/internal/article/ioc"
-	"gitee.com/geekbang/basic-go/webook/internal/article/repository"
-	"gitee.com/geekbang/basic-go/webook/internal/article/repository/cache"
-	"gitee.com/geekbang/basic-go/webook/internal/article/repository/dao"
-	"gitee.com/geekbang/basic-go/webook/internal/article/service"
+	"gitee.com/geekbang/basic-go/webook/article/events"
+	"gitee.com/geekbang/basic-go/webook/article/grpc"
+	"gitee.com/geekbang/basic-go/webook/article/ioc"
+	"gitee.com/geekbang/basic-go/webook/article/repository"
+	"gitee.com/geekbang/basic-go/webook/article/repository/cache"
+	"gitee.com/geekbang/basic-go/webook/article/repository/dao"
+	"gitee.com/geekbang/basic-go/webook/article/service"
+	"gitee.com/geekbang/basic-go/webook/pkg/wego"
 	"github.com/google/wire"
 )
 
 // Injectors from wire.go:
 
-func Init() *App {
+func Init() *wego.App {
 	loggerV1 := ioc.InitLogger()
 	db := ioc.InitDB(loggerV1)
 	articleDAO := dao.NewGORMArticleDAO(db)
@@ -33,8 +34,8 @@ func Init() *App {
 	articleService := service.NewArticleService(articleRepository, authorRepository, loggerV1, producer)
 	articleServiceServer := grpc.NewArticleServiceServer(articleService)
 	server := ioc.InitGRPCxServer(articleServiceServer)
-	app := &App{
-		server: server,
+	app := &wego.App{
+		GRPCServer: server,
 	}
 	return app
 }

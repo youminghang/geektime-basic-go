@@ -3,7 +3,7 @@ package cache
 import (
 	"context"
 	"errors"
-	"gitee.com/geekbang/basic-go/webook/internal/ranking/domain"
+	"gitee.com/geekbang/basic-go/webook/ranking/domain"
 	"github.com/ecodeclub/ekit/syncx/atomicx"
 	"time"
 )

@@ -4,6 +4,7 @@ import (
 	userv1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/user/v1"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func InitUserRpcClient() userv1.UserServiceClient {
@@ -11,11 +12,11 @@ func InitUserRpcClient() userv1.UserServiceClient {
 		Addr string `yaml:"addr"`
 	}
 	var cfg config
-	err := viper.UnmarshalKey("userGrpc", &cfg)
+	err := viper.UnmarshalKey("grpc.client.user", &cfg)
 	if err != nil {
 		panic(err)
 	}
-	conn, err := grpc.Dial(cfg.Addr, grpc.WithInsecure())
+	conn, err := grpc.Dial(cfg.Addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		panic(err)
 	}

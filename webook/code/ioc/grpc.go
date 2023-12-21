@@ -1,7 +1,7 @@
 package ioc
 
 import (
-	grpc2 "gitee.com/geekbang/basic-go/webook/internal/code/grpc"
+	grpc2 "gitee.com/geekbang/basic-go/webook/code/grpc"
 	"gitee.com/geekbang/basic-go/webook/pkg/grpcx"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"

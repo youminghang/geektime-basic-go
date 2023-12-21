@@ -1,6 +1,7 @@
 grpc:
   #  启动监听 9000 端口
-  addr: ":9000"
+  server:
+    addr: ":8093"
 
 weChatConf:
   appId: "xxxxxxx"

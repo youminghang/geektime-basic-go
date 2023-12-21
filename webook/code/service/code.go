@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	smsv1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/sms/v1"
-	"gitee.com/geekbang/basic-go/webook/internal/code/repository"
+	"gitee.com/geekbang/basic-go/webook/code/repository"
 	"math/rand"
 )
 
