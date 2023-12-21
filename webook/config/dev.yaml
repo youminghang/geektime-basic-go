@@ -11,9 +11,11 @@ kafka:
 grpc:
   client:
     intr:
-      addr: "localhost:8090"
+#      addr: "localhost:8090"
+      name: "interactive"
       secure: false
+      etcdAddr: "localhost:12379"
 #      全部都走grpc调用
-      threshold: 100
+#      threshold: 100
 
 test: "hello,babc"
