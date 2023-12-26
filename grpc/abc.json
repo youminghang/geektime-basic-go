@@ -1,0 +1,15 @@
+{
+  "loadBalancingConfig": [{"round_robin":{}}],
+  "methodConfig": [{
+    "name": [{"service": "UserService"}],
+    "waitForReady": true,
+
+    "retryPolicy": {
+      "maxAttempts": 4,
+      "initialBackoff": "0.01s",
+      "maxBackoff": "0.1s",
+      "backoffMultiplier": 1.0,
+      "retryableStatusCodes": [ "Unavailable" ]
+    }
+  }]
+}
