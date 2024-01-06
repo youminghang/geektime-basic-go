@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"gitee.com/geekbang/basic-go/webook/user/domain"
 	"gitee.com/geekbang/basic-go/webook/user/repository/cache"
 	"gitee.com/geekbang/basic-go/webook/user/repository/dao"
@@ -95,6 +96,11 @@ func (ur *CachedUserRepository) FindById(ctx context.Context,
 	// 注意这里的处理方式
 	if err == nil {
 		return u, err
+	}
+	if ctx.Value("downgrade") == "true" {
+		// 触发了降级，直接返回
+		return domain.User{},
+			errors.New("缓存中没有数据，并且触发了降级，放弃查询数据库")
 	}
 	ue, err := ur.dao.FindById(ctx, id)
 	if err != nil {
