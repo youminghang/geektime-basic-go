@@ -19,12 +19,12 @@ func (b *InterceptorBuilder) BuildServerUnaryInterceptor() grpc.UnaryServerInter
 	return func(ctx context.Context, req any,
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler) (resp any, err error) {
-		ok, err := b.limiter.Limit(ctx, b.key)
+		limited, err := b.limiter.Limit(ctx, b.key)
 		if err != nil {
 			// 这里采用保守措施，在触发限流之后直接返回
 			return nil, err
 		}
-		if !ok {
+		if limited {
 			return nil, status.Errorf(codes.ResourceExhausted,
 				"限流")
 		}
@@ -39,17 +39,16 @@ func (b *InterceptorBuilder) BuildServerUnaryInterceptorService() grpc.UnaryServ
 		handler grpc.UnaryHandler) (resp any, err error) {
 		// prefix 这里可以做成参数
 		if strings.HasPrefix(info.FullMethod, "/UserService") {
-			ok, err := b.limiter.Limit(ctx, b.key)
+			limited, err := b.limiter.Limit(ctx, b.key)
 			if err != nil {
 				// 这里采用保守措施，在触发限流之后直接返回
 				return nil, err
 			}
-			if !ok {
+			if limited {
 				return nil, status.Errorf(codes.ResourceExhausted,
 					"限流")
 			}
 		}
-
 		return handler(ctx, req)
 	}
 }
@@ -59,12 +58,12 @@ func (b *InterceptorBuilder) BuildServerUnaryInterceptorV1() grpc.UnaryServerInt
 	return func(ctx context.Context, req any,
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler) (resp any, err error) {
-		ok, err := b.limiter.Limit(ctx, b.key)
+		limited, err := b.limiter.Limit(ctx, b.key)
 		if err != nil {
 			// 这里采用保守措施，在触发限流之后直接返回
 			return nil, err
 		}
-		if !ok {
+		if limited {
 			ctx = context.WithValue(ctx, "downgrade", "true")
 			return handler(ctx, req)
 		}
@@ -80,12 +79,12 @@ func (b *InterceptorBuilder) BuildServerUnaryInterceptorBiz() grpc.UnaryServerIn
 		// prefix 这里可以做成参数
 		if getById, ok := req.(*GetByIdReq); ok {
 			key := fmt.Sprintf("limiter:user:get_by_id:%d", getById.GetId())
-			ok, err := b.limiter.Limit(ctx, key)
+			limited, err := b.limiter.Limit(ctx, key)
 			if err != nil {
 				// 这里采用保守措施，在触发限流之后直接返回
 				return nil, err
 			}
-			if !ok {
+			if limited {
 				return nil, status.Errorf(codes.ResourceExhausted,
 					"限流")
 			}

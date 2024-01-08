@@ -57,7 +57,7 @@ package bff
 //			reqBuilder: func(t *testing.T) *http.Request {
 //				body := bytes.NewBuffer([]byte(`{"email":"123@qq.com","password":"hello@world123","confirmPassword":"hello@world123"}`))
 //				req, err := http.NewRequest(http.MethodPost, signupUrl, body)
-//				req.Header.Set("Content-Type", "application/json")
+//				req.Header.Set("Content-State", "application/json")
 //				if err != nil {
 //					t.Fatal(err)
 //				}
@@ -77,7 +77,7 @@ package bff
 //				// 准备一个错误的JSON 串
 //				body := bytes.NewBuffer([]byte(`{"email":"123@qq.com",`))
 //				req, err := http.NewRequest(http.MethodPost, signupUrl, body)
-//				req.Header.Set("Content-Type", "application/json")
+//				req.Header.Set("Content-State", "application/json")
 //				if err != nil {
 //					t.Fatal(err)
 //				}
@@ -97,7 +97,7 @@ package bff
 //				// 准备一个不合法的邮箱
 //				body := bytes.NewBuffer([]byte(`{"email":"123@","password":"hello@world123","confirmPassword":"hello@world123"}`))
 //				req, err := http.NewRequest(http.MethodPost, signupUrl, body)
-//				req.Header.Set("Content-Type", "application/json")
+//				req.Header.Set("Content-State", "application/json")
 //				if err != nil {
 //					t.Fatal(err)
 //				}
@@ -117,7 +117,7 @@ package bff
 //				// 准备一个不合法的邮箱
 //				body := bytes.NewBuffer([]byte(`{"email":"123@qq.com","password":"hello","confirmPassword":"hello@world123"}`))
 //				req, err := http.NewRequest(http.MethodPost, signupUrl, body)
-//				req.Header.Set("Content-Type", "application/json")
+//				req.Header.Set("Content-State", "application/json")
 //				if err != nil {
 //					t.Fatal(err)
 //				}
@@ -137,7 +137,7 @@ package bff
 //				// 准备一个不合法的邮箱
 //				body := bytes.NewBuffer([]byte(`{"email":"123@qq.com","password":"hello","confirmPassword":"hello"}`))
 //				req, err := http.NewRequest(http.MethodPost, signupUrl, body)
-//				req.Header.Set("Content-Type", "application/json")
+//				req.Header.Set("Content-State", "application/json")
 //				if err != nil {
 //					t.Fatal(err)
 //				}
@@ -164,7 +164,7 @@ package bff
 //			reqBuilder: func(t *testing.T) *http.Request {
 //				body := bytes.NewBuffer([]byte(`{"email":"123@qq.com","password":"hello@world123","confirmPassword":"hello@world123"}`))
 //				req, err := http.NewRequest(http.MethodPost, signupUrl, body)
-//				req.Header.Set("Content-Type", "application/json")
+//				req.Header.Set("Content-State", "application/json")
 //				if err != nil {
 //					t.Fatal(err)
 //				}
@@ -191,7 +191,7 @@ package bff
 //			reqBuilder: func(t *testing.T) *http.Request {
 //				body := bytes.NewBuffer([]byte(`{"email":"123@qq.com","password":"hello@world123","confirmPassword":"hello@world123"}`))
 //				req, err := http.NewRequest(http.MethodPost, signupUrl, body)
-//				req.Header.Set("Content-Type", "application/json")
+//				req.Header.Set("Content-State", "application/json")
 //				if err != nil {
 //					t.Fatal(err)
 //				}
