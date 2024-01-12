@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
 	"strings"
+	"time"
 )
 
 type InterceptorBuilder struct {
@@ -32,6 +33,7 @@ func (b *InterceptorBuilder) buildUnaryServerInterceptor() grpc.UnaryServerInter
 		}, []string{"type", "service", "method", "peer", "code"})
 	prometheus.MustRegister(summary)
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
+		start := time.Now()
 		defer func() {
 			serviceName, method := b.splitMethodName(info.FullMethod)
 			st, _ := status.FromError(err)
@@ -40,7 +42,7 @@ func (b *InterceptorBuilder) buildUnaryServerInterceptor() grpc.UnaryServerInter
 				code = st.Code().String()
 			}
 			summary.WithLabelValues("unary", serviceName, method,
-				b.PeerName(ctx), code)
+				b.PeerName(ctx), code).Observe(float64(time.Since(start).Milliseconds()))
 		}()
 		resp, err = handler(ctx, req)
 		return
