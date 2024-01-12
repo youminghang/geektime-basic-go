@@ -5768,7 +5768,7 @@ func (mr *MockCmdableMockRecorder) TxPipelined(arg0, arg1 any) *gomock.Call {
 // Type mocks base method.
 func (m *MockCmdable) Type(arg0 context.Context, arg1 string) *redis.StatusCmd {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Type", arg0, arg1)
+	ret := m.ctrl.Call(m, "State", arg0, arg1)
 	ret0, _ := ret[0].(*redis.StatusCmd)
 	return ret0
 }
@@ -5776,7 +5776,7 @@ func (m *MockCmdable) Type(arg0 context.Context, arg1 string) *redis.StatusCmd {
 // Type indicates an expected call of Type.
 func (mr *MockCmdableMockRecorder) Type(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Type", reflect.TypeOf((*MockCmdable)(nil).Type), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "State", reflect.TypeOf((*MockCmdable)(nil).Type), arg0, arg1)
 }
 
 // Unlink mocks base method.

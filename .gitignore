@@ -2,4 +2,6 @@
 test.db
 /webook/interactive/integration/data.sql
 /cronjob/demojob
+/webook/payment/config/cert
+
 qa
