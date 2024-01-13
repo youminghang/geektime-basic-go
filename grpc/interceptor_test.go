@@ -24,11 +24,13 @@ func (s *InterceptorTestSuite) SetupSuite() {
 
 func (s *InterceptorTestSuite) TestServer() {
 	t := s.T()
+	//tracer := otel.Tracer("interceptor-test")
+	//propagator := otel.GetTextMapPropagator()
 	server := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			NewLogInterceptor(t),
-			trace.NewOTELInterceptorBuilder("user-service", nil, nil).
-				BuildUnaryServerInterceptor(),
+			trace.NewOTELInterceptorBuilder("user-service",
+				nil, nil).BuildUnaryServerInterceptor(),
 		))
 	// 这个是生成的代码
 	RegisterUserServiceServer(server, &Server{})
@@ -54,14 +56,14 @@ func (s *InterceptorTestSuite) TestClient() {
 	conn, err := grpc.Dial(":8090",
 		grpc.WithChainUnaryInterceptor(
 			trace.NewOTELInterceptorBuilder("user-service-test",
-				nil, nil).
-				BuildUnaryClientInterceptor()),
+				nil, nil).BuildUnaryClientInterceptor(),
+		),
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	assert.NoError(t, err)
 	client := NewUserServiceClient(conn)
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 1; i++ {
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		spanCtx, span := otel.Tracer("interceptor-test-client").Start(ctx, "client-invocation")
+		spanCtx, span := otel.Tracer("interceptor_test").Start(ctx, "client_getbyid")
 		resp, err := client.GetById(spanCtx, &GetByIdReq{
 			Id: 123,
 		})
@@ -72,6 +74,7 @@ func (s *InterceptorTestSuite) TestClient() {
 		assert.NoError(t, err)
 		t.Log(resp.User)
 	}
+	time.Sleep(time.Second * 3)
 }
 
 func NewLogInterceptor(t *testing.T) grpc.UnaryServerInterceptor {
