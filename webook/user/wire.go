@@ -18,6 +18,7 @@ var thirdProvider = wire.NewSet(
 	ioc.InitLogger,
 	ioc.InitDB,
 	ioc.InitRedis,
+	ioc.InitEtcdClient,
 )
 
 func Init() *wego.App {

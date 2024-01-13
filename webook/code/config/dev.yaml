@@ -2,9 +2,14 @@ grpc:
   #  启动监听 9000 端口
   server:
     addr: ":8096"
+    etcdTTL: 60
+  client:
+    sms:
+      target: "etcd:///service/sms"
 
 redis:
   addr: "localhost:6379"
 
-smsGrpc:
-  addr: "127.0.0.1:9001"
+etcd:
+  endpoints:
+    - "localhost:12379"

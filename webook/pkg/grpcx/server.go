@@ -14,10 +14,10 @@ import (
 
 type Server struct {
 	*grpc.Server
-	Port        int
-	EtcdAddr    string
+	Port int
+	// ETCD 服务注册租约 TTL
 	EtcdTTL     int64
-	etcdClient  *clientv3.Client
+	EtcdClient  *clientv3.Client
 	etcdManager endpoints.Manager
 	etcdKey     string
 	cancel      func()
@@ -45,11 +45,7 @@ func (s *Server) Serve() error {
 }
 
 func (s *Server) register(ctx context.Context, port string) error {
-	cli, err := clientv3.NewFromURL("http://localhost:12379")
-	if err != nil {
-		return err
-	}
-	s.etcdClient = cli
+	cli := s.EtcdClient
 	serviceName := "service/" + s.Name
 	em, err := endpoints.NewManager(cli,
 		serviceName)
@@ -87,7 +83,7 @@ func (s *Server) Close() error {
 			return err
 		}
 	}
-	err := s.etcdClient.Close()
+	err := s.EtcdClient.Close()
 	if err != nil {
 		return err
 	}

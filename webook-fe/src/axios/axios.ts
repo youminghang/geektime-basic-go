@@ -6,6 +6,12 @@ const instance = axios.create({
     withCredentials: true
 })
 
+export interface Result<T> {
+    code: number,
+    msg: string,
+    data: T,
+}
+
 
 instance.interceptors.response.use(function (resp) {
     const newToken = resp.headers["x-jwt-token"]

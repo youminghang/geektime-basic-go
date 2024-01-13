@@ -8,10 +8,14 @@ kafka:
   addrs:
     - "localhost:9094"
 
+etcd:
+  endpoints:
+    - "localhost:12379"
 grpc:
   server:
-    #  启动监听 8090 端口，你如果启动很多个服务的话，小心端口冲突
-    addr: ":8097"
+    port: 8097
+    etcdAddr: "localhost:12379"
+    etcdTTL: 60
   client:
     user:
       addr: ":8091"

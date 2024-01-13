@@ -13,12 +13,14 @@ import (
 
 var thirdProvider = wire.NewSet(
 	ioc.InitRedis,
-	ioc.InitSmsRpcClient,
+	ioc.InitEtcdClient,
+	ioc.InitLogger,
 )
 
 func Init() *App {
 	wire.Build(
 		thirdProvider,
+		ioc.InitSmsRpcClient,
 		cache.NewRedisCodeCache,
 		repository.NewCachedCodeRepository,
 		service.NewSMSCodeService,

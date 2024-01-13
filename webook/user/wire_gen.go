@@ -28,7 +28,8 @@ func Init() *wego.App {
 	userRepository := repository.NewCachedUserRepository(userDAO, userCache)
 	userService := service.NewUserService(userRepository)
 	userServiceServer := grpc.NewUserServiceServer(userService)
-	server := ioc.InitGRPCxServer(userServiceServer)
+	client := ioc.InitEtcdClient()
+	server := ioc.InitGRPCxServer(userServiceServer, client, loggerV1)
 	app := &wego.App{
 		GRPCServer: server,
 	}
@@ -37,4 +38,4 @@ func Init() *wego.App {
 
 // wire.go:
 
-var thirdProvider = wire.NewSet(ioc.InitLogger, ioc.InitDB, ioc.InitRedis)
+var thirdProvider = wire.NewSet(ioc.InitLogger, ioc.InitDB, ioc.InitRedis, ioc.InitEtcdClient)

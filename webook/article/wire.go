@@ -19,6 +19,7 @@ var thirdProvider = wire.NewSet(
 	ioc.InitLogger,
 	ioc.InitUserRpcClient,
 	ioc.InitProducer,
+	ioc.InitEtcdClient,
 	ioc.InitDB,
 )
 

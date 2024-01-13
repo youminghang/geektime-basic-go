@@ -4,18 +4,21 @@ import (
 	smsv1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/sms/v1"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func InitSmsRpcClient() smsv1.SmsServiceClient {
 	type config struct {
-		Addr string `yaml:"addr"`
+		Target string `yaml:"target"`
 	}
 	var cfg config
-	err := viper.UnmarshalKey("smsGrpc", &cfg)
+	err := viper.UnmarshalKey("grpc.client.sms", &cfg)
 	if err != nil {
 		panic(err)
 	}
-	conn, err := grpc.Dial(cfg.Addr, grpc.WithInsecure())
+	conn, err := grpc.Dial(
+		cfg.Target,
+		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		panic(err)
 	}

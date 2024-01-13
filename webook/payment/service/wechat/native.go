@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"gitee.com/geekbang/basic-go/webook/payment/domain"
+	"gitee.com/geekbang/basic-go/webook/payment/events"
 	"gitee.com/geekbang/basic-go/webook/payment/repository"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"github.com/wechatpay-apiv3/wechatpay-go/core"
@@ -22,6 +23,7 @@ type NativePaymentService struct {
 	notifyURL string
 	repo      repository.PaymentRepository
 	l         logger.LoggerV1
+	producer  events.Producer
 
 	// 在微信 native 里面，分别是
 	// SUCCESS：支付成功
@@ -36,6 +38,7 @@ type NativePaymentService struct {
 
 func NewNativePaymentService(svc *native.NativeApiService,
 	repo repository.PaymentRepository,
+	producer events.Producer,
 	l logger.LoggerV1,
 	appid, mchid string) *NativePaymentService {
 	return &NativePaymentService{
@@ -102,6 +105,10 @@ func (n *NativePaymentService) FindExpiredPayment(ctx context.Context, offset, l
 	return n.repo.FindExpiredPayment(ctx, offset, limit, t)
 }
 
+func (n *NativePaymentService) GetPayment(ctx context.Context, bizTradeId string) (domain.Payment, error) {
+	return n.repo.GetPayment(ctx, bizTradeId)
+}
+
 func (n *NativePaymentService) HandleCallback(ctx context.Context, txn *payments.Transaction) error {
 	return n.updateByTxn(ctx, txn)
 }
@@ -111,9 +118,26 @@ func (n *NativePaymentService) updateByTxn(ctx context.Context, txn *payments.Tr
 	if !ok {
 		return fmt.Errorf("%w, %s", errUnknownTransactionState, *txn.TradeState)
 	}
-	return n.repo.UpdatePayment(ctx, domain.Payment{
+	pmt := domain.Payment{
 		BizTradeNO: *txn.OutTradeNo,
 		TxnID:      *txn.TransactionId,
 		Status:     status,
+	}
+	err := n.repo.UpdatePayment(ctx, pmt)
+	if err != nil {
+		// 这里有一个小问题，就是如果超时了的话，你都不知道更新成功了没
+		return err
+	}
+	// 就是处于结束状态
+	err1 := n.producer.ProducePaymentEvent(ctx, events.PaymentEvent{
+		BizTradeNO: pmt.BizTradeNO,
+		Status:     pmt.Status.AsUint8(),
 	})
+	if err1 != nil {
+		// 要做好监控和告警
+		n.l.Error("发送支付事件失败", logger.Error(err),
+			logger.String("biz_trade_no", pmt.BizTradeNO))
+	}
+	// 虽然发送事件失败，但是数据库记录了，所以可以返回 Nil
+	return nil
 }

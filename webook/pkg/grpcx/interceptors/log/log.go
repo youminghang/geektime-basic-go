@@ -17,7 +17,11 @@ type LoggerInterceptorBuilder struct {
 	interceptors.Builder
 }
 
-func (b *LoggerInterceptorBuilder) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor {
+func NewLoggerInterceptorBuilder(l logger.LoggerV1) *LoggerInterceptorBuilder {
+	return &LoggerInterceptorBuilder{l: l}
+}
+
+func (b *LoggerInterceptorBuilder) BuildUnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res interface{}, err error) {
 		// 默认过滤掉该探活日志
 		if info.FullMethod == "/grpc.health.v1.Health/Check" {

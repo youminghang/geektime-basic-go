@@ -4,8 +4,11 @@ db:
 redis:
   addr: "localhost:6379"
 
+etcd:
+  endpoints:
+    - "localhost:12379"
 grpc:
-#  启动监听 8090 端口
   server:
 #    要注意，拆分出来之后有很多服务，都会占用端口，小心端口冲突。
-    addr: ":8091"
+    port: 8091
+    etcdTTL: 60

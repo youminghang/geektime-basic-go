@@ -33,7 +33,8 @@ func Init() *wego.App {
 	producer := events.NewSaramaSyncProducer(syncProducer)
 	articleService := service.NewArticleService(articleRepository, authorRepository, loggerV1, producer)
 	articleServiceServer := grpc.NewArticleServiceServer(articleService)
-	server := ioc.InitGRPCxServer(articleServiceServer)
+	client := ioc.InitEtcdClient()
+	server := ioc.InitGRPCxServer(articleServiceServer, client, loggerV1)
 	app := &wego.App{
 		GRPCServer: server,
 	}
@@ -42,4 +43,4 @@ func Init() *wego.App {
 
 // wire.go:
 
-var thirdProvider = wire.NewSet(ioc.InitRedis, ioc.InitLogger, ioc.InitUserRpcClient, ioc.InitProducer, ioc.InitDB)
+var thirdProvider = wire.NewSet(ioc.InitRedis, ioc.InitLogger, ioc.InitUserRpcClient, ioc.InitProducer, ioc.InitEtcdClient, ioc.InitDB)

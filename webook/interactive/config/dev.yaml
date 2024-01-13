@@ -10,12 +10,15 @@ redis:
 kafka:
   addrs:
     - "localhost:9094"
-
+etcd:
+  endpoints:
+    - "localhost:12379"
 grpc:
-#  启动监听 8090 端口
-  port: 8094
-  etcdAddr: "localhost:12379"
-  etcdTTL: 60
+  server:
+    #  启动监听 8094 端口
+    port: 8094
+    etcdAddr: "localhost:12379"
+    etcdTTL: 60
 
 migrator:
   http:

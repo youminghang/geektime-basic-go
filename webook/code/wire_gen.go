@@ -24,7 +24,9 @@ func Init() *App {
 	codeRepository := repository.NewCachedCodeRepository(codeCache)
 	codeService := service.NewSMSCodeService(smsServiceClient, codeRepository)
 	codeServiceServer := grpc.NewCodeServiceServer(codeService)
-	server := ioc.InitGRPCxServer(codeServiceServer)
+	client := ioc.InitEtcdClient()
+	loggerV1 := ioc.InitLogger()
+	server := ioc.InitGRPCxServer(codeServiceServer, client, loggerV1)
 	app := &App{
 		server: server,
 	}
@@ -33,4 +35,4 @@ func Init() *App {
 
 // wire.go:
 
-var thirdProvider = wire.NewSet(ioc.InitRedis, ioc.InitSmsRpcClient)
+var thirdProvider = wire.NewSet(ioc.InitRedis, ioc.InitEtcdClient, ioc.InitLogger)

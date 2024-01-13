@@ -139,11 +139,6 @@ func (svc *articleService) Save(ctx context.Context,
 func (svc *articleService) Publish(ctx context.Context,
 	art domain.Article) (int64, error) {
 	art.Status = domain.ArticleStatusPublished
-	author, err := svc.userRepo.FindAuthor(ctx, art.Id)
-	if err != nil {
-		return 0, err
-	}
-	art.Author = author
 	return svc.repo.Sync(ctx, art)
 }
 

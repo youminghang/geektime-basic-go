@@ -16,8 +16,4 @@ plugins:
     out: webook/api/proto/gen
     opt:
       - paths=source_relative
-# 你需要安装这个
-  - plugin: go-grpc-mock
-      out: .
-      opt: paths=source_relative
 

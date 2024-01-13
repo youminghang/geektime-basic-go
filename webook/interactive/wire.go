@@ -27,6 +27,7 @@ var thirdProvider = wire.NewSet(
 	ioc.InitRedis,
 	ioc.InitLogger,
 	ioc.InitKafka,
+	ioc.InitEtcdClient,
 	ioc.InitSyncProducer,
 )
 

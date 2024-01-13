@@ -21,6 +21,7 @@ import (
 
 func Init() *App {
 	loggerV1 := ioc.InitLogger()
+	client := ioc.InitEtcdClient()
 	srcDB := ioc.InitSRC()
 	dstDB := ioc.InitDST()
 	doubleWritePool := ioc.InitDoubleWritePool(srcDB, dstDB)
@@ -31,13 +32,13 @@ func Init() *App {
 	interactiveRepository := repository.NewCachedInteractiveRepository(interactiveDAO, interactiveCache, loggerV1)
 	interactiveService := service.NewInteractiveService(interactiveRepository, loggerV1)
 	interactiveServiceServer := grpc.NewInteractiveServiceServer(interactiveService)
-	server := ioc.InitGRPCxServer(loggerV1, interactiveServiceServer)
-	client := ioc.InitKafka()
-	syncProducer := ioc.InitSyncProducer(client)
+	server := ioc.InitGRPCxServer(loggerV1, client, interactiveServiceServer)
+	saramaClient := ioc.InitKafka()
+	syncProducer := ioc.InitSyncProducer(saramaClient)
 	producer := ioc.InitMigradatorProducer(syncProducer)
 	ginxServer := ioc.InitMigratorWeb(loggerV1, srcDB, dstDB, doubleWritePool, producer)
-	interactiveReadEventConsumer := events.NewInteractiveReadEventConsumer(client, loggerV1, interactiveRepository)
-	consumer := ioc.InitFixDataConsumer(loggerV1, srcDB, dstDB, client)
+	interactiveReadEventConsumer := events.NewInteractiveReadEventConsumer(saramaClient, loggerV1, interactiveRepository)
+	consumer := ioc.InitFixDataConsumer(loggerV1, srcDB, dstDB, saramaClient)
 	v := ioc.NewConsumers(interactiveReadEventConsumer, consumer)
 	app := &App{
 		server:         server,
@@ -51,6 +52,6 @@ func Init() *App {
 
 var serviceProviderSet = wire.NewSet(dao.NewGORMInteractiveDAO, cache.NewRedisInteractiveCache, repository.NewCachedInteractiveRepository, service.NewInteractiveService)
 
-var thirdProvider = wire.NewSet(ioc.InitSRC, ioc.InitDST, ioc.InitDoubleWritePool, ioc.InitBizDB, ioc.InitRedis, ioc.InitLogger, ioc.InitKafka, ioc.InitSyncProducer)
+var thirdProvider = wire.NewSet(ioc.InitSRC, ioc.InitDST, ioc.InitDoubleWritePool, ioc.InitBizDB, ioc.InitRedis, ioc.InitLogger, ioc.InitKafka, ioc.InitEtcdClient, ioc.InitSyncProducer)
 
 var migratorSet = wire.NewSet(ioc.InitMigratorWeb, ioc.InitFixDataConsumer, ioc.InitMigradatorProducer)

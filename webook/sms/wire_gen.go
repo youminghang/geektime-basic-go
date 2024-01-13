@@ -17,7 +17,9 @@ import (
 func Init() *wego.App {
 	service := ioc.InitSmsTencentService()
 	smsServiceServer := grpc.NewSmsServiceServer(service)
-	server := ioc.InitGRPCxServer(smsServiceServer)
+	client := ioc.InitEtcdClient()
+	loggerV1 := ioc.InitLogger()
+	server := ioc.InitGRPCxServer(smsServiceServer, client, loggerV1)
 	app := &wego.App{
 		GRPCServer: server,
 	}
