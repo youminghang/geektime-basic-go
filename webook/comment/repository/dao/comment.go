@@ -17,9 +17,7 @@ type CommentDAO interface {
 		bizId, minID, limit int64) ([]Comment, error)
 	// FindCommentList Comment的id为0 获取一级评论，如果不为0获取对应的评论，和其评论的所有回复
 	FindCommentList(ctx context.Context, u Comment) ([]Comment, error)
-	FindRepliesByPids(ctx context.Context, pids []int64,
-		offset,
-		limit int) ([]Comment, error)
+	FindRepliesByPid(ctx context.Context, pid int64, offset, limit int) ([]Comment, error)
 	// Delete 删除本节点和其对应的子节点
 	Delete(ctx context.Context, u Comment) error
 	FindOneByIDs(ctx context.Context, id []int64) ([]Comment, error)
@@ -91,15 +89,14 @@ func (c *GORMCommentDAO) FindByBiz(ctx context.Context, biz string,
 	return res, err
 }
 
-// FindRepliesByPids 查找评论的直接评论
-func (c *GORMCommentDAO) FindRepliesByPids(ctx context.Context,
-	pids []int64,
+// FindRepliesByPid 查找评论的直接评论
+func (c *GORMCommentDAO) FindRepliesByPid(ctx context.Context,
+	pid int64,
 	offset,
 	limit int) ([]Comment, error) {
 	var res []Comment
-	err := c.db.WithContext(ctx).Where("pid IN ?", pids).
+	err := c.db.WithContext(ctx).Where("pid = ?", pid).
 		Order("id DESC").
-		Group("pid").
 		Offset(offset).Limit(limit).Find(&res).Error
 	return res, err
 }

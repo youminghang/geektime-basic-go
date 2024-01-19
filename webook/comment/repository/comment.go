@@ -6,6 +6,7 @@ import (
 	"gitee.com/geekbang/basic-go/webook/comment/domain"
 	"gitee.com/geekbang/basic-go/webook/comment/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
+	"golang.org/x/sync/errgroup"
 	"time"
 )
 
@@ -47,35 +48,33 @@ func (c *CachedCommentRepo) FindByBiz(ctx context.Context, biz string,
 		return nil, err
 	}
 	res := make([]domain.Comment, 0, len(daoComments))
-	ids := make([]int64, 0, len(daoComments))
-	for _, d := range daoComments {
-		cm := c.toDomain(d)
-		// 只展示三条
-		cm.Children = make([]domain.Comment, 0, 3)
-		res = append(res)
-		ids = append(ids, d.Id)
-	}
-	// 查找直接的子节点
-	if ctx.Value("downgraded") == "true" {
-		// 触发了降级
-		return res, nil
-	}
 	// 只找三条
-	subRes, err := c.dao.FindRepliesByPids(ctx, ids, 0, 3)
-	if err != nil {
-		// 这里做一个容错
-		c.l.Error("查找回复失败", logger.Error(err))
-		return res, nil
-	}
-	// 一般来说，因为批次都不大，所以双重循环和 map 比起来，性能也不会差
-	for _, sr := range subRes {
-		for _, r := range res {
-			if r.Id == sr.PID.Int64 {
-				r.Children = append(r.Children, c.toDomain(sr))
-			}
+	var eg errgroup.Group
+	downgraded := ctx.Value("downgraded") == "true"
+	for _, d := range daoComments {
+		d := d
+		// 这两句不能放进去，因为并发操作 res 会有坑
+		cm := c.toDomain(d)
+		res = append(res, cm)
+		if downgraded {
+			continue
 		}
+		eg.Go(func() error {
+			// 只展示三条
+			cm.Children = make([]domain.Comment, 0, 3)
+			rs, err := c.dao.FindRepliesByPid(ctx, d.PID.Int64, 0, 3)
+			if err != nil {
+				// 我们认为这是一个可以容忍的错误
+				c.l.Error("查询子评论失败", logger.Error(err))
+				return nil
+			}
+			for _, r := range rs {
+				cm.Children = append(cm.Children, c.toDomain(r))
+			}
+			return nil
+		})
 	}
-	return res, nil
+	return res, eg.Wait()
 }
 
 func (c *CachedCommentRepo) DeleteComment(ctx context.Context, comment domain.Comment) error {
