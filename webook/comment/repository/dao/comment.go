@@ -58,8 +58,8 @@ func (c *GORMCommentDAO) FindRepliesByRid(ctx context.Context,
 	rid int64, id int64, limit int64) ([]Comment, error) {
 	var res []Comment
 	err := c.db.WithContext(ctx).
-		Where("root_id = ? AND id < ?", rid, id).
-		Order("id DESC").
+		Where("root_id = ? AND id > ?", rid, id).
+		Order("id ASC").
 		Limit(int(limit)).Find(&res).Error
 	return res, err
 }

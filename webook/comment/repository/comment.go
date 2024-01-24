@@ -29,8 +29,8 @@ type CachedCommentRepo struct {
 	l   logger.LoggerV1
 }
 
-func (c *CachedCommentRepo) GetMoreReplies(ctx context.Context, rid int64, minID int64, limit int64) ([]domain.Comment, error) {
-	cs, err := c.dao.FindRepliesByRid(ctx, rid, minID, limit)
+func (c *CachedCommentRepo) GetMoreReplies(ctx context.Context, rid int64, maxID int64, limit int64) ([]domain.Comment, error) {
+	cs, err := c.dao.FindRepliesByRid(ctx, rid, maxID, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (c *CachedCommentRepo) FindByBiz(ctx context.Context, biz string,
 		eg.Go(func() error {
 			// 只展示三条
 			cm.Children = make([]domain.Comment, 0, 3)
-			rs, err := c.dao.FindRepliesByPid(ctx, d.PID.Int64, 0, 3)
+			rs, err := c.dao.FindRepliesByPid(ctx, d.Id, 0, 3)
 			if err != nil {
 				// 我们认为这是一个可以容忍的错误
 				c.l.Error("查询子评论失败", logger.Error(err))

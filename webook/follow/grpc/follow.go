@@ -23,7 +23,7 @@ func (f *FollowServiceServer) Register(server grpc.ServiceRegistrar) {
 	followv1.RegisterFollowServiceServer(server, f)
 }
 
-func (f *FollowServiceServer) FollowRelationList(ctx context.Context, request *followv1.FollowRelationListRequest) (*followv1.FollowRelationListResponse, error) {
+func (f *FollowServiceServer) GetFollowee(ctx context.Context, request *followv1.GetFolloweeRequest) (*followv1.GetFolloweeResponse, error) {
 	relationList, err := f.svc.GetFollowee(ctx, request.Follower, request.Offset, request.Limit)
 	if err != nil {
 		return nil, err
@@ -32,24 +32,29 @@ func (f *FollowServiceServer) FollowRelationList(ctx context.Context, request *f
 	for _, relation := range relationList {
 		res = append(res, f.convertToView(relation))
 	}
-	return &followv1.FollowRelationListResponse{
+	return &followv1.GetFolloweeResponse{
 		FollowRelations: res,
 	}, nil
 }
 
-func (f *FollowServiceServer) FollowRelationInfo(ctx context.Context, request *followv1.FollowRelationInfoRequest) (*followv1.FollowRelationInfoResponse, error) {
+func (f *FollowServiceServer) FollowInfo(ctx context.Context, request *followv1.FollowInfoRequest) (*followv1.FollowInfoResponse, error) {
 	info, err := f.svc.FollowInfo(ctx, request.Follower, request.Followee)
 	if err != nil {
 		return nil, err
 	}
-	return &followv1.FollowRelationInfoResponse{
+	return &followv1.FollowInfoResponse{
 		FollowRelation: f.convertToView(info),
 	}, nil
 }
 
-func (f *FollowServiceServer) AddFollowRelation(ctx context.Context, request *followv1.AddFollowRelationRequest) (*followv1.AddFollowRelationResponse, error) {
+func (f *FollowServiceServer) Follow(ctx context.Context, request *followv1.FollowRequest) (*followv1.FollowResponse, error) {
 	err := f.svc.Follow(ctx, request.Follower, request.Followee)
-	return &followv1.AddFollowRelationResponse{}, err
+	return &followv1.FollowResponse{}, err
+}
+
+func (f *FollowServiceServer) CancelFollow(ctx context.Context, request *followv1.CancelFollowRequest) (*followv1.CancelFollowResponse, error) {
+	err := f.svc.CancelFollow(ctx, request.Follower, request.Followee)
+	return &followv1.CancelFollowResponse{}, err
 }
 
 func (f *FollowServiceServer) convertToView(relation domain.FollowRelation) *followv1.FollowRelation {

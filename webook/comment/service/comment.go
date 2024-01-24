@@ -14,7 +14,7 @@ type CommentService interface {
 	DeleteComment(ctx context.Context, id int64) error
 	// CreateComment 创建评论
 	CreateComment(ctx context.Context, comment domain.Comment) error
-	GetMoreReplies(ctx context.Context, rid int64, minID int64, limit int64) ([]domain.Comment, error)
+	GetMoreReplies(ctx context.Context, rid int64, maxID int64, limit int64) ([]domain.Comment, error)
 }
 
 type commentService struct {
@@ -23,8 +23,8 @@ type commentService struct {
 
 func (c *commentService) GetMoreReplies(ctx context.Context,
 	rid int64,
-	minID int64, limit int64) ([]domain.Comment, error) {
-	return c.repo.GetMoreReplies(ctx, rid, minID, limit)
+	maxID int64, limit int64) ([]domain.Comment, error) {
+	return c.repo.GetMoreReplies(ctx, rid, maxID, limit)
 }
 
 func NewCommentSvc(repo repository.CommentRepository) CommentService {
