@@ -20,6 +20,5 @@ func InitGRPCxServer(oauth2Server *grpc2.Oauth2ServiceServer) *grpcx.Server {
 	oauth2Server.Register(server)
 	return &grpcx.Server{
 		Server: server,
-		Addr:   cfg.Addr,
 	}
 }
