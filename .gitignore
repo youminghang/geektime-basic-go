@@ -5,3 +5,4 @@ test.db
 /webook/payment/config/cert
 
 qa
+/webook/tag/repository/dao/gorm.db

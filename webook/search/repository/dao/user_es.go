@@ -33,6 +33,9 @@ func (h *UserElasticDAO) Search(ctx context.Context, keywords []string) ([]User,
 	for _, hit := range resp.Hits.Hits {
 		var ele User
 		err = json.Unmarshal(hit.Source, &ele)
+		if err != nil {
+			return nil, err
+		}
 		res = append(res, ele)
 	}
 	return res, nil

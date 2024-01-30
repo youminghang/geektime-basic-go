@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	searchv1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/search/v1"
 	"gitee.com/geekbang/basic-go/webook/article/domain"
 	"gitee.com/geekbang/basic-go/webook/article/events"
 	"gitee.com/geekbang/basic-go/webook/article/repository"
@@ -41,6 +42,8 @@ type articleService struct {
 	repo     repository.ArticleRepository
 	logger   logger.LoggerV1
 
+	syncClient searchv1.SyncServiceClient
+
 	// 搞个异步的
 	producer events.Producer
 }
@@ -76,11 +79,13 @@ func NewArticleService(repo repository.ArticleRepository,
 func NewArticleServiceV1(
 	authorRepo repository.ArticleAuthorRepository,
 	readerRepo repository.ArticleReaderRepository,
+	syncClient searchv1.SyncServiceClient,
 	l logger.LoggerV1) ArticleService {
 	return &articleService{
 		authorRepo: authorRepo,
 		readerRepo: readerRepo,
 		logger:     l,
+		syncClient: syncClient,
 	}
 }
 

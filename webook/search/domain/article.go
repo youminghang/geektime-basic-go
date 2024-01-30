@@ -5,4 +5,5 @@ type Article struct {
 	Title   string
 	Status  int32
 	Content string
+	Tags    []string
 }

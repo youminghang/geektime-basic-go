@@ -14,6 +14,8 @@ var (
 	userIndex string
 	//go:embed article_index.json
 	articleIndex string
+	//go:embed tags_index.json
+	tagIndex string
 )
 
 // InitES 创建索引
@@ -28,6 +30,7 @@ func InitES(client *elastic.Client) error {
 	eg.Go(func() error {
 		return tryCreateIndex(ctx, client, ArticleIndexName, articleIndex)
 	})
+	eg.Go(func() error { return tryCreateIndex(ctx, client, TagIndexName, tagIndex) })
 
 	return eg.Wait()
 }

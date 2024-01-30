@@ -15,8 +15,11 @@ import (
 var serviceProviderSet = wire.NewSet(
 	dao.NewUserElasticDAO,
 	dao.NewArticleElasticDAO,
+	dao.NewAnyESDAO,
+	dao.NewTagESDAO,
 	repository.NewUserRepository,
 	repository.NewArticleRepository,
+	repository.NewAnyRepository,
 	service.NewSyncService,
 	service.NewSearchService,
 )

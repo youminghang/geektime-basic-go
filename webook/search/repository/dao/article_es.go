@@ -3,18 +3,21 @@ package dao
 import (
 	"context"
 	"encoding/json"
+	"github.com/ecodeclub/ekit/slice"
 	"github.com/olivere/elastic/v7"
 	"strconv"
 	"strings"
 )
 
 const ArticleIndexName = "article_index"
+const TagIndexName = "tags_index"
 
 type Article struct {
-	Id      int64  `json:"id"`
-	Title   string `json:"title"`
-	Status  int32  `json:"status"`
-	Content string `json:"content"`
+	Id      int64    `json:"id"`
+	Title   string   `json:"title"`
+	Status  int32    `json:"status"`
+	Content string   `json:"content"`
+	Tags    []string `json:"tags"`
 }
 
 type ArticleElasticDAO struct {
@@ -25,10 +28,15 @@ func NewArticleElasticDAO(client *elastic.Client) ArticleDAO {
 	return &ArticleElasticDAO{client: client}
 }
 
-func (h *ArticleElasticDAO) Search(ctx context.Context, keywords []string) ([]Article, error) {
+func (h *ArticleElasticDAO) Search(ctx context.Context, tagArtIds []int64, keywords []string) ([]Article, error) {
 	queryString := strings.Join(keywords, " ")
+	ids := slice.Map(tagArtIds, func(idx int, src int64) any {
+		return src
+	})
 	query := elastic.NewBoolQuery().Must(
 		elastic.NewBoolQuery().Should(
+			// 给予更高权重
+			elastic.NewTermsQuery("id", ids...).Boost(2),
 			elastic.NewMatchQuery("title", queryString),
 			elastic.NewMatchQuery("content", queryString)),
 		elastic.NewTermQuery("status", 2))

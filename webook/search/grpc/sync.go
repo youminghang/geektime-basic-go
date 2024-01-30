@@ -33,6 +33,11 @@ func (s *SyncServiceServer) InputArticle(ctx context.Context, request *searchv1.
 	return &searchv1.InputArticleResponse{}, err
 }
 
+func (s *SyncServiceServer) InputAny(ctx context.Context, req *searchv1.InputAnyRequest) (*searchv1.InputAnyResponse, error) {
+	err := s.syncSvc.InputAny(ctx, req.IndexName, req.DocId, req.Data)
+	return &searchv1.InputAnyResponse{}, err
+}
+
 func (s *SyncServiceServer) toDomainUser(vuser *searchv1.User) domain.User {
 	return domain.User{
 		Id:       vuser.Id,
@@ -47,5 +52,6 @@ func (s *SyncServiceServer) toDomainArticle(art *searchv1.Article) domain.Articl
 		Title:   art.Title,
 		Status:  art.Status,
 		Content: art.Content,
+		Tags:    art.Tags,
 	}
 }

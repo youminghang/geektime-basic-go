@@ -9,7 +9,7 @@ import (
 )
 
 type SearchService interface {
-	Search(ctx context.Context, expression string) (domain.SearchResult, error)
+	Search(ctx context.Context, uid int64, expression string) (domain.SearchResult, error)
 }
 
 type searchService struct {
@@ -21,7 +21,7 @@ func NewSearchService(userRepo repository.UserRepository, articleRepo repository
 	return &searchService{userRepo: userRepo, articleRepo: articleRepo}
 }
 
-func (s *searchService) Search(ctx context.Context, expression string) (domain.SearchResult, error) {
+func (s *searchService) Search(ctx context.Context, uid int64, expression string) (domain.SearchResult, error) {
 	// 这边一般要对 expression 进行一些预处理
 	// 正常大家都是使用的空格符来分割的，但是有些时候可能会手抖，输错
 	keywords := strings.Split(expression, " ")
@@ -36,7 +36,7 @@ func (s *searchService) Search(ctx context.Context, expression string) (domain.S
 		return err
 	})
 	eg.Go(func() error {
-		arts, err := s.articleRepo.SearchArticle(ctx, keywords)
+		arts, err := s.articleRepo.SearchArticle(ctx, uid, keywords)
 		res.Articles = arts
 		return err
 	})

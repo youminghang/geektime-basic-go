@@ -18,6 +18,7 @@ service SearchService {
 
 message SearchRequest {
   string expression = 1;
+  int64 uid = 2;
 }
 
 message SearchResponse {

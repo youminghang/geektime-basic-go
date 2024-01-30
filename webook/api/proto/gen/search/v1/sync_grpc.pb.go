@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	SyncService_InputUser_FullMethodName    = "/search.v1.SyncService/InputUser"
 	SyncService_InputArticle_FullMethodName = "/search.v1.SyncService/InputArticle"
+	SyncService_InputAny_FullMethodName     = "/search.v1.SyncService/InputAny"
 )
 
 // SyncServiceClient is the client API for SyncService service.
@@ -29,6 +30,7 @@ const (
 type SyncServiceClient interface {
 	InputUser(ctx context.Context, in *InputUserRequest, opts ...grpc.CallOption) (*InputUserResponse, error)
 	InputArticle(ctx context.Context, in *InputArticleRequest, opts ...grpc.CallOption) (*InputArticleResponse, error)
+	InputAny(ctx context.Context, in *InputAnyRequest, opts ...grpc.CallOption) (*InputAnyResponse, error)
 }
 
 type syncServiceClient struct {
@@ -57,12 +59,22 @@ func (c *syncServiceClient) InputArticle(ctx context.Context, in *InputArticleRe
 	return out, nil
 }
 
+func (c *syncServiceClient) InputAny(ctx context.Context, in *InputAnyRequest, opts ...grpc.CallOption) (*InputAnyResponse, error) {
+	out := new(InputAnyResponse)
+	err := c.cc.Invoke(ctx, SyncService_InputAny_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SyncServiceServer is the server API for SyncService service.
 // All implementations must embed UnimplementedSyncServiceServer
 // for forward compatibility
 type SyncServiceServer interface {
 	InputUser(context.Context, *InputUserRequest) (*InputUserResponse, error)
 	InputArticle(context.Context, *InputArticleRequest) (*InputArticleResponse, error)
+	InputAny(context.Context, *InputAnyRequest) (*InputAnyResponse, error)
 	mustEmbedUnimplementedSyncServiceServer()
 }
 
@@ -75,6 +87,9 @@ func (UnimplementedSyncServiceServer) InputUser(context.Context, *InputUserReque
 }
 func (UnimplementedSyncServiceServer) InputArticle(context.Context, *InputArticleRequest) (*InputArticleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InputArticle not implemented")
+}
+func (UnimplementedSyncServiceServer) InputAny(context.Context, *InputAnyRequest) (*InputAnyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InputAny not implemented")
 }
 func (UnimplementedSyncServiceServer) mustEmbedUnimplementedSyncServiceServer() {}
 
@@ -125,6 +140,24 @@ func _SyncService_InputArticle_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SyncService_InputAny_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(InputAnyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SyncServiceServer).InputAny(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SyncService_InputAny_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SyncServiceServer).InputAny(ctx, req.(*InputAnyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SyncService_ServiceDesc is the grpc.ServiceDesc for SyncService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -139,6 +172,10 @@ var SyncService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "InputArticle",
 			Handler:    _SyncService_InputArticle_Handler,
+		},
+		{
+			MethodName: "InputAny",
+			Handler:    _SyncService_InputAny_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

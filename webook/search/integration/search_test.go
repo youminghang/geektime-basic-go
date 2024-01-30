@@ -2,6 +2,7 @@ package integration
 
 import (
 	"context"
+	"encoding/json"
 	searchv1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/search/v1"
 	"gitee.com/geekbang/basic-go/webook/search/grpc"
 	"gitee.com/geekbang/basic-go/webook/search/integration/startup"
@@ -26,7 +27,22 @@ func (s *SearchTestSuite) SetupSuite() {
 func (s *SearchTestSuite) TestSearch() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
-	_, err := s.syncSvc.InputUser(ctx, &searchv1.InputUserRequest{
+
+	data, err := json.Marshal(BizTags{
+		Uid:   1001,
+		Biz:   "article",
+		BizId: 123,
+		Tags:  []string{"Jerry"},
+	})
+	require.NoError(s.T(), err)
+	_, err = s.syncSvc.InputAny(ctx, &searchv1.InputAnyRequest{
+		IndexName: "tags_index",
+		DocId:     "abcd",
+		Data:      string(data),
+	})
+	require.NoError(s.T(), err)
+
+	_, err = s.syncSvc.InputUser(ctx, &searchv1.InputUserRequest{
 		User: &searchv1.User{
 			Id:       123,
 			Nickname: "Tom White",
@@ -50,11 +66,19 @@ func (s *SearchTestSuite) TestSearch() {
 	})
 	require.NoError(s.T(), err)
 	resp, err := s.searchSvc.Search(ctx, &searchv1.SearchRequest{
-		Expression: "Tom 内容",
+		Expression: "Tom 内容 Jerry",
+		Uid:        1001,
 	})
 	require.NoError(s.T(), err)
 	assert.Equal(s.T(), 1, len(resp.User.Users))
 	assert.Equal(s.T(), 2, len(resp.Article.Articles))
+}
+
+type BizTags struct {
+	Uid   int64    `json:"uid"`
+	Biz   string   `json:"biz"`
+	BizId int64    `json:"biz_id"`
+	Tags  []string `json:"tags"`
 }
 
 func TestSearchService(t *testing.T) {
