@@ -10,6 +10,7 @@ func InitLogger() logger.LoggerV1 {
 	// 这里我们用一个小技巧，
 	// 就是直接使用 zap 本身的配置结构体来处理
 	cfg := zap.NewDevelopmentConfig()
+	cfg.OutputPaths = []string{"/var/log/bff.log"}
 	err := viper.UnmarshalKey("log", &cfg)
 	if err != nil {
 		panic(err)
