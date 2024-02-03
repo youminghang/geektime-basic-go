@@ -7,6 +7,7 @@
 package startup
 
 import (
+	"gitee.com/geekbang/basic-go/webook/tag/events"
 	"gitee.com/geekbang/basic-go/webook/tag/grpc"
 	"gitee.com/geekbang/basic-go/webook/tag/repository/cache"
 	"gitee.com/geekbang/basic-go/webook/tag/repository/dao"
@@ -15,14 +16,14 @@ import (
 
 // Injectors from wire.go:
 
-func InitGRPCService() *grpc.TagServiceServer {
+func InitGRPCService(p events.Producer) *grpc.TagServiceServer {
 	gormDB := InitTestDB()
 	tagDAO := dao.NewGORMTagDAO(gormDB)
 	cmdable := InitRedis()
 	tagCache := cache.NewRedisTagCache(cmdable)
 	loggerV1 := InitLog()
 	tagRepository := InitRepository(tagDAO, tagCache, loggerV1)
-	tagService := service.NewTagService(tagRepository, loggerV1)
+	tagService := service.NewTagService(tagRepository, p, loggerV1)
 	tagServiceServer := grpc.NewTagServiceServer(tagService)
 	return tagServiceServer
 }

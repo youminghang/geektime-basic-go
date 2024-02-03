@@ -3,14 +3,17 @@ package integration
 import (
 	"context"
 	"fmt"
-	"gitee.com/geekbang/basic-go/webook/tag/grpc"
+	tagv1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/tag/v1"
+	evtmocks "gitee.com/geekbang/basic-go/webook/tag/events/mocks"
 	"gitee.com/geekbang/basic-go/webook/tag/integration/startup"
 	"gitee.com/geekbang/basic-go/webook/tag/repository"
 	"gitee.com/geekbang/basic-go/webook/tag/repository/cache"
 	"gitee.com/geekbang/basic-go/webook/tag/repository/dao"
 	"github.com/redis/go-redis/v9"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 	"gorm.io/gorm"
 	"testing"
 	"time"
@@ -18,13 +21,11 @@ import (
 
 type TagServiceTestSuite struct {
 	suite.Suite
-	svc *grpc.TagServiceServer
 	db  *gorm.DB
 	rdb redis.Cmdable
 }
 
 func (s *TagServiceTestSuite) SetupSuite() {
-	s.svc = startup.InitGRPCService()
 	s.db = startup.InitTestDB()
 	s.rdb = startup.InitRedis()
 }
@@ -60,4 +61,44 @@ func (s *TagServiceTestSuite) TestPreload() {
 	defer cancel()
 	err = repo.PreloadUserTags(ctx)
 	require.NoError(s.T(), err)
+}
+
+func (s *TagServiceTestSuite) TestFullFlow() {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+	var uid int64 = 123
+	var bizId int64 = 456
+	// 模拟整个流程
+	ctrl := gomock.NewController(s.T())
+	p := evtmocks.NewMockProducer(ctrl)
+	p.EXPECT().ProduceSyncEvent(gomock.Any(), gomock.Any()).
+		AnyTimes().Return(nil)
+	svc := startup.InitGRPCService(p)
+	resp, err := svc.CreateTag(ctx, &tagv1.CreateTagRequest{
+		Uid:  123,
+		Name: "tag1",
+	})
+	require.NoError(s.T(), err)
+	tid0 := resp.Tag.Id
+	_, err = svc.AttachTags(ctx, &tagv1.AttachTagsRequest{
+		Tids:  []int64{tid0},
+		Uid:   uid,
+		Biz:   "test",
+		BizId: bizId,
+	})
+	require.NoError(s.T(), err)
+	tagsResp, err := svc.GetBizTags(ctx, &tagv1.GetBizTagsRequest{
+		Uid:   123,
+		Biz:   "test",
+		BizId: bizId,
+	})
+	require.NoError(s.T(), err)
+	assert.Equal(s.T(), 1, len(tagsResp.Tags))
+	assert.Equal(s.T(), &tagv1.Tag{
+		Id:   tid0,
+		Name: "tag1",
+		Uid:  uid,
+	}, tagsResp.Tags[0])
+
+	time.Sleep(time.Second)
 }

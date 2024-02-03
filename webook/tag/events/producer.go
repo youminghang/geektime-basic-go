@@ -7,6 +7,7 @@ import (
 	"github.com/IBM/sarama"
 )
 
+//go:generate mockgen -source=./producer.go -package=evtmocks -destination=mocks/producer.mock.go Producer
 type Producer interface {
 	ProduceSyncEvent(ctx context.Context, data BizTags) error
 }

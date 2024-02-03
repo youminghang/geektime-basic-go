@@ -2,13 +2,12 @@ package service
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"gitee.com/geekbang/basic-go/webook/tag/domain"
 	"gitee.com/geekbang/basic-go/webook/tag/events"
 	"gitee.com/geekbang/basic-go/webook/tag/repository"
 	"github.com/ecodeclub/ekit/slice"
+	"time"
 )
 
 type TagService interface {
@@ -38,19 +37,20 @@ func (svc *tagService) AttachTags(ctx context.Context, uid int64, biz string, bi
 		// 这里要根据 tag_index 的结构来定义
 		// 同样要注意顺序，即同一个用户对同一个资源打标签的顺序，
 		// 是不能乱的
-		val, _ := json.Marshal(map[string]any{
-			"biz":    biz,
-			"biz_id": bizId,
-			"tags": slice.Map(ts, func(idx int, src domain.Tag) string {
+		pctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		err = svc.producer.ProduceSyncEvent(pctx, events.BizTags{
+			Uid:   uid,
+			Biz:   biz,
+			BizId: bizId,
+			Tags: slice.Map(ts, func(idx int, src domain.Tag) string {
 				return src.Name
 			}),
-			"uid": uid,
 		})
-		err = svc.producer.ProduceSyncEvent(ctx, events.SyncDataEvent{
-			IndexName: "tags_index",
-			DocID:     fmt.Sprintf("biz_%d", bizId),
-			Data:      string(val),
-		})
+		cancel()
+		if err != nil {
+			// 记录日志
+			svc.logger.Error("发送标签搜索事件失败", logger.Error(err))
+		}
 	}()
 	return err
 }
@@ -70,9 +70,12 @@ func (svc *tagService) GetTags(ctx context.Context, uid int64) ([]domain.Tag, er
 	return svc.repo.GetTags(ctx, uid)
 }
 
-func NewTagService(repo repository.TagRepository, l logger.LoggerV1) TagService {
+func NewTagService(repo repository.TagRepository,
+	producer events.Producer,
+	l logger.LoggerV1) TagService {
 	return &tagService{
-		repo:   repo,
-		logger: l,
+		producer: producer,
+		repo:     repo,
+		logger:   l,
 	}
 }

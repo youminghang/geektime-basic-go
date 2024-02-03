@@ -86,8 +86,8 @@ func (dao *GORMTagDAO) GetTagsByBiz(ctx context.Context, uid int64, biz string, 
 	// 直接用 preload 特性
 	var res []TagBiz
 	err := dao.db.WithContext(ctx).Model(&TagBiz{}).
-		InnerJoins("Tag", dao.db.Model(&Tag{}).Where("uid = ?", uid)).
-		Where("biz = ? AND biz_id = ?", biz, bizId).Find(&res).Error
+		InnerJoins("Tag", dao.db.Model(&Tag{})).
+		Where("Tag.uid = ? AND biz = ? AND biz_id = ?", uid, biz, bizId).Find(&res).Error
 	return slice.Map(res, func(idx int, src TagBiz) Tag {
 		return *src.Tag
 	}), err

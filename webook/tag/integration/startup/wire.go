@@ -3,6 +3,7 @@
 package startup
 
 import (
+	"gitee.com/geekbang/basic-go/webook/tag/events"
 	"gitee.com/geekbang/basic-go/webook/tag/grpc"
 	"gitee.com/geekbang/basic-go/webook/tag/repository/cache"
 	"gitee.com/geekbang/basic-go/webook/tag/repository/dao"
@@ -10,7 +11,7 @@ import (
 	"github.com/google/wire"
 )
 
-func InitGRPCService() *grpc.TagServiceServer {
+func InitGRPCService(p events.Producer) *grpc.TagServiceServer {
 	wire.Build(InitTestDB, InitRedis,
 		InitLog,
 		dao.NewGORMTagDAO,
