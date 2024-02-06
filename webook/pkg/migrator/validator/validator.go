@@ -12,19 +12,9 @@ import (
 )
 
 type Validator[T migrator.Entity] struct {
-	base   *gorm.DB
-	target *gorm.DB
-
-	// 这边需要告知，是以 SRC 为准，还是以 DST 为准
-	// 修复数据需要知道
-	direction string
-
+	baseValidator
 	batchSize int
-
-	l        logger.LoggerV1
-	producer events2.Producer
-
-	utime int64
+	utime     int64
 	// 如果没有数据了，就睡眠
 	// 如果不是正数，那么就说明直接返回，结束这一次的循环
 	// 我很厌恶这种特殊值有特殊含义的做法，但是不得不搞
@@ -39,11 +29,13 @@ func NewValidator[T migrator.Entity](
 	producer events2.Producer,
 ) *Validator[T] {
 	return &Validator[T]{
-		base:      base,
-		target:    target,
-		direction: direction,
-		l:         l,
-		producer:  producer,
+		baseValidator: baseValidator{
+			base:      base,
+			target:    target,
+			direction: direction,
+			l:         l,
+			producer:  producer,
+		},
 		batchSize: 100,
 		// 默认是全量校验，并且数据没了就结束
 		sleepInterval: 0,
@@ -181,24 +173,6 @@ func (v *Validator[T]) srcMissingRecords(ctx context.Context, ts []T) {
 		v.notifySrcMissing(missing)
 	default:
 		v.l.Error("dst => src 查询源表失败", logger.Error(err))
-	}
-}
-
-// 上报不一致的数据
-func (v *Validator[T]) notify(id int64, typ string) {
-	// 这里我们要单独控制超时时间
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	evt := events2.InconsistentEvent{
-		Direction: v.direction,
-		ID:        id,
-		Type:      typ,
-	}
-
-	err := v.producer.ProduceInconsistentEvent(ctx, evt)
-	if err != nil {
-		v.l.Error("发送消息失败", logger.Error(err),
-			logger.Field{Key: "event", Value: evt})
 	}
 }
 

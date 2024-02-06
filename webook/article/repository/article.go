@@ -42,6 +42,10 @@ type CachedArticleRepository struct {
 	l  logger.LoggerV1
 }
 
+func (repo *CachedArticleRepository) Cache() cache.ArticleCache {
+	return repo.cache
+}
+
 func (repo *CachedArticleRepository) ListPub(ctx context.Context, utime time.Time, offset int, limit int) ([]domain.Article, error) {
 	val, err := repo.dao.ListPubByUtime(ctx, utime, offset, limit)
 	if err != nil {
@@ -49,7 +53,7 @@ func (repo *CachedArticleRepository) ListPub(ctx context.Context, utime time.Tim
 	}
 	return slice.Map[dao.PublishedArticle, domain.Article](val, func(idx int, src dao.PublishedArticle) domain.Article {
 		// 偷懒写法
-		return repo.toDomain(dao.Article(src))
+		return repo.ToDomain(dao.Article(src))
 	}), nil
 }
 
@@ -105,7 +109,7 @@ func (repo *CachedArticleRepository) GetById(ctx context.Context, id int64) (dom
 	if err != nil {
 		return domain.Article{}, err
 	}
-	return repo.toDomain(art), nil
+	return repo.ToDomain(art), nil
 }
 
 func (repo *CachedArticleRepository) List(ctx context.Context, author int64,
@@ -134,7 +138,7 @@ func (repo *CachedArticleRepository) List(ctx context.Context, author int64,
 	}
 	res := slice.Map[dao.Article, domain.Article](arts,
 		func(idx int, src dao.Article) domain.Article {
-			return repo.toDomain(src)
+			return repo.ToDomain(src)
 		})
 	// 一般都是让调用者来控制是否异步。
 	go func() {
@@ -280,7 +284,7 @@ func (repo *CachedArticleRepository) Update(ctx context.Context,
 	return nil
 }
 
-func (repo *CachedArticleRepository) toDomain(art dao.Article) domain.Article {
+func (repo *CachedArticleRepository) ToDomain(art dao.Article) domain.Article {
 	return domain.Article{
 		Id:      art.Id,
 		Title:   art.Title,
