@@ -2,7 +2,7 @@ version: v1
 managed:
   enabled: true
   go_package_prefix:
-    default: gitee.com/geekbang/basic-go/webook/api/proto/gen
+    default: ecodepub/pkg/model
 plugins:
   # 默认用最新版本
   - plugin: buf.build/protocolbuffers/go
