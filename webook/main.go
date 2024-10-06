@@ -1,6 +1,9 @@
 package main
 
 import (
+	"net/http"
+	"time"
+
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
@@ -14,17 +17,14 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"net/http"
-	"strings"
-	"time"
 )
 
 func main() {
-	//db := initDB()
-	//server := initWebServer()
+	// db := initDB()
+	// server := initWebServer()
 
-	//u := initUser(db)
-	//u.RegisterRoutes(server)
+	// u := initUser(db)
+	// u.RegisterRoutes(server)
 
 	server := gin.Default()
 	server.GET("/hello", func(ctx *gin.Context) {
@@ -46,26 +46,17 @@ func initWebServer() *gin.Engine {
 	})
 
 	redisClient := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr: "101.126.89.236:6379",
 	})
 	server.Use(ratelimit.NewBuilder(redisClient, time.Second, 100).Build())
 
 	server.Use(cors.New(cors.Config{
-		//AllowOrigins: []string{"*"},
-		//AllowMethods: []string{"POST", "GET"},
-		AllowHeaders: []string{"Content-Type", "Authorization"},
-		// 你不加这个，前端是拿不到的
-		ExposeHeaders: []string{"x-jwt-token"},
-		// 是否允许你带 cookie 之类的东西
-		AllowCredentials: true,
-		AllowOriginFunc: func(origin string) bool {
-			if strings.HasPrefix(origin, "http://localhost") {
-				// 你的开发环境
-				return true
-			}
-			return strings.Contains(origin, "yourcompany.com")
-		},
-		MaxAge: 12 * time.Hour,
+		AllowOrigins:     []string{"https://nhksfg-acjlge-3001.app.cloudstudio.work"}, // 允许的前端域名
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},         // 允许的 HTTP 方法
+		AllowHeaders:     []string{"Content-Type", "Authorization", "User-Agent"},     // 允许的自定义请求头
+		ExposeHeaders:    []string{"x-jwt-token"},                                     // 暴露的响应头
+		AllowCredentials: true,                                                        // 允许带凭证（cookie）请求
+		MaxAge:           12 * time.Hour,
 	}))
 
 	// 步骤1
@@ -111,7 +102,7 @@ func initUser(db *gorm.DB) *web.UserHandler {
 }
 
 func initDB() *gorm.DB {
-	db, err := gorm.Open(mysql.Open("root:root@tcp(localhost:13316)/webook"))
+	db, err := gorm.Open(mysql.Open("root:root@tcp(101.126.89.236:13316)/webook"))
 	if err != nil {
 		// 我只会在初始化过程中 panic
 		// panic 相当于整个 goroutine 结束
